@@ -4,16 +4,17 @@ import (
 	"errors"
 	"go/ast"
 	"reflect"
+	"sync"
 )
 
+//缓存map的key前缀
 const (
-	exPortPrefix = "_exPortStructFields_"
-
+	exPortPrefix  = "_exPortStructFields_"
 	privatePrefix = "_privateStructFields_"
 )
 
-// 用于缓存反射的信息
-var cacheStructFieldMap = map[string][]reflect.StructField{}
+// 用于缓存反射的信息.全局变量不能使用:=简写声明
+var cacheStructFieldMap sync.Map
 
 //获取StructField的信息.只对struct或者*struct判断,如果是指针,返回指针下实际的struct类型.
 //第一个返回值是可以输出的字段(首字母大写),第二个是不能输出的字段(首字母小写)
@@ -39,13 +40,17 @@ func StructFieldInfo(s interface{}) ([]reflect.StructField, []reflect.StructFiel
 		}
 	}
 
-	//缓存字段信息
+	//缓存的key
 	exPortCacheKey := exPortPrefix + typeOf.String()
 	privateCacheKey := privatePrefix + typeOf.String()
-	exPortStructFields := cacheStructFieldMap[exPortCacheKey]
-	privateStructFields := cacheStructFieldMap[privateCacheKey]
-	if len(privateStructFields) > 0 || len(privateStructFields) > 0 {
-		return exPortStructFields, privateStructFields, nil
+	//缓存的值
+	cacheExPortStructFields, exportOk := cacheStructFieldMap.Load(exPortCacheKey)
+	cachePrivateStructFields, privateOk := cacheStructFieldMap.Load(privateCacheKey)
+
+	//如果存在值,返回值为true
+	if exportOk && privateOk {
+		//把 interface{} 类型 转为 []reflect.StructField 类型
+		return cacheExPortStructFields.([]reflect.StructField), cachePrivateStructFields.([]reflect.StructField), nil
 	}
 
 	fieldNum := typeOf.NumField()
@@ -53,8 +58,9 @@ func StructFieldInfo(s interface{}) ([]reflect.StructField, []reflect.StructFiel
 		return nil, nil, errors.New("entity没有属性")
 	}
 
-	exPortStructFields = make([]reflect.StructField, 0)
-	privateStructFields = make([]reflect.StructField, 0)
+	exPortStructFields := make([]reflect.StructField, 0)
+	privateStructFields := make([]reflect.StructField, 0)
+	//遍历所有字段
 	for i := 0; i < fieldNum; i++ {
 		field := typeOf.Field(i)
 		if ast.IsExported(field.Name) { //如果是可以输出的
@@ -64,7 +70,9 @@ func StructFieldInfo(s interface{}) ([]reflect.StructField, []reflect.StructFiel
 		}
 	}
 
-	cacheStructFieldMap[exPortCacheKey] = exPortStructFields
-	cacheStructFieldMap[privateCacheKey] = privateStructFields
+	//加入缓存
+	cacheStructFieldMap.Store(exPortCacheKey, exPortStructFields)
+	cacheStructFieldMap.Store(privateCacheKey, privateStructFields)
+
 	return exPortStructFields, privateStructFields, nil
 }
