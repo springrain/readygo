@@ -52,12 +52,13 @@ func StructFieldInfo(s interface{}) ([]reflect.StructField, []reflect.StructFiel
 		//把 interface{} 类型 转为 []reflect.StructField 类型
 		return cacheExPortStructFields.([]reflect.StructField), cachePrivateStructFields.([]reflect.StructField), nil
 	}
-
+	//获取字段长度
 	fieldNum := typeOf.NumField()
+	//如果没有字段
 	if fieldNum < 1 {
 		return nil, nil, errors.New("entity没有属性")
 	}
-
+	//声明承接数组
 	exPortStructFields := make([]reflect.StructField, 0)
 	privateStructFields := make([]reflect.StructField, 0)
 	//遍历所有字段
