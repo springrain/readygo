@@ -8,6 +8,7 @@ import (
 	"time"
 )
 
+//包装保存语句
 func wrapsavesql(dbType DBTYPE, entity IBaseEntity, columns []reflect.StructField, values []interface{}) (string, error) {
 
 	//SQL语句的构造器
