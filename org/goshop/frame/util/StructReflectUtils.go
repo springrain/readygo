@@ -80,9 +80,9 @@ func StructFieldInfo(s interface{}) ([]reflect.StructField, []reflect.StructFiel
 	//调用匿名struct的递归方法
 	recursiveAnonymousStruct(&allFieldMap, anonymous)
 
-	//遍历sync.Map, 要求输入一个func作为参数
+	//遍历sync.Map,要求输入一个func作为参数
 	//这个函数的入参、出参的类型都已经固定，不能修改
-	//可以在函数体内编写自己的代码，调用map中的k,v
+	//可以在函数体内编写自己的代码,调用map中的k,v
 	f := func(k, v interface{}) bool {
 		fmt.Println(k, ":", v)
 		field := v.(reflect.StructField)
