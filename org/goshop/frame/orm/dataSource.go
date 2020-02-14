@@ -13,7 +13,14 @@ type DBTYPE string
 
 // 枚举数据库类型
 const (
-	DBType_MySQL DBTYPE = "mysql"
+	DBType_MYSQL      DBTYPE = "mysql"
+	DBType_DB2        DBTYPE = "db2"
+	DBType_INFORMIX   DBTYPE = "informix"
+	DBType_MSSQL      DBTYPE = "mssql"
+	DBType_ORACLE     DBTYPE = "oracle"
+	DBType_POSTGRESQL DBTYPE = "postgresql"
+	DBType_SQLITE     DBTYPE = "sqlite3"
+	DBType_UNKNOWN    DBTYPE = "mysql"
 )
 
 // dataSorce对象,隔离mysql原生对象

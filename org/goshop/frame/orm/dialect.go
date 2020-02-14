@@ -2,7 +2,6 @@ package orm
 
 import (
 	"errors"
-	"fmt"
 	"reflect"
 	"strconv"
 	"strings"
@@ -10,14 +9,6 @@ import (
 )
 
 func wrapsavesql(dbType DBTYPE, entity IBaseEntity, columns []reflect.StructField, values []interface{}) (string, error) {
-	if dbType == DBType_MySQL {
-		return wrapsavesql_mysql(entity, columns, values)
-	}
-	return "", errors.New("不支持的数据库")
-}
-
-//mysql的save语句拼接
-func wrapsavesql_mysql(entity IBaseEntity, columns []reflect.StructField, values []interface{}) (string, error) {
 
 	//SQL语句的构造器
 	var sqlBuilder strings.Builder
@@ -39,12 +30,25 @@ func wrapsavesql_mysql(entity IBaseEntity, columns []reflect.StructField, values
 			if !(pkKind == reflect.String || pkKind == reflect.Int) { //只支持字符串和int类型的主键
 				return "", errors.New("不支持的主键类型")
 			}
-
+			//主键的值
 			pkValue := values[i]
-			if (pkKind == reflect.String) && (pkValue.(string) == "") { //主键是字符串类型,并且值为"",赋值id
+			if len(entity.GetPkSequence()) > 0 { //如果是主键序列
+				//拼接字符串
+				sqlBuilder.WriteString(field.Tag.Get(tagColumnName))
+				sqlBuilder.WriteString(",")
+				valueSQLBuilder.WriteString(entity.GetPkSequence())
+				valueSQLBuilder.WriteString(",")
+				//去掉这一列,后续不再处理
+				columns = append(columns[:i], columns[i+1:]...)
+				values = append(values[:i], values[i+1:]...)
+				i = i - 1
+				continue
+
+			} else if (pkKind == reflect.String) && (pkValue.(string) == "") { //主键是字符串类型,并且值为"",赋值id
 				values[i] = id
 				//如果是数字类型,并且值为0,需要从数组中删除掉主键的信息,让数据库自己生成
 			} else if (pkKind == reflect.Int) && (pkValue.(int) == 0) {
+				//去掉这一列,后续不再处理
 				columns = append(columns[:i], columns[i+1:]...)
 				values = append(values[:i], values[i+1:]...)
 				i = i - 1
@@ -68,17 +72,17 @@ func wrapsavesql_mysql(entity IBaseEntity, columns []reflect.StructField, values
 	}
 	sqlstr = sqlstr + ")" + valuestr + ")"
 
-	fmt.Println(rebind(sqlstr))
-
+	if dbType == DBType_MYSQL || dbType == DBType_UNKNOWN {
+		return sqlstr, nil
+	}
+	//根据数据库类型,调整SQL变量符号,例如?,? $1,$2这样的
+	sqlstr = rebind(dbType, sqlstr)
 	return sqlstr, nil
 
 }
 
-func rebind(query string) string {
-	//switch bindType {
-	//case QUESTION, UNKNOWN:
-	//	return query
-	//}
+//根据数据库类型,调整SQL变量符号,例如?,? $1,$2这样的
+func rebind(dbType DBTYPE, query string) string {
 
 	// Add space enough for 10 params before we have to allocate
 	rqb := make([]byte, 0, len(query)+10)
@@ -88,15 +92,11 @@ func rebind(query string) string {
 	for i = strings.Index(query, "?"); i != -1; i = strings.Index(query, "?") {
 		rqb = append(rqb, query[:i]...)
 
-		//switch bindType {
-		//case DOLLAR:
-		rqb = append(rqb, '$')
-		//case NAMED:
-		//	rqb = append(rqb, ':', 'a', 'r', 'g')
-		//case AT:
-		//	rqb = append(rqb, '@', 'p')
-		//}
-
+		if dbType == DBType_POSTGRESQL {
+			rqb = append(rqb, '$')
+		} else if dbType == DBType_MSSQL {
+			rqb = append(rqb, '@', 'p')
+		}
 		j++
 		rqb = strconv.AppendInt(rqb, int64(j), 10)
 
