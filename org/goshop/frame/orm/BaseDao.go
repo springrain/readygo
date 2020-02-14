@@ -16,6 +16,8 @@ var allowTypeMap = map[reflect.Kind]bool{
 	reflect.String:  true,
 }
 
+const tagColumnName = "column"
+
 //数据库操作基类,隔离原生操作数据库API入口,所有数据库操作必须通过BaseDao进行.
 type BaseDao struct {
 	config     *DataSourceConfig
@@ -101,15 +103,21 @@ func columnAndValue(entity IBaseEntity) ([]reflect.StructField, []interface{}, e
 
 	//遍历所有公共属性
 	for i := 0; i < fLen; i++ {
+		field := exPortStructFields[i]
 		//获取字段类型的Kind
-		fieldKind := exPortStructFields[i].Type.Kind()
+		fieldKind := field.Type.Kind()
 		if !allowTypeMap[fieldKind] { //不允许的类型
 			continue
 		}
-		columns = append(columns, exPortStructFields[i])
-		pname := exPortStructFields[i].Name
+
+		// 只处理tag有column的字段
+		tagValue := field.Tag.Get(tagColumnName)
+		if len(tagValue) < 1 {
+			continue
+		}
+		columns = append(columns, field)
 		//FieldByName方法返回的是reflect.Value类型,调用Interface()方法,返回原始类型的数据值
-		value := valueOf.FieldByName(pname).Interface()
+		value := valueOf.FieldByName(field.Name).Interface()
 		//添加到记录值的数组
 		values = append(values, value)
 

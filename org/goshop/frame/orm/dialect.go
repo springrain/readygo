@@ -51,7 +51,7 @@ func wrapsavesql_mysql(entity IBaseEntity, columns []reflect.StructField, values
 			}
 		}
 		//拼接字符串
-		sqlBuilder.WriteString(field.Name)
+		sqlBuilder.WriteString(field.Tag.Get(tagColumnName))
 		sqlBuilder.WriteString(",")
 		valueSQLBuilder.WriteString("?,")
 

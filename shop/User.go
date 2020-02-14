@@ -11,9 +11,9 @@ type User struct {
 
 type User2 struct {
 	User
-	Id      string
-	Account string
-	age     string
+	Id      string `column:"id"`
+	Account string `column:"account"`
+	Age     string
 	sex     string
 }
 
