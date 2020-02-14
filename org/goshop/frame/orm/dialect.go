@@ -2,6 +2,7 @@ package orm
 
 import (
 	"errors"
+	"fmt"
 	"reflect"
 	"strconv"
 	"strings"
@@ -66,6 +67,41 @@ func wrapsavesql_mysql(entity IBaseEntity, columns []reflect.StructField, values
 		valuestr = valuestr[:len(valuestr)-1]
 	}
 	sqlstr = sqlstr + ")" + valuestr + ")"
+
+	fmt.Println(rebind(sqlstr))
+
 	return sqlstr, nil
 
+}
+
+func rebind(query string) string {
+	//switch bindType {
+	//case QUESTION, UNKNOWN:
+	//	return query
+	//}
+
+	// Add space enough for 10 params before we have to allocate
+	rqb := make([]byte, 0, len(query)+10)
+
+	var i, j int
+
+	for i = strings.Index(query, "?"); i != -1; i = strings.Index(query, "?") {
+		rqb = append(rqb, query[:i]...)
+
+		//switch bindType {
+		//case DOLLAR:
+		rqb = append(rqb, '$')
+		//case NAMED:
+		//	rqb = append(rqb, ':', 'a', 'r', 'g')
+		//case AT:
+		//	rqb = append(rqb, '@', 'p')
+		//}
+
+		j++
+		rqb = strconv.AppendInt(rqb, int64(j), 10)
+
+		query = query[i+1:]
+	}
+
+	return string(append(rqb, query...))
 }
