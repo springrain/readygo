@@ -13,7 +13,7 @@ func main() {
 		DBName:   "shop",
 		UserName: "root",
 		PassWord: "root",
-		DBType:   orm.DBType_MySQL,
+		DBType:   orm.DBType_MYSQL,
 	}
 	baseDao, _ := orm.NewBaseDao(&dataSourceConfig)
 
