@@ -2,6 +2,7 @@ package util
 
 import (
 	"errors"
+	"fmt"
 	"go/ast"
 	"reflect"
 	"sync"
@@ -61,19 +62,103 @@ func StructFieldInfo(s interface{}) ([]reflect.StructField, []reflect.StructFiel
 	//声明承接数组
 	exPortStructFields := make([]reflect.StructField, 0)
 	privateStructFields := make([]reflect.StructField, 0)
-	//遍历所有字段
+
+	// 声明所有字段的载体
+	var allFieldMap sync.Map
+	anonymous := make([]reflect.StructField, 0)
+
+	//遍历所有字段,记录匿名属性
 	for i := 0; i < fieldNum; i++ {
 		field := typeOf.Field(i)
+		if _, ok := allFieldMap.Load(field.Name); !ok {
+			allFieldMap.Store(field.Name, field)
+		}
+		if field.Anonymous { //如果是匿名的
+			anonymous = append(anonymous, field)
+		}
+	}
+	//调用匿名struct的递归方法
+	recursiveAnonymousStruct(&allFieldMap, anonymous)
+
+	//遍历sync.Map, 要求输入一个func作为参数
+	//这个函数的入参、出参的类型都已经固定，不能修改
+	//可以在函数体内编写自己的代码，调用map中的k,v
+	f := func(k, v interface{}) bool {
+		fmt.Println(k, ":", v)
+		field := v.(reflect.StructField)
 		if ast.IsExported(field.Name) { //如果是可以输出的
 			exPortStructFields = append(exPortStructFields, field)
 		} else {
 			privateStructFields = append(privateStructFields, field)
 		}
+
+		return true
 	}
+	allFieldMap.Range(f)
+
+	//遍历所有字段
+	/*
+		for i := 0; i < fieldNum; i++ {
+			field := typeOf.Field(i)
+			if ast.IsExported(field.Name) { //如果是可以输出的
+				exPortStructFields = append(exPortStructFields, field)
+			} else {
+				privateStructFields = append(privateStructFields, field)
+			}
+		}
+	*/
 
 	//加入缓存
 	cacheStructFieldMap.Store(exPortCacheKey, exPortStructFields)
 	cacheStructFieldMap.Store(privateCacheKey, privateStructFields)
 
 	return exPortStructFields, privateStructFields, nil
+}
+
+//递归调用struct的匿名属性,就近覆盖属性.
+func recursiveAnonymousStruct(allFieldMap *sync.Map, anonymous []reflect.StructField) {
+
+	for i := 0; i < len(anonymous); i++ {
+		field := anonymous[i]
+		typeOf := field.Type
+
+		if typeOf.Kind() == reflect.Ptr {
+			//获取指针下的Struct类型
+			typeOf = typeOf.Elem()
+		}
+
+		//只处理Struct类型
+		if typeOf.Kind() != reflect.Struct {
+			continue
+		}
+
+		//获取字段长度
+		fieldNum := typeOf.NumField()
+		//如果没有字段
+		if fieldNum < 1 {
+			continue
+		}
+
+		// 匿名struct里自身又有匿名struct
+		anonymousField := make([]reflect.StructField, 0)
+
+		//遍历所有字段
+		for i := 0; i < fieldNum; i++ {
+			field := typeOf.Field(i)
+			if _, ok := allFieldMap.Load(field.Name); ok { //如果存在属性名
+				continue
+			} else { //不存在属性名,加入到allFieldMap
+				allFieldMap.Store(field.Name, field)
+			}
+
+			if field.Anonymous { //匿名struct里自身又有匿名struct
+				anonymousField = append(anonymousField, field)
+			}
+		}
+
+		//递归调用匿名struct
+		recursiveAnonymousStruct(allFieldMap, anonymousField)
+
+	}
+
 }

@@ -17,7 +17,7 @@ func main() {
 	}
 	baseDao, _ := orm.NewBaseDao(&dataSourceConfig)
 
-	user := shop.User{
+	user := shop.User2{
 		Id:      "id",
 		Account: "user1_username",
 	}

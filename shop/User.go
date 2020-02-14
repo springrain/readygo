@@ -9,6 +9,14 @@ type User struct {
 	age     int
 }
 
+type User2 struct {
+	User
+	Id      string
+	Account string
+	age     string
+	sex     string
+}
+
 func (user *User) GetTableName() string {
 	return "t_user"
 }
