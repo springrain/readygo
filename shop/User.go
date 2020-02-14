@@ -3,7 +3,7 @@ package shop
 import "goshop/org/goshop/frame/orm"
 
 type User struct {
-	*orm.EntityStruct
+	orm.EntityStruct
 	Id      string
 	Account string
 	age     int

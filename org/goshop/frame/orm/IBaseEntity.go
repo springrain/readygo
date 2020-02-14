@@ -12,7 +12,7 @@ const (
 type IBaseEntity interface {
 	//获取表名称
 	GetTableName() string
-	//获取主键名称
+	//获取主键名称,需要兼容Map,所以不放到tag里了
 	GetPkName() string
 	//Struct对象类型和Map类型.两者都是Struct类型,一个是对象载体需要反射,一个是Map载体,不需要反射
 	GetEntityType() EntityType
@@ -32,7 +32,7 @@ func (entity *EntityStruct) GetTableName() string {
 	return ""
 }
 
-//获取主键名称
+//获取主键名称,需要兼容Map,所以不放到tag里了
 func (entity *EntityStruct) GetPkName() string {
 	return "Id"
 }
@@ -65,7 +65,7 @@ func (entity *EntityMap) GetTableName() string {
 	return ""
 }
 
-//获取主键名称
+//获取主键名称,需要兼容Map,所以不放到tag里了
 func (entity *EntityMap) GetPkName() string {
 	return "Id"
 }
