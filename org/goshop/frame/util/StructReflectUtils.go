@@ -96,18 +96,6 @@ func StructFieldInfo(s interface{}) ([]reflect.StructField, []reflect.StructFiel
 	}
 	allFieldMap.Range(f)
 
-	//遍历所有字段
-	/*
-		for i := 0; i < fieldNum; i++ {
-			field := typeOf.Field(i)
-			if ast.IsExported(field.Name) { //如果是可以输出的
-				exPortStructFields = append(exPortStructFields, field)
-			} else {
-				privateStructFields = append(privateStructFields, field)
-			}
-		}
-	*/
-
 	//加入缓存
 	cacheStructFieldMap.Store(exPortCacheKey, exPortStructFields)
 	cacheStructFieldMap.Store(privateCacheKey, privateStructFields)

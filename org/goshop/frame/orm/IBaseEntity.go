@@ -14,6 +14,8 @@ type IBaseEntity interface {
 	GetTableName() string
 	//获取主键名称,需要兼容Map,所以不放到tag里了
 	GetPkName() string
+	//兼容主键序列.如果有值,优先级最高
+	GetPkSequence() string
 	//Struct对象类型和Map类型.两者都是Struct类型,一个是对象载体需要反射,一个是Map载体,不需要反射
 	GetEntityType() EntityType
 
@@ -35,6 +37,11 @@ func (entity *EntityStruct) GetTableName() string {
 //获取主键名称,需要兼容Map,所以不放到tag里了
 func (entity *EntityStruct) GetPkName() string {
 	return "Id"
+}
+
+//兼容主键序列.如果有值,优先级最高
+func (entity *EntityStruct) GetPkSequence() string {
+	return ""
 }
 
 //Struct对象类型和Map类型.两者都是Struct类型,一个是对象载体需要反射,一个是Map载体,不需要反射
@@ -68,6 +75,11 @@ func (entity *EntityMap) GetTableName() string {
 //获取主键名称,需要兼容Map,所以不放到tag里了
 func (entity *EntityMap) GetPkName() string {
 	return "Id"
+}
+
+//兼容主键序列.如果有值,优先级最高
+func (entity *EntityMap) GetPkSequence() string {
+	return ""
 }
 
 //Struct对象类型和Map类型.两者都是Struct类型,一个是对象载体需要反射,一个是Map载体,不需要反射
