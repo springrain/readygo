@@ -13,7 +13,7 @@ const (
 	privatePrefix = "_privateStructFields_"
 )
 
-// 用于缓存反射的信息.全局变量不能使用:=简写声明
+// 用于缓存反射的信息,sync.Map内部处理了并发锁.全局变量不能使用:=简写声明
 var cacheStructFieldMap sync.Map
 
 //获取StructField的信息.只对struct或者*struct判断,如果是指针,返回指针下实际的struct类型.
