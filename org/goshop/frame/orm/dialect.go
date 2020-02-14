@@ -81,6 +81,49 @@ func wrapsavesql(dbType DBTYPE, entity IBaseEntity, columns []reflect.StructFiel
 
 }
 
+//包装更新对象的语句
+func wrapupdatesql(dbType DBTYPE, entity IBaseEntity, columns []reflect.StructField, values []interface{}, onlyupdatenotnull bool) (string, error) {
+
+	//SQL语句的构造器
+	var sqlBuilder strings.Builder
+	sqlBuilder.WriteString("UPDATE ")
+	sqlBuilder.WriteString(entity.GetTableName())
+	sqlBuilder.WriteString(" SET ")
+
+	//主键名称
+	var pkValue interface{}
+
+	for i := 0; i < len(columns); i++ {
+		field := columns[i]
+		if strings.EqualFold(field.Name, entity.GetPkName()) { //如果是主键
+			pkValue = values[i]
+			//去掉这一列,后面处理
+			columns = append(columns[:i], columns[i+1:]...)
+			values = append(values[:i], values[i+1:]...)
+			i = i - 1
+			continue
+		}
+
+		sqlBuilder.WriteString(field.Tag.Get(tagColumnName))
+		sqlBuilder.WriteString("=?,")
+
+	}
+	//主键的值是最后一个
+	values = append(values, pkValue)
+	//去掉字符串最后的 , 号
+	sqlstr := sqlBuilder.String()
+	sqlstr = sqlstr[:len(sqlstr)-1]
+
+	sqlstr = sqlstr + " WHERE " + entity.GetPkName() + "=?"
+
+	if dbType == DBType_MYSQL || dbType == DBType_UNKNOWN {
+		return sqlstr, nil
+	}
+	//根据数据库类型,调整SQL变量符号,例如?,? $1,$2这样的
+	sqlstr = rebind(dbType, sqlstr)
+	return sqlstr, nil
+}
+
 //根据数据库类型,调整SQL变量符号,例如?,? $1,$2这样的
 func rebind(dbType DBTYPE, query string) string {
 
