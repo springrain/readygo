@@ -28,4 +28,11 @@ func main() {
 	baseDao.Update(&user, false)
 	baseDao.Query("select id,account from t_user")
 
+	userMap := orm.NewEntityMap("t_user")
+
+	userMap.Set("id", "mapId")
+	userMap.Set("account", "mapAccount")
+	baseDao.SaveMap(&userMap)
+	baseDao.Query("select id,account from t_user")
+
 }

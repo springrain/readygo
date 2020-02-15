@@ -43,7 +43,8 @@ func (entity *EntityStruct) GetPkSequence() string {
 
 //IBaseEntity 的基础实现,所有的实体类都匿名注入.这样就类似实现继承了,如果接口增加方法,调整这个默认实现即可
 type EntityMap struct {
-	//记得init初始化
+	//表名
+	tableName string
 	//数据库字段
 	DBFieldMap map[string]interface{}
 	//自定义的kv
@@ -51,8 +52,17 @@ type EntityMap struct {
 }
 
 //获取表名称
+func NewEntityMap(tbName string) EntityMap {
+	entityMap := EntityMap{}
+	entityMap.DBFieldMap = map[string]interface{}{}
+	entityMap.TransientMap = map[string]interface{}{}
+	entityMap.tableName = tbName
+	return entityMap
+}
+
+//获取表名称
 func (entity *EntityMap) GetTableName() string {
-	return ""
+	return entity.tableName
 }
 
 //获取数据库表的主键字段名称.因为要兼容Map,只能是数据库的字段名称.对应的struct 属性field,使用cacheStructPKFieldNameMap缓存
