@@ -8,8 +8,8 @@ import (
 	"time"
 )
 
-//包装保存语句
-func wrapsavesql(dbType DBTYPE, entity IBaseEntity, columns []reflect.StructField, values []interface{}) (string, error) {
+//包装保存Struct语句
+func wrapSaveStructSQL(dbType DBTYPE, entity IBaseEntity, columns []reflect.StructField, values []interface{}) (string, error) {
 
 	//SQL语句的构造器
 	var sqlBuilder strings.Builder
@@ -20,8 +20,6 @@ func wrapsavesql(dbType DBTYPE, entity IBaseEntity, columns []reflect.StructFiel
 	//SQL语句中,VALUES(?,?,...)语句的构造器
 	var valueSQLBuilder strings.Builder
 	valueSQLBuilder.WriteString(" VALUES (")
-
-	id := strconv.FormatInt(time.Now().UnixNano(), 10)
 
 	for i := 0; i < len(columns); i++ {
 		field := columns[i]
@@ -46,7 +44,11 @@ func wrapsavesql(dbType DBTYPE, entity IBaseEntity, columns []reflect.StructFiel
 				continue
 
 			} else if (pkKind == reflect.String) && (pkValue.(string) == "") { //主键是字符串类型,并且值为"",赋值id
+				id := strconv.FormatInt(time.Now().UnixNano(), 10)
 				values[i] = id
+				//给对象主键赋值
+				v := reflect.ValueOf(entity).Elem()
+				v.FieldByName(field.Name).Set(reflect.ValueOf(id))
 				//如果是数字类型,并且值为0,需要从数组中删除掉主键的信息,让数据库自己生成
 			} else if (pkKind == reflect.Int) && (pkValue.(int) == 0) {
 				//去掉这一列,后续不再处理
@@ -82,8 +84,8 @@ func wrapsavesql(dbType DBTYPE, entity IBaseEntity, columns []reflect.StructFiel
 
 }
 
-//包装更新对象的语句
-func wrapupdatesql(dbType DBTYPE, entity IBaseEntity, columns []reflect.StructField, values []interface{}, onlyupdatenotnull bool) (string, error) {
+//包装更新Struct语句
+func wrapUpdateStructSQL(dbType DBTYPE, entity IBaseEntity, columns []reflect.StructField, values []interface{}, onlyupdatenotnull bool) (string, error) {
 
 	//SQL语句的构造器
 	var sqlBuilder strings.Builder
@@ -135,8 +137,8 @@ func wrapupdatesql(dbType DBTYPE, entity IBaseEntity, columns []reflect.StructFi
 	return sqlstr, nil
 }
 
-//包装删除语句
-func wrapdeletesql(dbType DBTYPE, entity IBaseEntity) (string, error) {
+//包装删除Struct语句
+func wrapDeleteStructSQL(dbType DBTYPE, entity IBaseEntity) (string, error) {
 
 	//SQL语句的构造器
 	var sqlBuilder strings.Builder

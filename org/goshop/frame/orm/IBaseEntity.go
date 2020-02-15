@@ -21,8 +21,6 @@ type IBaseEntity interface {
 
 	//针对Map类型,记录数据库字段
 	GetDBFieldMap() map[string]interface{}
-	//针对Map类型,记录非数据库字段
-	GetTransientMap() map[string]interface{}
 }
 
 //IBaseEntity 的基础实现,所有的实体类都匿名注入.这样就类似实现继承了,如果接口增加方法,调整这个默认实现即可
@@ -54,16 +52,14 @@ func (entity *EntityStruct) GetDBFieldMap() map[string]interface{} {
 	return nil
 }
 
-//针对Map类型,记录非数据库字段
-func (entity *EntityStruct) GetTransientMap() map[string]interface{} {
-	return nil
-}
-
 //-------------------------------------------------------------------------//
 
 //IBaseEntity 的基础实现,所有的实体类都匿名注入.这样就类似实现继承了,如果接口增加方法,调整这个默认实现即可
 type EntityMap struct {
-	DBFieldMap   map[string]interface{}
+	//记得init初始化
+	//数据库字段
+	DBFieldMap map[string]interface{}
+	//自定义的kv
 	TransientMap map[string]interface{}
 }
 
@@ -92,7 +88,14 @@ func (entity *EntityMap) GetDBFieldMap() map[string]interface{} {
 	return entity.DBFieldMap
 }
 
-//针对Map类型,记录非数据库字段
-func (entity *EntityMap) GetTransientMap() map[string]interface{} {
+//设置数据库字段
+func (entity *EntityMap) Set(key string, value interface{}) map[string]interface{} {
+	entity.DBFieldMap[key] = value
+	return entity.DBFieldMap
+}
+
+//设置非数据库字段
+func (entity *EntityMap) Put(key string, value interface{}) map[string]interface{} {
+	entity.TransientMap[key] = value
 	return entity.TransientMap
 }
