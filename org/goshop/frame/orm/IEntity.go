@@ -24,6 +24,8 @@ type IEntityMap interface {
 type EntityStruct struct {
 }
 
+const defaultPkName = "id"
+
 //获取表名称
 func (entity *EntityStruct) GetTableName() string {
 	return ""
@@ -31,7 +33,7 @@ func (entity *EntityStruct) GetTableName() string {
 
 //获取数据库表的主键字段名称.因为要兼容Map,只能是数据库的字段名称.对应的struct 属性field,使用cacheStructPKFieldNameMap缓存
 func (entity *EntityStruct) GetPKColumnName() string {
-	return "id"
+	return defaultPkName
 }
 
 //兼容主键序列.如果有值,优先级最高
@@ -59,7 +61,7 @@ func NewEntityMap(tbName string) EntityMap {
 	entityMap.DBFieldMap = map[string]interface{}{}
 	entityMap.TransientMap = map[string]interface{}{}
 	entityMap.tableName = tbName
-	entityMap.pkColumnName = "id"
+	entityMap.pkColumnName = defaultPkName
 	return entityMap
 }
 
