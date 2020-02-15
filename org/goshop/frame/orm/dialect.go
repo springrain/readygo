@@ -225,6 +225,7 @@ func wrapUpdateMapSQL(dbType DBTYPE, entity IEntityMap) (string, []interface{}, 
 
 		if k == entity.GetPKColumnName() { //如果是主键
 			pkValue = v
+			continue
 		}
 
 		//拼接字符串

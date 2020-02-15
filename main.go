@@ -33,6 +33,8 @@ func main() {
 	userMap.Set("id", "mapId")
 	userMap.Set("account", "mapAccount")
 	baseDao.SaveMap(&userMap)
+	userMap.Set("account", "213")
+	baseDao.UpdateMap(&userMap)
 	baseDao.Query("select id,account from t_user")
 
 }
