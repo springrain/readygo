@@ -22,9 +22,10 @@ func main() {
 		Account: "test",
 	}
 	baseDao.Delete(&user)
-	//baseDao.Save(&user)
+	baseDao.Save(&user)
 	baseDao.Query("select id,account from t_user")
-
+	user.Account = "update"
 	baseDao.Update(&user, false)
+	baseDao.Query("select id,account from t_user")
 
 }
