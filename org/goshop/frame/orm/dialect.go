@@ -9,7 +9,7 @@ import (
 )
 
 //包装保存Struct语句
-func wrapSaveStructSQL(dbType DBTYPE, entity IBaseEntity, columns []reflect.StructField, values []interface{}) (string, error) {
+func wrapSaveStructSQL(dbType DBTYPE, entity IEntityStruct, columns []reflect.StructField, values []interface{}) (string, error) {
 
 	//SQL语句的构造器
 	var sqlBuilder strings.Builder
@@ -85,7 +85,7 @@ func wrapSaveStructSQL(dbType DBTYPE, entity IBaseEntity, columns []reflect.Stru
 }
 
 //包装更新Struct语句
-func wrapUpdateStructSQL(dbType DBTYPE, entity IBaseEntity, columns []reflect.StructField, values []interface{}, onlyupdatenotnull bool) (string, error) {
+func wrapUpdateStructSQL(dbType DBTYPE, entity IEntityStruct, columns []reflect.StructField, values []interface{}, onlyupdatenotnull bool) (string, error) {
 
 	//SQL语句的构造器
 	var sqlBuilder strings.Builder
@@ -138,7 +138,7 @@ func wrapUpdateStructSQL(dbType DBTYPE, entity IBaseEntity, columns []reflect.St
 }
 
 //包装删除Struct语句
-func wrapDeleteStructSQL(dbType DBTYPE, entity IBaseEntity) (string, error) {
+func wrapDeleteStructSQL(dbType DBTYPE, entity IEntityStruct) (string, error) {
 
 	//SQL语句的构造器
 	var sqlBuilder strings.Builder
@@ -156,6 +156,96 @@ func wrapDeleteStructSQL(dbType DBTYPE, entity IBaseEntity) (string, error) {
 	sqlstr = rebind(dbType, sqlstr)
 	return sqlstr, nil
 
+}
+
+//包装保存Map语句,Map因为没有字段属性,无法完成Id的类型判断和赋值,需要确保Map的值是完整的.
+func wrapSaveMapSQL(dbType DBTYPE, entity IEntityMap) (string, []interface{}, error) {
+
+	dbFieldMap := entity.GetDBFieldMap()
+	if len(dbFieldMap) < 1 {
+		return "", nil, errors.New("GetDBFieldMap()返回值不能为空")
+	}
+	//SQL对应的参数
+	values := []interface{}{}
+
+	//SQL语句的构造器
+	var sqlBuilder strings.Builder
+	sqlBuilder.WriteString("INSERT INTO ")
+	sqlBuilder.WriteString(entity.GetTableName())
+	sqlBuilder.WriteString("(")
+
+	//SQL语句中,VALUES(?,?,...)语句的构造器
+	var valueSQLBuilder strings.Builder
+	valueSQLBuilder.WriteString(" VALUES (")
+
+	for k, v := range dbFieldMap {
+		//拼接字符串
+		sqlBuilder.WriteString(k)
+		sqlBuilder.WriteString(",")
+		valueSQLBuilder.WriteString("?,")
+		values = append(values, v)
+	}
+	//去掉字符串最后的 , 号
+	sqlstr := sqlBuilder.String()
+	if len(sqlstr) > 0 {
+		sqlstr = sqlstr[:len(sqlstr)-1]
+	}
+	valuestr := valueSQLBuilder.String()
+	if len(valuestr) > 0 {
+		valuestr = valuestr[:len(valuestr)-1]
+	}
+	sqlstr = sqlstr + ")" + valuestr + ")"
+
+	if dbType == DBType_MYSQL || dbType == DBType_UNKNOWN {
+		return sqlstr, values, nil
+	}
+	//根据数据库类型,调整SQL变量符号,例如?,? $1,$2这样的
+	sqlstr = rebind(dbType, sqlstr)
+	return sqlstr, values, nil
+}
+
+//包装Map更新语句,Map因为没有字段属性,无法完成Id的类型判断和赋值,需要确保Map的值是完整的.
+func wrapUpdateMapSQL(dbType DBTYPE, entity IEntityMap) (string, []interface{}, error) {
+	dbFieldMap := entity.GetDBFieldMap()
+	if len(dbFieldMap) < 1 {
+		return "", nil, errors.New("GetDBFieldMap()返回值不能为空")
+	}
+	//SQL语句的构造器
+	var sqlBuilder strings.Builder
+	sqlBuilder.WriteString("UPDATE ")
+	sqlBuilder.WriteString(entity.GetTableName())
+	sqlBuilder.WriteString(" SET ")
+
+	//SQL对应的参数
+	values := []interface{}{}
+	//主键名称
+	var pkValue interface{}
+
+	for k, v := range dbFieldMap {
+
+		if k == entity.GetPKColumnName() { //如果是主键
+			pkValue = v
+		}
+
+		//拼接字符串
+		sqlBuilder.WriteString(k)
+		sqlBuilder.WriteString("=?,")
+		values = append(values, v)
+	}
+	//主键的值是最后一个
+	values = append(values, pkValue)
+	//去掉字符串最后的 , 号
+	sqlstr := sqlBuilder.String()
+	sqlstr = sqlstr[:len(sqlstr)-1]
+
+	sqlstr = sqlstr + " WHERE " + entity.GetPKColumnName() + "=?"
+
+	if dbType == DBType_MYSQL || dbType == DBType_UNKNOWN {
+		return sqlstr, values, nil
+	}
+	//根据数据库类型,调整SQL变量符号,例如?,? $1,$2这样的
+	sqlstr = rebind(dbType, sqlstr)
+	return sqlstr, values, nil
 }
 
 //根据数据库类型,调整SQL变量符号,例如?,? $1,$2这样的

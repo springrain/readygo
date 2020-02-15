@@ -51,15 +51,17 @@ func (baseDao *BaseDao) Query(sql string) {
 	}
 }
 
-//保存对象
-func (baseDao *BaseDao) Save(entity IBaseEntity) error {
-
+//保存Struct对象
+func (baseDao *BaseDao) Save(entity IEntityStruct) error {
+	if entity == nil {
+		return errors.New("对象不能为空")
+	}
 	columns, values, err := columnAndValue(entity)
 	if err != nil {
 		return err
 	}
 	//SQL语句
-	sqlstr, err := wrapsavesql(baseDao.config.DBType, entity, columns, values)
+	sqlstr, err := wrapSaveStructSQL(baseDao.config.DBType, entity, columns, values)
 	if err != nil {
 		return err
 	}
@@ -82,14 +84,16 @@ func (baseDao *BaseDao) Save(entity IBaseEntity) error {
 }
 
 //保存对象
-func (baseDao *BaseDao) Update(entity IBaseEntity, onlyupdatenotnull bool) error {
-
+func (baseDao *BaseDao) Update(entity IEntityStruct, onlyupdatenotnull bool) error {
+	if entity == nil {
+		return errors.New("对象不能为空")
+	}
 	columns, values, err := columnAndValue(entity)
 	if err != nil {
 		return err
 	}
 	//SQL语句
-	sqlstr, err := wrapupdatesql(baseDao.config.DBType, entity, columns, values, onlyupdatenotnull)
+	sqlstr, err := wrapUpdateStructSQL(baseDao.config.DBType, entity, columns, values, onlyupdatenotnull)
 	if err != nil {
 		return err
 	}
@@ -112,7 +116,10 @@ func (baseDao *BaseDao) Update(entity IBaseEntity, onlyupdatenotnull bool) error
 }
 
 // 根据主键删除一个对象
-func (baseDao *BaseDao) Delete(entity IBaseEntity) error {
+func (baseDao *BaseDao) Delete(entity IEntityStruct) error {
+	if entity == nil {
+		return errors.New("对象不能为空")
+	}
 	pkName := entityPKFieldName(entity)
 	value, err := util.StructFieldValue(entity, pkName)
 
@@ -120,7 +127,7 @@ func (baseDao *BaseDao) Delete(entity IBaseEntity) error {
 		return err
 	}
 	//SQL语句
-	sqlstr, err := wrapdeletesql(baseDao.config.DBType, entity)
+	sqlstr, err := wrapDeleteStructSQL(baseDao.config.DBType, entity)
 	if err != nil {
 		return err
 	}
@@ -140,8 +147,64 @@ func (baseDao *BaseDao) Delete(entity IBaseEntity) error {
 
 }
 
+//保存对象
+func (baseDao *BaseDao) SaveMap(entity IEntityMap) error {
+	if entity == nil {
+		return errors.New("对象不能为空")
+	}
+	//SQL语句
+	sqlstr, values, err := wrapSaveMapSQL(baseDao.config.DBType, entity)
+	if err != nil {
+		return err
+	}
+	fmt.Println(sqlstr)
+
+	tx, err := baseDao.dataSource.BeginTx(context.Background(), nil)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	//流弊的...,把数组展开变成多个参数的形式
+	tx.Exec(sqlstr, values...)
+
+	tx.Commit()
+
+	//fmt.Println(entity.GetTableName() + " save success")
+	return nil
+
+}
+
+//保存Map
+func (baseDao *BaseDao) UpdateMap(entity IEntityMap) error {
+	if entity == nil {
+		return errors.New("对象不能为空")
+	}
+	//SQL语句
+	sqlstr, values, err := wrapUpdateMapSQL(baseDao.config.DBType, entity)
+	if err != nil {
+		return err
+	}
+	fmt.Println(sqlstr)
+
+	tx, err := baseDao.dataSource.BeginTx(context.Background(), nil)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	//流弊的...,把数组展开变成多个参数的形式
+	tx.Exec(sqlstr, values...)
+
+	tx.Commit()
+
+	//fmt.Println(entity.GetTableName() + " update success")
+	return nil
+
+}
+
 //根据保存的对象,返回插入的语句,需要插入的字段,字段的值.
-func columnAndValue(entity IBaseEntity) ([]reflect.StructField, []interface{}, error) {
+func columnAndValue(entity IEntityStruct) ([]reflect.StructField, []interface{}, error) {
 
 	// 获取实体类的反射
 	valueOf := reflect.ValueOf(entity)
@@ -208,7 +271,7 @@ func columnAndValue(entity IBaseEntity) ([]reflect.StructField, []interface{}, e
 }
 
 //获取实体类主键属性名称
-func entityPKFieldName(entity IBaseEntity) string {
+func entityPKFieldName(entity IEntityStruct) string {
 	cacheKey := reflect.TypeOf(entity).Elem().String()
 
 	fieldName := cacheStructPKFieldNameMap[cacheKey]
