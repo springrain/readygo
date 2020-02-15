@@ -54,22 +54,19 @@ func NewDeleteFinder(tableName string) *Finder {
 	return &finder
 }
 
-//只添加SQL. finder.AppendOnlySQL(" a=1 ")
-func (finder *Finder) AppendOnlySQL(s string) *Finder {
-	if len(s) < 1 {
-		return nil
-	}
-	finder.sqlBuilder.WriteString(s)
-	return finder
-}
-
-//添加SQL和参数的值 finder.Append(" and id=? and name=? ",23123,"abc")
+//添加SQL和参数的值,第一个参数是语句,后面的参数[可选]是参数的值,顺序要正确.
+//例如: finder.Append(" and id=? and name=? ",23123,"abc")
+//只拼接SQL,例如: finder.Append(" and name=123 ")
 func (finder *Finder) Append(s string, v ...interface{}) *Finder {
 	if len(s) < 1 || len(v) < 1 {
 		return nil
 	}
-	finder.sqlBuilder.WriteString(s)
-	finder.Values = append(finder.Values, v)
+	if len(s) > 0 {
+		finder.sqlBuilder.WriteString(s)
+	}
+	if v != nil {
+		finder.Values = append(finder.Values, v)
+	}
 	return finder
 }
 

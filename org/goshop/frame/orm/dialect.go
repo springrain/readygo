@@ -93,7 +93,7 @@ func wrapUpdateStructSQL(dbType DBTYPE, entity IEntityStruct, columns []reflect.
 	sqlBuilder.WriteString(entity.GetTableName())
 	sqlBuilder.WriteString(" SET ")
 
-	//主键名称
+	//主键的值
 	var pkValue interface{}
 
 	for i := 0; i < len(columns); i++ {
