@@ -8,6 +8,16 @@ import (
 	"time"
 )
 
+//包装基础的SQL语句
+func wrapSQL(dbType DBTYPE, sqlstr string) (string, error) {
+	if dbType == DBType_MYSQL || dbType == DBType_UNKNOWN {
+		return sqlstr, nil
+	}
+	//根据数据库类型,调整SQL变量符号,例如?,? $1,$2这样的
+	sqlstr = rebind(dbType, sqlstr)
+	return sqlstr, nil
+}
+
 //包装保存Struct语句
 func wrapSaveStructSQL(dbType DBTYPE, entity IEntityStruct, columns []reflect.StructField, values []interface{}) (string, error) {
 

@@ -26,7 +26,7 @@ func main() {
 	baseDao.Save(&user)
 	baseDao.Query("select id,account from t_user")
 	user.Account = "update"
-	baseDao.Update(&user, false)
+	baseDao.Update(&user)
 	baseDao.Query("select id,account from t_user")
 
 	userMap := orm.NewEntityMap("t_user")

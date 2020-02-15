@@ -51,6 +51,34 @@ func (baseDao *BaseDao) Query(sql string) {
 	}
 }
 
+//更新Finder
+func (baseDao *BaseDao) UpdateFinder(finder *Finder) error {
+	if finder == nil {
+		return errors.New("finder不能为空")
+	}
+
+	sqlstr := finder.GetSQL()
+	var err error
+	sqlstr, err = wrapSQL(baseDao.config.DBType, sqlstr)
+	if err != nil {
+		return err
+	}
+
+	tx, err := baseDao.dataSource.BeginTx(context.Background(), nil)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	//流弊的...,把数组展开变成多个参数的形式
+	tx.Exec(sqlstr, finder.Values...)
+
+	tx.Commit()
+
+	//fmt.Println(entity.GetTableName() + " save success")
+	return nil
+}
+
 //保存Struct对象
 func (baseDao *BaseDao) Save(entity IEntityStruct) error {
 	if entity == nil {
@@ -83,8 +111,18 @@ func (baseDao *BaseDao) Save(entity IEntityStruct) error {
 
 }
 
-//保存对象
-func (baseDao *BaseDao) Update(entity IEntityStruct, onlyupdatenotnull bool) error {
+//更新struct所有属性
+func (baseDao *BaseDao) Update(entity IEntityStruct) error {
+	return baseDao.updateStruct(entity, false)
+}
+
+//更新struct不为nil的属性
+func (baseDao *BaseDao) UpdateNotNil(entity IEntityStruct) error {
+	return baseDao.updateStruct(entity, true)
+}
+
+//更新对象
+func (baseDao *BaseDao) updateStruct(entity IEntityStruct, onlyupdatenotnull bool) error {
 	if entity == nil {
 		return errors.New("对象不能为空")
 	}
