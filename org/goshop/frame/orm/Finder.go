@@ -58,9 +58,7 @@ func NewDeleteFinder(tableName string) *Finder {
 //例如: finder.Append(" and id=? and name=? ",23123,"abc")
 //只拼接SQL,例如: finder.Append(" and name=123 ")
 func (finder *Finder) Append(s string, v ...interface{}) *Finder {
-	if len(s) < 1 || len(v) < 1 {
-		return nil
-	}
+
 	if len(s) > 0 {
 		finder.sqlBuilder.WriteString(s)
 	}
