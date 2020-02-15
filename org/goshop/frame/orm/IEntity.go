@@ -24,6 +24,7 @@ type IEntityMap interface {
 type EntityStruct struct {
 }
 
+//默认数据库的主键列名
 const defaultPkName = "id"
 
 //获取表名称
