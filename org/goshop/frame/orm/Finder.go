@@ -1,7 +1,6 @@
 package orm
 
 import (
-	"errors"
 	"strings"
 )
 
@@ -74,10 +73,7 @@ func (finder *Finder) AppendFinder(f *Finder) *Finder {
 		return nil
 	}
 	//添加f的SQL
-	sqlstr, err := f.GetSQL()
-	if err != nil {
-		return nil
-	}
+	sqlstr := f.GetSQL()
 	finder.sqlBuilder.WriteString(sqlstr)
 	//添加f的值
 	finder.Values = append(finder.Values, f.Values...)
@@ -85,11 +81,12 @@ func (finder *Finder) AppendFinder(f *Finder) *Finder {
 }
 
 // 返回Finder封装的SQL语句
-func (finder *Finder) GetSQL() (string, error) {
+func (finder *Finder) GetSQL() string {
 	sqlstr := finder.sqlBuilder.String()
-	if !finder.InjectionSQL && (strings.Index(sqlstr, "'") >= 0) { //包含单引号,属于非法字符串
-		return "", errors.New("SQL语句请不要直接拼接字符串参数!!!使用标准的占位符实现,例如  finder.Append(' and id=? and name=? ','123','abc')")
+	//包含单引号,属于非法字符串
+	if !finder.InjectionSQL && (strings.Index(sqlstr, "'") >= 0) {
+		return "SQL语句请不要直接拼接字符串参数!!!使用标准的占位符实现,例如  finder.Append(' and id=? and name=? ','123','abc')"
 	}
 
-	return sqlstr, nil
+	return sqlstr
 }

@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-func Testappend(t *testing.T) {
+func TestAppend(t *testing.T) {
 	finder := NewFinder()
 	finder.Append("SELECT * FROM t_user ")
 	fmt.Println(finder.GetSQL())
