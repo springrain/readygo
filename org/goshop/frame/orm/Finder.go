@@ -61,9 +61,10 @@ func (finder *Finder) Append(s string, values ...interface{}) *Finder {
 	if values == nil || len(values) < 1 {
 		return finder
 	}
-	for _, v := range values {
-		finder.Values = append(finder.Values, v)
-	}
+	//for _, v := range values {
+	//	finder.Values = append(finder.Values, v)
+	//}
+	finder.Values = append(finder.Values, values...)
 	return finder
 }
 

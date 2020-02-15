@@ -39,7 +39,7 @@ func main() {
 
 	finder := orm.NewUpdateFinder(user.GetTableName())
 	finder.Append("acc")
-	finder.Append("ount=?", "123123")
+	finder.Append("ount=?", "adad")
 	baseDao.UpdateFinder(finder)
 
 	baseDao.Query("select id,account from t_user")
