@@ -19,10 +19,12 @@ func main() {
 
 	user := shop.User2{
 		Id:      "id",
-		Account: "user1_username",
+		Account: "test",
 	}
-
-	baseDao.Save(&user)
+	baseDao.Delete(&user)
+	//baseDao.Save(&user)
 	baseDao.Query("select id,account from t_user")
+
+	baseDao.Update(&user, false)
 
 }

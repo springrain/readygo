@@ -2,7 +2,6 @@ package util
 
 import (
 	"errors"
-	"fmt"
 	"go/ast"
 	"reflect"
 	"sync"
@@ -30,14 +29,14 @@ func StructFieldInfo(s interface{}) ([]reflect.StructField, []reflect.StructFiel
 	kind := typeOf.Kind()
 
 	if !(kind == reflect.Ptr || kind == reflect.Struct) {
-		return nil, nil, errors.New("entity必须是Struct或者*Struct类型")
+		return nil, nil, errors.New("必须是Struct或者*Struct类型")
 	}
 
 	if kind == reflect.Ptr {
 		//获取指针下的Struct类型
 		typeOf = typeOf.Elem()
 		if typeOf.Kind() != reflect.Struct {
-			return nil, nil, errors.New("entity必须是Struct或者*Struct类型")
+			return nil, nil, errors.New("必须是Struct或者*Struct类型")
 		}
 	}
 
@@ -84,7 +83,7 @@ func StructFieldInfo(s interface{}) ([]reflect.StructField, []reflect.StructFiel
 	//这个函数的入参、出参的类型都已经固定，不能修改
 	//可以在函数体内编写自己的代码,调用map中的k,v
 	f := func(k, v interface{}) bool {
-		fmt.Println(k, ":", v)
+		// fmt.Println(k, ":", v)
 		field := v.(reflect.StructField)
 		if ast.IsExported(field.Name) { //如果是可以输出的
 			exPortStructFields = append(exPortStructFields, field)
@@ -148,5 +147,34 @@ func recursiveAnonymousStruct(allFieldMap *sync.Map, anonymous []reflect.StructF
 		recursiveAnonymousStruct(allFieldMap, anonymousField)
 
 	}
+
+}
+
+//获取指定字段的值
+func StructFieldValue(s interface{}, fieldName string) (interface{}, error) {
+
+	if s == nil {
+		return nil, errors.New("数据为空")
+	}
+	//entity的s类型
+	valueOf := reflect.ValueOf(s)
+
+	kind := valueOf.Kind()
+	if !(kind == reflect.Ptr || kind == reflect.Struct) {
+		return nil, errors.New("必须是Struct或者*Struct类型")
+	}
+
+	if kind == reflect.Ptr {
+		//获取指针下的Struct类型
+		valueOf = valueOf.Elem()
+		if valueOf.Kind() != reflect.Struct {
+			return nil, errors.New("必须是Struct或者*Struct类型")
+		}
+	}
+
+	//FieldByName方法返回的是reflect.Value类型,调用Interface()方法,返回原始类型的数据值
+	value := valueOf.FieldByName(fieldName).Interface()
+
+	return value, nil
 
 }

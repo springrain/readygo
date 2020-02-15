@@ -25,7 +25,7 @@ func wrapsavesql(dbType DBTYPE, entity IBaseEntity, columns []reflect.StructFiel
 
 	for i := 0; i < len(columns); i++ {
 		field := columns[i]
-		if strings.EqualFold(field.Name, entity.GetPkName()) { //如果是主键
+		if field.Name == entityPKFieldName(entity) { //如果是主键
 			pkKind := field.Type.Kind()
 
 			if !(pkKind == reflect.String || pkKind == reflect.Int) { //只支持字符串和int类型的主键
@@ -96,13 +96,23 @@ func wrapupdatesql(dbType DBTYPE, entity IBaseEntity, columns []reflect.StructFi
 
 	for i := 0; i < len(columns); i++ {
 		field := columns[i]
-		if strings.EqualFold(field.Name, entity.GetPkName()) { //如果是主键
+		if field.Name == entityPKFieldName(entity) { //如果是主键
 			pkValue = values[i]
-			//去掉这一列,后面处理
+			//去掉这一列,最后处理主键
 			columns = append(columns[:i], columns[i+1:]...)
 			values = append(values[:i], values[i+1:]...)
 			i = i - 1
 			continue
+		}
+
+		//只更新不为nil的字段
+		if onlyupdatenotnull && (values[i] == nil) {
+			//去掉这一列,不再处理
+			columns = append(columns[:i], columns[i+1:]...)
+			values = append(values[:i], values[i+1:]...)
+			i = i - 1
+			continue
+
 		}
 
 		sqlBuilder.WriteString(field.Tag.Get(tagColumnName))
@@ -115,7 +125,7 @@ func wrapupdatesql(dbType DBTYPE, entity IBaseEntity, columns []reflect.StructFi
 	sqlstr := sqlBuilder.String()
 	sqlstr = sqlstr[:len(sqlstr)-1]
 
-	sqlstr = sqlstr + " WHERE " + entity.GetPkName() + "=?"
+	sqlstr = sqlstr + " WHERE " + entity.GetPKColumnName() + "=?"
 
 	if dbType == DBType_MYSQL || dbType == DBType_UNKNOWN {
 		return sqlstr, nil
@@ -123,6 +133,27 @@ func wrapupdatesql(dbType DBTYPE, entity IBaseEntity, columns []reflect.StructFi
 	//根据数据库类型,调整SQL变量符号,例如?,? $1,$2这样的
 	sqlstr = rebind(dbType, sqlstr)
 	return sqlstr, nil
+}
+
+//包装删除语句
+func wrapdeletesql(dbType DBTYPE, entity IBaseEntity) (string, error) {
+
+	//SQL语句的构造器
+	var sqlBuilder strings.Builder
+	sqlBuilder.WriteString("DELETE FROM ")
+	sqlBuilder.WriteString(entity.GetTableName())
+	sqlBuilder.WriteString(" WHERE ")
+	sqlBuilder.WriteString(entity.GetPKColumnName())
+	sqlBuilder.WriteString("=?")
+	sqlstr := sqlBuilder.String()
+
+	if dbType == DBType_MYSQL || dbType == DBType_UNKNOWN {
+		return sqlstr, nil
+	}
+	//根据数据库类型,调整SQL变量符号,例如?,? $1,$2这样的
+	sqlstr = rebind(dbType, sqlstr)
+	return sqlstr, nil
+
 }
 
 //根据数据库类型,调整SQL变量符号,例如?,? $1,$2这样的

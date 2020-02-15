@@ -16,7 +16,15 @@ var allowTypeMap = map[reflect.Kind]bool{
 	reflect.String:  true,
 }
 
-const tagColumnName = "column"
+const (
+	tagColumnName = "column"
+)
+
+//缓存数据列
+var cacheDBColumnMap = make(map[string][]reflect.StructField)
+
+//缓存主键名称
+var cacheStructPKFieldNameMap = make(map[string]string)
 
 //数据库操作基类,隔离原生操作数据库API入口,所有数据库操作必须通过BaseDao进行.
 type BaseDao struct {
@@ -24,6 +32,7 @@ type BaseDao struct {
 	dataSource *dataSource
 }
 
+//创建baseDao
 func NewBaseDao(config *DataSourceConfig) (*BaseDao, error) {
 	dataSource, err := newDataSource(config)
 	return &BaseDao{config, dataSource}, err
@@ -62,15 +71,71 @@ func (baseDao *BaseDao) Save(entity IBaseEntity) error {
 	}
 	defer tx.Rollback()
 
-	// 测试,执行删除
-	tx.Exec("DELETE FROM " + entity.GetTableName())
+	//流弊的...,把数组展开变成多个参数的形式
+	tx.Exec(sqlstr, values...)
+
+	tx.Commit()
+
+	//fmt.Println(entity.GetTableName() + " save success")
+	return nil
+
+}
+
+//保存对象
+func (baseDao *BaseDao) Update(entity IBaseEntity, onlyupdatenotnull bool) error {
+
+	columns, values, err := columnAndValue(entity)
+	if err != nil {
+		return err
+	}
+	//SQL语句
+	sqlstr, err := wrapupdatesql(baseDao.config.DBType, entity, columns, values, onlyupdatenotnull)
+	if err != nil {
+		return err
+	}
+	fmt.Println(sqlstr)
+
+	tx, err := baseDao.dataSource.BeginTx(context.Background(), nil)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
 
 	//流弊的...,把数组展开变成多个参数的形式
 	tx.Exec(sqlstr, values...)
 
 	tx.Commit()
 
-	fmt.Println(entity.GetTableName() + " save success")
+	//fmt.Println(entity.GetTableName() + " update success")
+	return nil
+
+}
+
+// 根据主键删除一个对象
+func (baseDao *BaseDao) Delete(entity IBaseEntity) error {
+	pkName := entityPKFieldName(entity)
+	value, err := util.StructFieldValue(entity, pkName)
+
+	if err != nil {
+		return err
+	}
+	//SQL语句
+	sqlstr, err := wrapdeletesql(baseDao.config.DBType, entity)
+	if err != nil {
+		return err
+	}
+	fmt.Println(sqlstr)
+
+	tx, err := baseDao.dataSource.BeginTx(context.Background(), nil)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	tx.Exec(sqlstr, value)
+
+	tx.Commit()
+
 	return nil
 
 }
@@ -83,13 +148,19 @@ func columnAndValue(entity IBaseEntity) ([]reflect.StructField, []interface{}, e
 
 	//获取Kind,验证是否是指针,只能是*Struct结构
 	if valueOf.Kind() != reflect.Ptr {
-		return nil, nil, errors.New("只能保存*Struct类型")
+		return nil, nil, errors.New("只能是*Struct类型")
 	}
 
-	//获取实体类的输出字段和私有字段
-	exPortStructFields, _, err := util.StructFieldInfo(entity)
-	if err != nil {
-		return nil, nil, err
+	//先从本地缓存中查找
+	entityName := reflect.TypeOf(entity).Elem().String()
+	exPortStructFields := cacheDBColumnMap[entityName]
+	if len(exPortStructFields) < 1 { //缓存不存在
+		//获取实体类的输出字段和私有字段
+		var err error
+		exPortStructFields, _, err = util.StructFieldInfo(entity)
+		if err != nil {
+			return nil, nil, err
+		}
 	}
 
 	//实体类公开字段的长度
@@ -115,6 +186,12 @@ func columnAndValue(entity IBaseEntity) ([]reflect.StructField, []interface{}, e
 		if len(tagValue) < 1 {
 			continue
 		}
+
+		//缓存主键的属性名
+		if tagValue == entity.GetPKColumnName() {
+			cacheStructPKFieldNameMap[entityName] = field.Name
+		}
+
 		columns = append(columns, field)
 		//FieldByName方法返回的是reflect.Value类型,调用Interface()方法,返回原始类型的数据值
 		value := valueOf.FieldByName(field.Name).Interface()
@@ -123,6 +200,24 @@ func columnAndValue(entity IBaseEntity) ([]reflect.StructField, []interface{}, e
 
 	}
 
+	//缓存数据库的列
+	cacheDBColumnMap[entityName] = columns
+
 	return columns, values, nil
+
+}
+
+//获取实体类主键属性名称
+func entityPKFieldName(entity IBaseEntity) string {
+	cacheKey := reflect.TypeOf(entity).Elem().String()
+
+	fieldName := cacheStructPKFieldNameMap[cacheKey]
+	if len(fieldName) > 0 {
+		return fieldName
+	}
+	columnAndValue(entity)
+	pkName := cacheStructPKFieldNameMap[cacheKey]
+
+	return pkName
 
 }

@@ -12,8 +12,8 @@ const (
 type IBaseEntity interface {
 	//获取表名称
 	GetTableName() string
-	//获取主键名称,需要兼容Map,所以不放到tag里了
-	GetPkName() string
+	//获取数据库表的主键字段名称.因为要兼容Map,只能是数据库的字段名称.对应的struct 属性field,使用cacheStructPKFieldNameMap缓存
+	GetPKColumnName() string
 	//兼容主键序列.如果有值,优先级最高
 	GetPkSequence() string
 	//Struct对象类型和Map类型.两者都是Struct类型,一个是对象载体需要反射,一个是Map载体,不需要反射
@@ -34,9 +34,9 @@ func (entity *EntityStruct) GetTableName() string {
 	return ""
 }
 
-//获取主键名称,需要兼容Map,所以不放到tag里了
-func (entity *EntityStruct) GetPkName() string {
-	return "Id"
+//获取数据库表的主键字段名称.因为要兼容Map,只能是数据库的字段名称.对应的struct 属性field,使用cacheStructPKFieldNameMap缓存
+func (entity *EntityStruct) GetPKColumnName() string {
+	return "id"
 }
 
 //兼容主键序列.如果有值,优先级最高
@@ -72,9 +72,9 @@ func (entity *EntityMap) GetTableName() string {
 	return ""
 }
 
-//获取主键名称,需要兼容Map,所以不放到tag里了
-func (entity *EntityMap) GetPkName() string {
-	return "Id"
+//获取数据库表的主键字段名称.因为要兼容Map,只能是数据库的字段名称.对应的struct 属性field,使用cacheStructPKFieldNameMap缓存
+func (entity *EntityMap) GetPKColumnName() string {
+	return "id"
 }
 
 //兼容主键序列.如果有值,优先级最高
