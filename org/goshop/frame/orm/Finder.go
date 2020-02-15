@@ -54,7 +54,7 @@ func NewDeleteFinder(tableName string) *Finder {
 	return &finder
 }
 
-//只添加SQL
+//只添加SQL. finder.AppendOnlySQL(" a=1 ")
 func (finder *Finder) AppendOnlySQL(s string) *Finder {
 	if len(s) < 1 {
 		return nil
@@ -63,7 +63,7 @@ func (finder *Finder) AppendOnlySQL(s string) *Finder {
 	return finder
 }
 
-//添加SQL和参数的值
+//添加SQL和参数的值 finder.Append(" and id=? and name=? ",23123,"abc")
 func (finder *Finder) Append(s string, v ...interface{}) *Finder {
 	if len(s) < 1 || len(v) < 1 {
 		return nil
@@ -73,7 +73,7 @@ func (finder *Finder) Append(s string, v ...interface{}) *Finder {
 	return finder
 }
 
-//添加另一个Finder
+//添加另一个Finder finder.AppendFinder(f)
 func (finder *Finder) AppendFinder(f *Finder) *Finder {
 	if f == nil {
 		return nil
