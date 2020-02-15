@@ -45,6 +45,8 @@ func (entity *EntityStruct) GetPkSequence() string {
 type EntityMap struct {
 	//表名
 	tableName string
+	//主键列名
+	pkColumnName string
 	//数据库字段
 	DBFieldMap map[string]interface{}
 	//自定义的kv
@@ -57,6 +59,7 @@ func NewEntityMap(tbName string) EntityMap {
 	entityMap.DBFieldMap = map[string]interface{}{}
 	entityMap.TransientMap = map[string]interface{}{}
 	entityMap.tableName = tbName
+	entityMap.pkColumnName = "id"
 	return entityMap
 }
 
@@ -65,9 +68,13 @@ func (entity *EntityMap) GetTableName() string {
 	return entity.tableName
 }
 
+func (entity *EntityMap) SetPKColumnName(pkName string) {
+	entity.pkColumnName = pkName
+}
+
 //获取数据库表的主键字段名称.因为要兼容Map,只能是数据库的字段名称.对应的struct 属性field,使用cacheStructPKFieldNameMap缓存
 func (entity *EntityMap) GetPKColumnName() string {
-	return "id"
+	return entity.pkColumnName
 }
 
 //针对Map类型,记录数据库字段
