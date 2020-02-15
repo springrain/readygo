@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"goshop/org/goshop/frame/orm"
 	"goshop/shop"
 )
@@ -38,8 +37,11 @@ func main() {
 	baseDao.UpdateMap(&userMap)
 	baseDao.Query("select id,account from t_user")
 
-	finder := orm.NewFinder()
-	finder.Append("SELECT * sfsdf ")
-	fmt.Println(finder.GetSQL())
+	finder := orm.NewUpdateFinder(user.GetTableName())
+	finder.Append("acc")
+	finder.Append("ount=?", "123123")
+	baseDao.UpdateFinder(finder)
+
+	baseDao.Query("select id,account from t_user")
 
 }

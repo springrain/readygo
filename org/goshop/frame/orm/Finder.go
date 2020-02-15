@@ -20,48 +20,48 @@ type Finder struct {
 // 初始化一个Finder,生成一个空的Finder
 func NewFinder() *Finder {
 	finder := Finder{}
-	finder.Values = []interface{}{}
+	finder.Values = make([]interface{}, 0)
 	return &finder
 }
 
 //根据表名初始化查询的Finder, SELECT * FROM tableName
 func NewSelectFinder(tableName string) *Finder {
-	finder := Finder{}
-	finder.Values = []interface{}{}
+	finder := NewFinder()
 	finder.sqlBuilder.WriteString("SELECT * FROM ")
 	finder.sqlBuilder.WriteString(tableName)
-	return &finder
+	return finder
 }
 
 //根据表名初始化更新的Finder,  UPDATE tableName SET
 func NewUpdateFinder(tableName string) *Finder {
-	finder := Finder{}
-	finder.Values = []interface{}{}
+	finder := NewFinder()
 	finder.sqlBuilder.WriteString("UPDATE ")
 	finder.sqlBuilder.WriteString(tableName)
 	finder.sqlBuilder.WriteString(" SET ")
-	return &finder
+	return finder
 }
 
 //根据表名初始化删除的Finder,  DELETE FROM tableName WHERE
 func NewDeleteFinder(tableName string) *Finder {
-	finder := Finder{}
-	finder.Values = []interface{}{}
+	finder := NewFinder()
 	finder.sqlBuilder.WriteString("DELETE FROM ")
 	finder.sqlBuilder.WriteString(tableName)
 	finder.sqlBuilder.WriteString(" WHERE ")
-	return &finder
+	return finder
 }
 
 //添加SQL和参数的值,第一个参数是语句,后面的参数[可选]是参数的值,顺序要正确.
 //例如: finder.Append(" and id=? and name=? ",23123,"abc")
 //只拼接SQL,例如: finder.Append(" and name=123 ")
-func (finder *Finder) Append(s string, v ...interface{}) *Finder {
+func (finder *Finder) Append(s string, values ...interface{}) *Finder {
 
 	if len(s) > 0 {
 		finder.sqlBuilder.WriteString(s)
 	}
-	if v != nil {
+	if values == nil || len(values) < 1 {
+		return finder
+	}
+	for _, v := range values {
 		finder.Values = append(finder.Values, v)
 	}
 	return finder
