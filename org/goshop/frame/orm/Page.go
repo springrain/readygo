@@ -1,13 +1,48 @@
 package orm
 
 type Page struct {
-	PageNo          int
-	PageSize        int
-	TotalCount      int
-	PageCount       int
-	FirstPage       bool
-	HasPrev         bool
-	HasNext         bool
-	LastPage        bool
-	selectpagecount bool
+	//当前页码,从1开始
+	PageNo int
+	//每页多少条,默认20条
+	PageSize int
+	//数据总条数
+	TotalCount int
+	//总共多少页
+	PageCount int
+	//是否是第一页
+	FirstPage bool
+	//是否有上一页
+	HasPrev bool
+	//是否有下一页
+	HasNext bool
+	//是否是最后一页
+	LastPage bool
+	//是否自动查询总页数,默认true
+	SelectPageCount bool
+}
+
+//创建Page对象
+func NewPage() Page {
+	page := Page{}
+	page.PageNo = 1
+	page.PageSize = 20
+	page.SelectPageCount = true
+	return page
+}
+
+//设置总条数,计算其他值
+func (page *Page) SetTotalCount(total int) {
+	page.TotalCount = total
+	page.PageCount = (page.TotalCount + page.PageSize - 1) / page.PageSize
+	if page.PageNo >= page.PageCount {
+		page.LastPage = true
+	} else {
+		page.HasNext = true
+	}
+	if page.PageNo > 1 {
+		page.HasPrev = true
+	} else {
+		page.FirstPage = true
+	}
+
 }
