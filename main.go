@@ -1,7 +1,7 @@
 package main
 
 import (
-	"goshop/org/goshop/frame/orm"
+	"goshop/org/springrain/orm"
 	"goshop/shop"
 )
 

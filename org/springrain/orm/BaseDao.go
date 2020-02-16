@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"goshop/org/goshop/frame/util"
+	"goshop/org/springrain/util"
 	"reflect"
 )
 
@@ -297,6 +297,7 @@ func columnAndValue(entity IEntityStruct) ([]reflect.StructField, []interface{},
 	if valueOf.Kind() != reflect.Ptr {
 		return nil, nil, errors.New("只能是*Struct类型")
 	}
+	//reflect.Indirect
 
 	//先从本地缓存中查找
 	entityName := reflect.TypeOf(entity).Elem().String()

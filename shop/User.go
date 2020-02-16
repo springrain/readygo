@@ -1,6 +1,6 @@
 package shop
 
-import "goshop/org/goshop/frame/orm"
+import "goshop/org/springrain/orm"
 
 type User struct {
 	orm.EntityStruct
