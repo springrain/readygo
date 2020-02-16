@@ -39,7 +39,7 @@ func NewBaseDao(config *DataSourceConfig) (*BaseDao, error) {
 }
 
 //根据Finder和封装为指定的entity类型,entity必须是*struct类型
-func (baseDao *BaseDao) Query(finder *Finder, entity IEntityStruct) error {
+func (baseDao *BaseDao) QueryStruct(finder *Finder, entity IEntityStruct) error {
 	//检查Kind
 	checke := checkEntityKind(entity)
 	if checke != nil {
@@ -101,6 +101,64 @@ func (baseDao *BaseDao) Query(finder *Finder, entity IEntityStruct) error {
 	return nil
 }
 
+//根据Finder查询,封装Map
+func (baseDao *BaseDao) QueryMap(finder *Finder) (map[string]interface{}, error) {
+
+	//获取到Finder的语句
+	sqlstr, err := wrapSQL(baseDao.config.DBType, finder.GetSQL())
+	if err != nil {
+		return nil, err
+	}
+	//根据语句和参数查询
+	rows, e := baseDao.dataSource.Query(sqlstr, finder.Values...)
+	if e != nil {
+		return nil, e
+	}
+	//记录条数,本方法只能查询一个对象
+	i := 0
+	//数据库返回的列名
+	columns, cne := rows.Columns()
+	if cne != nil {
+		return nil, cne
+	}
+	result := make(map[string]interface{})
+	//循环遍历结果集
+	for rows.Next() {
+		//只能查询出一条,如果查询出多条,只取第一条,然后抛错
+		i++
+		if i > 1 {
+			i++
+			break
+		}
+		i++
+		//接收数据库返回的值,返回的字段值都是[]byte直接数组,需要使用指针接收.比较恶心......
+
+		values := make([]interface{}, len(columns))
+		for i := range values {
+			values[i] = new(interface{})
+		}
+
+		err = rows.Scan(values...)
+		if err != nil {
+			return nil, err
+		}
+
+		for i, column := range columns {
+			result[column] = *(values[i].(*interface{}))
+		}
+
+	}
+
+	//如果没有查询出数据
+	if i == 0 {
+		return nil, errors.New("没有查询出数据")
+	} else if i > 1 { //查询出多条数据,返回第一条
+		return result, errors.New("查询出多条数据")
+	}
+
+	return result, nil
+}
+
 //更新Finder
 func (baseDao *BaseDao) UpdateFinder(finder *Finder) error {
 	if finder == nil {
@@ -130,7 +188,7 @@ func (baseDao *BaseDao) UpdateFinder(finder *Finder) error {
 }
 
 //保存Struct对象
-func (baseDao *BaseDao) Save(entity IEntityStruct) error {
+func (baseDao *BaseDao) SaveStruct(entity IEntityStruct) error {
 	if entity == nil {
 		return errors.New("对象不能为空")
 	}
@@ -161,48 +219,17 @@ func (baseDao *BaseDao) Save(entity IEntityStruct) error {
 }
 
 //更新struct所有属性
-func (baseDao *BaseDao) Update(entity IEntityStruct) error {
-	return baseDao.updateStruct(entity, false)
+func (baseDao *BaseDao) UpdateStruct(entity IEntityStruct) error {
+	return updateStructFunc(baseDao, entity, false)
 }
 
 //更新struct不为nil的属性
-func (baseDao *BaseDao) UpdateNotNil(entity IEntityStruct) error {
-	return baseDao.updateStruct(entity, true)
-}
-
-//更新对象
-func (baseDao *BaseDao) updateStruct(entity IEntityStruct, onlyupdatenotnull bool) error {
-	if entity == nil {
-		return errors.New("对象不能为空")
-	}
-	columns, values, err := columnAndValue(entity)
-	if err != nil {
-		return err
-	}
-	//SQL语句
-	sqlstr, err := wrapUpdateStructSQL(baseDao.config.DBType, entity, columns, values, onlyupdatenotnull)
-	if err != nil {
-		return err
-	}
-
-	tx, err := baseDao.dataSource.BeginTx(context.Background(), nil)
-	if err != nil {
-		return err
-	}
-	defer tx.Rollback()
-
-	//流弊的...,把数组展开变成多个参数的形式
-	tx.Exec(sqlstr, values...)
-
-	tx.Commit()
-
-	//fmt.Println(entity.GetTableName() + " update success")
-	return nil
-
+func (baseDao *BaseDao) UpdateStructNotNil(entity IEntityStruct) error {
+	return updateStructFunc(baseDao, entity, true)
 }
 
 // 根据主键删除一个对象
-func (baseDao *BaseDao) Delete(entity IEntityStruct) error {
+func (baseDao *BaseDao) DeleteStruct(entity IEntityStruct) error {
 	if entity == nil {
 		return errors.New("对象不能为空")
 	}
@@ -445,6 +472,37 @@ func wrapStruct(columns []string, values [][]byte, entity IEntityStruct) error {
 
 	}
 
+	return nil
+
+}
+
+//更新对象
+func updateStructFunc(baseDao *BaseDao, entity IEntityStruct, onlyupdatenotnull bool) error {
+	if entity == nil {
+		return errors.New("对象不能为空")
+	}
+	columns, values, err := columnAndValue(entity)
+	if err != nil {
+		return err
+	}
+	//SQL语句
+	sqlstr, err := wrapUpdateStructSQL(baseDao.config.DBType, entity, columns, values, onlyupdatenotnull)
+	if err != nil {
+		return err
+	}
+
+	tx, err := baseDao.dataSource.BeginTx(context.Background(), nil)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	//流弊的...,把数组展开变成多个参数的形式
+	tx.Exec(sqlstr, values...)
+
+	tx.Commit()
+
+	//fmt.Println(entity.GetTableName() + " update success")
 	return nil
 
 }
