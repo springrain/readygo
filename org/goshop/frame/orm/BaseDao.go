@@ -58,10 +58,14 @@ func (baseDao *BaseDao) Query(finder *Finder, entity IEntityStruct) error {
 	//记录条数,本方法只能查询一个对象
 	i := 0
 	//数据库返回的列名
-	columns, cne := rows.Columns()
-	if cne != nil {
-		return cne
-	}
+	/*
+		columns, cne := rows.Columns()
+		if cne != nil {
+			return cne
+		}
+	*/
+	columns := []string{"id", "account"}
+
 	//循环遍历结果集
 	for rows.Next() {
 		//只能查询出一条,如果查询出多条,只取第一条,然后抛错
@@ -71,10 +75,18 @@ func (baseDao *BaseDao) Query(finder *Finder, entity IEntityStruct) error {
 			break
 		}
 		i++
-		//接收数据库返回的值
-		values := make([]interface{}, len(columns))
-		rows.Scan(values...)
-		//根据列明和值,包装成Struct对象
+		//接收数据库返回的值,返回的字段值都是[]byte直接数组,需要使用指针接收.比较恶心......
+		values := make([][]byte, len(columns))
+		//使用指针类型接收字段值,需要使用interface{}包装一下
+		scans := make([]interface{}, len(columns))
+		//包装[]byte的指针地址包装
+		for j := range values {
+			scans[j] = &values[j]
+		}
+		//接收数据库返回值,之后values就有值了
+		rows.Scan(scans...)
+
+		//根据列名和[]byte值,包装成Struct对象
 		wse := wrapStruct(columns, values, entity)
 		if wse != nil {
 			return wse
@@ -393,8 +405,8 @@ func checkEntityKind(entity IEntityStruct) error {
 	return nil
 }
 
-//根据数据库返回的sql.Rows,查询出列名和对应的值
-func wrapStruct(columns []string, values []interface{}, entity IEntityStruct) error {
+//根据数据库返回的sql.Rows,查询出列名和对应的值.
+func wrapStruct(columns []string, values [][]byte, entity IEntityStruct) error {
 	checke := checkEntityKind(entity)
 	if checke != nil {
 		return checke
@@ -418,7 +430,7 @@ func wrapStruct(columns []string, values []interface{}, entity IEntityStruct) er
 			continue
 		}
 		//给字段赋值
-		valueOf.FieldByName(fieldName).Set(reflect.ValueOf(values[i]))
+		valueOf.FieldByName(fieldName).Set(reflect.ValueOf(string(values[i])))
 
 	}
 
