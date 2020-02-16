@@ -38,17 +38,83 @@ func NewBaseDao(config *DataSourceConfig) (*BaseDao, error) {
 	return &BaseDao{config, dataSource}, err
 }
 
-func (baseDao *BaseDao) Query(sql string) {
-	rows, err := baseDao.dataSource.Query(sql)
+//检查entity类型必须是*struct类型
+func checkEntityKind(entity IEntityStruct) error {
+	if entity == nil {
+		return errors.New("参数不能为空,必须是*struct类型")
+	}
+	typeOf := reflect.TypeOf(entity)
+	if typeOf.Kind() != reflect.Ptr { //如果不是指针
+		return errors.New("必须是*struct类型")
+	}
+	typeOf = typeOf.Elem()
+	if typeOf.Kind() != reflect.Struct { //如果不是指针
+		return errors.New("必须是*struct类型")
+	}
+	return nil
+}
+
+//根据数据库返回的sql.Rows,查询出列名和对应的值
+func wrapStruct(columns []string, values []interface{}, entity IEntityStruct) error {
+	checke := checkEntityKind(entity)
+	if checke != nil {
+		return checke
+	}
+
+}
+
+//根据Finder和封装为指定的entity类型,entity必须是*struct类型
+func (baseDao *BaseDao) Query(finder *Finder, entity IEntityStruct) error {
+	//检查Kind
+	checke := checkEntityKind(entity)
+	if checke != nil {
+		return checke
+	}
+	//获取到Finder的语句
+	sqlstr, err := wrapSQL(baseDao.config.DBType, finder.GetSQL())
 	if err != nil {
-		return
+		return err
 	}
+	//根据语句和参数查询
+	rows, e := baseDao.dataSource.Query(sqlstr, finder.Values...)
+	if e != nil {
+		return e
+	}
+	//记录条数,本方法只能查询一个对象
+	i := 0
+	//数据库返回的列名
+	columns, cne := rows.Columns()
+	if cne != nil {
+		return cne
+	}
+	//循环遍历结果集
 	for rows.Next() {
-		var id string
-		var account string
-		rows.Scan(&id, &account)
-		fmt.Println(id + ":" + account)
+		//只能查询出一条,如果查询出多条,只取第一条,然后抛错
+		i++
+		if i > 1 {
+			i++
+			break
+		}
+		i++
+		//接收数据库返回的值
+		values := make([]interface{}, len(columns))
+		rows.Scan(values...)
+		//根据列明和值,包装成Struct对象
+		wrape := wrapStruct(columns, values, entity)
+		if wrape != nil {
+			return wrape
+		}
+
 	}
+
+	//如果没有查询出数据
+	if i == 0 {
+		return errors.New("没有查询出数据")
+	} else if i > 1 { //查询出多条数据
+		return errors.New("查询出多条数据")
+	}
+
+	return nil
 }
 
 //更新Finder
@@ -223,7 +289,7 @@ func (baseDao *BaseDao) UpdateMap(entity IEntityMap) error {
 	if err != nil {
 		return err
 	}
-	fmt.Println(sqlstr)
+	//fmt.Println(sqlstr)
 
 	tx, err := baseDao.dataSource.BeginTx(context.Background(), nil)
 	if err != nil {
