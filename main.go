@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"goshop/org/goshop/frame/orm"
 	"goshop/shop"
 )
@@ -24,12 +25,13 @@ func main() {
 
 	finder := orm.NewSelectFinder(user.GetTableName())
 
-	baseDao.Delete(&user)
-	baseDao.Save(&user)
+	//baseDao.Delete(&user)
+	//baseDao.Save(&user)
 	baseDao.Query(finder, &user)
 	user.Account = "update"
 	baseDao.Update(&user)
 	baseDao.Query(finder, &user)
+	fmt.Println(user)
 
 	userMap := orm.NewEntityMap("t_user")
 

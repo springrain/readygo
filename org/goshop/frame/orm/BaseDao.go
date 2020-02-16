@@ -429,8 +429,22 @@ func wrapStruct(columns []string, values [][]byte, entity IEntityStruct) error {
 		if len(fieldName) < 1 { //不存在列名,可以不接收
 			continue
 		}
-		//给字段赋值
-		valueOf.FieldByName(fieldName).Set(reflect.ValueOf(string(values[i])))
+
+		v := valueOf.FieldByName(fieldName)
+		if len(values[i]) < 1 { //数据返回的是空
+			continue
+		} else {
+
+		}
+
+		kind := v.Type().Kind()
+		if !allowTypeMap[kind] { //不允许的类型
+			continue
+		}
+		if kind == reflect.String { //string 类型
+			//给字段赋值
+			v.Set(reflect.ValueOf(string(values[i])))
+		}
 
 	}
 
