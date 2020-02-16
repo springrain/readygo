@@ -24,10 +24,20 @@ func NewFinder() *Finder {
 	return &finder
 }
 
-//根据表名初始化查询的Finder, SELECT * FROM tableName
-func NewSelectFinder(tableName string) *Finder {
+//根据表名初始化查询的Finder
+//NewSelectFinder("tableName") SELECT * FROM tableName
+//NewSelectFinder("tableName", "id") SELECT id FROM tableName
+func NewSelectFinder(tableName string, strs ...string) *Finder {
 	finder := NewFinder()
-	finder.sqlBuilder.WriteString("SELECT * FROM ")
+	finder.sqlBuilder.WriteString("SELECT ")
+	if len(strs) > 0 {
+		for _, str := range strs {
+			finder.sqlBuilder.WriteString(str)
+		}
+	} else {
+		finder.sqlBuilder.WriteString("*")
+	}
+	finder.sqlBuilder.WriteString(" FROM ")
 	finder.sqlBuilder.WriteString(tableName)
 	return finder
 }
