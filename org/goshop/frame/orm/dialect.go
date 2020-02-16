@@ -85,12 +85,7 @@ func wrapSaveStructSQL(dbType DBTYPE, entity IEntityStruct, columns []reflect.St
 	}
 	sqlstr = sqlstr + ")" + valuestr + ")"
 
-	if dbType == DBType_MYSQL || dbType == DBType_UNKNOWN {
-		return sqlstr, nil
-	}
-	//根据数据库类型,调整SQL变量符号,例如?,? $1,$2这样的
-	sqlstr = rebind(dbType, sqlstr)
-	return sqlstr, nil
+	return wrapSQL(dbType, sqlstr)
 
 }
 
@@ -139,12 +134,7 @@ func wrapUpdateStructSQL(dbType DBTYPE, entity IEntityStruct, columns []reflect.
 
 	sqlstr = sqlstr + " WHERE " + entity.GetPKColumnName() + "=?"
 
-	if dbType == DBType_MYSQL || dbType == DBType_UNKNOWN {
-		return sqlstr, nil
-	}
-	//根据数据库类型,调整SQL变量符号,例如?,? $1,$2这样的
-	sqlstr = rebind(dbType, sqlstr)
-	return sqlstr, nil
+	return wrapSQL(dbType, sqlstr)
 }
 
 //包装删除Struct语句
@@ -159,12 +149,7 @@ func wrapDeleteStructSQL(dbType DBTYPE, entity IEntityStruct) (string, error) {
 	sqlBuilder.WriteString("=?")
 	sqlstr := sqlBuilder.String()
 
-	if dbType == DBType_MYSQL || dbType == DBType_UNKNOWN {
-		return sqlstr, nil
-	}
-	//根据数据库类型,调整SQL变量符号,例如?,? $1,$2这样的
-	sqlstr = rebind(dbType, sqlstr)
-	return sqlstr, nil
+	return wrapSQL(dbType, sqlstr)
 
 }
 
@@ -206,11 +191,11 @@ func wrapSaveMapSQL(dbType DBTYPE, entity IEntityMap) (string, []interface{}, er
 	}
 	sqlstr = sqlstr + ")" + valuestr + ")"
 
-	if dbType == DBType_MYSQL || dbType == DBType_UNKNOWN {
-		return sqlstr, values, nil
+	var e error
+	sqlstr, e = wrapSQL(dbType, sqlstr)
+	if e != nil {
+		return "", nil, e
 	}
-	//根据数据库类型,调整SQL变量符号,例如?,? $1,$2这样的
-	sqlstr = rebind(dbType, sqlstr)
 	return sqlstr, values, nil
 }
 
@@ -251,11 +236,11 @@ func wrapUpdateMapSQL(dbType DBTYPE, entity IEntityMap) (string, []interface{}, 
 
 	sqlstr = sqlstr + " WHERE " + entity.GetPKColumnName() + "=?"
 
-	if dbType == DBType_MYSQL || dbType == DBType_UNKNOWN {
-		return sqlstr, values, nil
+	var e error
+	sqlstr, e = wrapSQL(dbType, sqlstr)
+	if e != nil {
+		return "", nil, e
 	}
-	//根据数据库类型,调整SQL变量符号,例如?,? $1,$2这样的
-	sqlstr = rebind(dbType, sqlstr)
 	return sqlstr, values, nil
 }
 
