@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"goshop/org/goshop/frame/orm"
 	"goshop/shop"
 )
@@ -31,7 +30,6 @@ func main() {
 	user.Account = "update"
 	baseDao.Update(&user)
 	baseDao.Query(finder, &user)
-	fmt.Println(user)
 
 	userMap := orm.NewEntityMap("t_user")
 

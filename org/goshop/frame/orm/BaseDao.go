@@ -58,14 +58,10 @@ func (baseDao *BaseDao) Query(finder *Finder, entity IEntityStruct) error {
 	//记录条数,本方法只能查询一个对象
 	i := 0
 	//数据库返回的列名
-	/*
-		columns, cne := rows.Columns()
-		if cne != nil {
-			return cne
-		}
-	*/
-	columns := []string{"id", "account"}
-
+	columns, cne := rows.Columns()
+	if cne != nil {
+		return cne
+	}
 	//循环遍历结果集
 	for rows.Next() {
 		//只能查询出一条,如果查询出多条,只取第一条,然后抛错
@@ -91,6 +87,7 @@ func (baseDao *BaseDao) Query(finder *Finder, entity IEntityStruct) error {
 		if wse != nil {
 			return wse
 		}
+		fmt.Println("Query:", entity)
 
 	}
 
@@ -101,7 +98,6 @@ func (baseDao *BaseDao) Query(finder *Finder, entity IEntityStruct) error {
 		return errors.New("查询出多条数据")
 	}
 
-	fmt.Println("Query:", entity)
 	return nil
 }
 
@@ -147,7 +143,6 @@ func (baseDao *BaseDao) Save(entity IEntityStruct) error {
 	if err != nil {
 		return err
 	}
-	fmt.Println(sqlstr)
 
 	tx, err := baseDao.dataSource.BeginTx(context.Background(), nil)
 	if err != nil {
@@ -189,7 +184,6 @@ func (baseDao *BaseDao) updateStruct(entity IEntityStruct, onlyupdatenotnull boo
 	if err != nil {
 		return err
 	}
-	fmt.Println(sqlstr)
 
 	tx, err := baseDao.dataSource.BeginTx(context.Background(), nil)
 	if err != nil {
@@ -248,7 +242,6 @@ func (baseDao *BaseDao) SaveMap(entity IEntityMap) error {
 	if err != nil {
 		return err
 	}
-	fmt.Println(sqlstr)
 
 	tx, err := baseDao.dataSource.BeginTx(context.Background(), nil)
 	if err != nil {
