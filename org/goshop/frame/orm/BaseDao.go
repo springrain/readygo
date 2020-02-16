@@ -75,11 +75,6 @@ func (baseDao *BaseDao) Query(finder *Finder, entity IEntityStruct) error {
 		values := make([]interface{}, len(columns))
 		rows.Scan(values...)
 		//根据列明和值,包装成Struct对象
-		wrape := wrapStruct(columns, values, entity)
-		if wrape != nil {
-			return wrape
-		}
-		//包装struct对象
 		wse := wrapStruct(columns, values, entity)
 		if wse != nil {
 			return wse
