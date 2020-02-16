@@ -206,10 +206,9 @@ func (baseDao *BaseDao) Delete(entity IEntityStruct) error {
 		return errors.New("对象不能为空")
 	}
 	pkName := entityPKFieldName(entity)
-	value, err := util.StructFieldValue(entity, pkName)
-
-	if err != nil {
-		return err
+	value, e := util.StructFieldValue(entity, pkName)
+	if e != nil {
+		return e
 	}
 	//SQL语句
 	sqlstr, err := wrapDeleteStructSQL(baseDao.config.DBType, entity)
@@ -321,10 +320,10 @@ func columnAndValue(entity IEntityStruct) ([]reflect.StructField, []interface{},
 	valueOf = valueOf.Elem()
 
 	//获取数据库列名和struct字段的对照缓存
-	cacheColumn2Field := true
+	isCacheColumn2Field := true
 	column2FieldNameMap := cacheColumn2FieldNameMap[entityName]
 	if column2FieldNameMap == nil || len(column2FieldNameMap) < 1 {
-		cacheColumn2Field = false
+		isCacheColumn2Field = false
 		column2FieldNameMap = make(map[string]string)
 		cacheColumn2FieldNameMap[entityName] = column2FieldNameMap
 	}
@@ -345,7 +344,7 @@ func columnAndValue(entity IEntityStruct) ([]reflect.StructField, []interface{},
 		}
 
 		//如果没缓存列名和字段对应表
-		if cacheColumn2Field {
+		if !isCacheColumn2Field {
 			column2FieldNameMap[tagValue] = field.Name
 		}
 

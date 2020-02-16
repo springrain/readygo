@@ -155,7 +155,7 @@ func recursiveAnonymousStruct(allFieldMap *sync.Map, anonymous []reflect.StructF
 //获取指定字段的值
 func StructFieldValue(s interface{}, fieldName string) (interface{}, error) {
 
-	if s == nil {
+	if s == nil || len(fieldName) < 1 {
 		return nil, errors.New("数据为空")
 	}
 	//entity的s类型
