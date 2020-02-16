@@ -82,6 +82,11 @@ func (baseDao *BaseDao) QueryStruct(finder *Finder, entity IEntityStruct) error 
 		//接收数据库返回值,之后values就有值了
 		rows.Scan(scans...)
 
+		//实际还是[]byte
+		//for j, data := range scans {
+		//	values[j] = *data.(*interface{})
+		//}
+
 		//根据列名和[]byte值,包装成Struct对象
 		wse := wrapStruct(columns, values, entity)
 		if wse != nil {
