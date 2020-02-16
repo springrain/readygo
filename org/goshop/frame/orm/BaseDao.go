@@ -430,14 +430,17 @@ func wrapStruct(columns []string, values [][]byte, entity IEntityStruct) error {
 			continue
 		}
 
-		v := valueOf.FieldByName(fieldName)
 		if len(values[i]) < 1 { //数据返回的是空
 			continue
 		} else {
 
 		}
-
+		v := valueOf.FieldByName(fieldName)
 		kind := v.Type().Kind()
+		if kind == reflect.Ptr { //如果是这个指针类型
+			v = v.Elem() //v的下一级
+			kind = v.Type().Kind()
+		}
 		if !allowTypeMap[kind] { //不允许的类型
 			continue
 		}
