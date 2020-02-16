@@ -23,8 +23,8 @@ const (
 //缓存数据列
 var cacheDBColumnMap = make(map[string][]reflect.StructField)
 
-//缓存主键名称
-var cacheStructPKFieldNameMap = make(map[string]string)
+//缓存数据库字段和struct属性名对应的Map
+var cacheColumn2FieldNameMap = make(map[string]map[string]string)
 
 //数据库操作基类,隔离原生操作数据库API入口,所有数据库操作必须通过BaseDao进行.
 type BaseDao struct {
@@ -36,31 +36,6 @@ type BaseDao struct {
 func NewBaseDao(config *DataSourceConfig) (*BaseDao, error) {
 	dataSource, err := newDataSource(config)
 	return &BaseDao{config, dataSource}, err
-}
-
-//检查entity类型必须是*struct类型
-func checkEntityKind(entity IEntityStruct) error {
-	if entity == nil {
-		return errors.New("参数不能为空,必须是*struct类型")
-	}
-	typeOf := reflect.TypeOf(entity)
-	if typeOf.Kind() != reflect.Ptr { //如果不是指针
-		return errors.New("必须是*struct类型")
-	}
-	typeOf = typeOf.Elem()
-	if typeOf.Kind() != reflect.Struct { //如果不是指针
-		return errors.New("必须是*struct类型")
-	}
-	return nil
-}
-
-//根据数据库返回的sql.Rows,查询出列名和对应的值
-func wrapStruct(columns []string, values []interface{}, entity IEntityStruct) error {
-	checke := checkEntityKind(entity)
-	if checke != nil {
-		return checke
-	}
-
 }
 
 //根据Finder和封装为指定的entity类型,entity必须是*struct类型
@@ -104,6 +79,11 @@ func (baseDao *BaseDao) Query(finder *Finder, entity IEntityStruct) error {
 		if wrape != nil {
 			return wrape
 		}
+		//包装struct对象
+		wse := wrapStruct(columns, values, entity)
+		if wse != nil {
+			return wse
+		}
 
 	}
 
@@ -114,6 +94,7 @@ func (baseDao *BaseDao) Query(finder *Finder, entity IEntityStruct) error {
 		return errors.New("查询出多条数据")
 	}
 
+	fmt.Println("Query:", entity)
 	return nil
 }
 
@@ -339,6 +320,15 @@ func columnAndValue(entity IEntityStruct) ([]reflect.StructField, []interface{},
 	//获取指针下struct的反射
 	valueOf = valueOf.Elem()
 
+	//获取数据库列名和struct字段的对照缓存
+	cacheColumn2Field := true
+	column2FieldNameMap := cacheColumn2FieldNameMap[entityName]
+	if column2FieldNameMap == nil || len(column2FieldNameMap) < 1 {
+		cacheColumn2Field = false
+		column2FieldNameMap = make(map[string]string)
+		cacheColumn2FieldNameMap[entityName] = column2FieldNameMap
+	}
+
 	//遍历所有公共属性
 	for i := 0; i < fLen; i++ {
 		field := exPortStructFields[i]
@@ -354,9 +344,9 @@ func columnAndValue(entity IEntityStruct) ([]reflect.StructField, []interface{},
 			continue
 		}
 
-		//缓存主键的属性名
-		if tagValue == entity.GetPKColumnName() {
-			cacheStructPKFieldNameMap[entityName] = field.Name
+		//如果没缓存列名和字段对应表
+		if cacheColumn2Field {
+			column2FieldNameMap[tagValue] = field.Name
 		}
 
 		columns = append(columns, field)
@@ -376,15 +366,68 @@ func columnAndValue(entity IEntityStruct) ([]reflect.StructField, []interface{},
 
 //获取实体类主键属性名称
 func entityPKFieldName(entity IEntityStruct) string {
+	//缓存的key,TypeOf和ValueOf的String()方法,返回值不一样
 	cacheKey := reflect.TypeOf(entity).Elem().String()
-
-	fieldName := cacheStructPKFieldNameMap[cacheKey]
-	if len(fieldName) > 0 {
-		return fieldName
+	//列名和属性名的对照缓存
+	column2FieldNameMap := cacheColumn2FieldNameMap[cacheKey]
+	//如果缓存不存在,调用缓存逻辑
+	if column2FieldNameMap == nil || len(column2FieldNameMap) < 1 {
+		columnAndValue(entity)
 	}
-	columnAndValue(entity)
-	pkName := cacheStructPKFieldNameMap[cacheKey]
+
+	column2FieldNameMap = cacheColumn2FieldNameMap[cacheKey]
+	//获取主键的列名
+	pkName := column2FieldNameMap[entity.GetPKColumnName()]
 
 	return pkName
+
+}
+
+//检查entity类型必须是*struct类型
+func checkEntityKind(entity IEntityStruct) error {
+	if entity == nil {
+		return errors.New("参数不能为空,必须是*struct类型")
+	}
+	typeOf := reflect.TypeOf(entity)
+	if typeOf.Kind() != reflect.Ptr { //如果不是指针
+		return errors.New("必须是*struct类型")
+	}
+	typeOf = typeOf.Elem()
+	if typeOf.Kind() != reflect.Struct { //如果不是指针
+		return errors.New("必须是*struct类型")
+	}
+	return nil
+}
+
+//根据数据库返回的sql.Rows,查询出列名和对应的值
+func wrapStruct(columns []string, values []interface{}, entity IEntityStruct) error {
+	checke := checkEntityKind(entity)
+	if checke != nil {
+		return checke
+	}
+	//缓存的key,TypeOf和ValueOf的String()方法,返回值不一样
+	cacheKey := reflect.TypeOf(entity).Elem().String()
+	//列名和属性名的对照缓存
+	column2FieldNameMap := cacheColumn2FieldNameMap[cacheKey]
+	//如果缓存不存在,调用缓存逻辑
+	if column2FieldNameMap == nil || len(column2FieldNameMap) < 1 {
+		columnAndValue(entity)
+	}
+
+	column2FieldNameMap = cacheColumn2FieldNameMap[cacheKey]
+
+	//对象值的操作
+	valueOf := reflect.ValueOf(entity).Elem()
+	for i, column := range columns {
+		fieldName := column2FieldNameMap[column]
+		if len(fieldName) < 1 { //不存在列名,可以不接收
+			continue
+		}
+		//给字段赋值
+		valueOf.FieldByName(fieldName).Set(reflect.ValueOf(values[i]))
+
+	}
+
+	return nil
 
 }

@@ -21,12 +21,15 @@ func main() {
 		Id:      "id",
 		Account: "test",
 	}
+
+	finder := orm.NewSelectFinder(user.GetTableName())
+
 	baseDao.Delete(&user)
 	baseDao.Save(&user)
-	baseDao.Query("select id,account from t_user")
+	baseDao.Query(finder, &user)
 	user.Account = "update"
 	baseDao.Update(&user)
-	baseDao.Query("select id,account from t_user")
+	baseDao.Query(finder, &user)
 
 	userMap := orm.NewEntityMap("t_user")
 
@@ -35,13 +38,13 @@ func main() {
 	baseDao.SaveMap(&userMap)
 	userMap.Set("account", "213")
 	baseDao.UpdateMap(&userMap)
-	baseDao.Query("select id,account from t_user")
+	baseDao.Query(finder, &user)
 
-	finder := orm.NewUpdateFinder(user.GetTableName())
-	finder.Append("acc")
-	finder.Append("ount=?", "adad")
-	baseDao.UpdateFinder(finder)
+	finder2 := orm.NewUpdateFinder(user.GetTableName())
+	finder2.Append("acc")
+	finder2.Append("ount=?", "adad")
+	baseDao.UpdateFinder(finder2)
 
-	baseDao.Query("select id,account from t_user")
+	baseDao.Query(finder, &user)
 
 }
