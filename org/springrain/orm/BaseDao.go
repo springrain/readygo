@@ -116,7 +116,7 @@ func (baseDao *BaseDao) QueryMap(finder *Finder) (map[string]ColumnValue, error)
 	if cne != nil {
 		return nil, cne
 	}
-	result := make(map[string]interface{})
+	result := make(map[string]ColumnValue)
 	//循环遍历结果集
 	for rows.Next() {
 		//只能查询出一条,如果查询出多条,只取第一条,然后抛错
@@ -129,11 +129,13 @@ func (baseDao *BaseDao) QueryMap(finder *Finder) (map[string]ColumnValue, error)
 		//接收数据库返回的值,返回的字段值都是[]byte直接数组,需要使用指针接收.比较恶心......
 
 		values := make([]ColumnValue, len(columns))
-		err = rows.Scan(values...)
+		var scan []interface{}
+		scan = values
+		err = rows.Scan(scan...)
 		if err != nil {
 			return nil, err
 		}
-		result = wrapMap(columns, values)
+		result, err = wrapMap(columns, values)
 
 	}
 
@@ -463,7 +465,7 @@ func wrapStruct(columns []string, values []ColumnValue, entity IEntityStruct) er
 func wrapMap(columns []string, values []ColumnValue) (map[string]ColumnValue, error) {
 	columnValueMap := make(map[string]ColumnValue)
 	for i, column := range columns {
-		columnValueMap[cloumn] = ColumnValue[i]
+		columnValueMap[column] = values[i]
 	}
 	return columnValueMap, nil
 }
