@@ -72,20 +72,10 @@ func (baseDao *BaseDao) QueryStruct(finder *Finder, entity IEntityStruct) error 
 		}
 		i++
 		//接收数据库返回的值,返回的字段值都是[]byte直接数组,需要使用指针接收.比较恶心......
-		values := make([][]byte, len(columns))
-		//使用指针类型接收字段值,需要使用interface{}包装一下
-		scans := make([]interface{}, len(columns))
-		//包装[]byte的指针地址包装
-		for j := range values {
-			scans[j] = &values[j]
-		}
-		//接收数据库返回值,之后values就有值了
-		rows.Scan(scans...)
+		values := make([]ColumnValue, len(columns))
 
-		//实际还是[]byte
-		//for j, data := range scans {
-		//	values[j] = *data.(*interface{})
-		//}
+		//接收数据库返回值,之后values就有值了
+		rows.Scan(values...)
 
 		//根据列名和[]byte值,包装成Struct对象
 		wse := wrapStruct(columns, values, entity)
@@ -107,7 +97,7 @@ func (baseDao *BaseDao) QueryStruct(finder *Finder, entity IEntityStruct) error 
 }
 
 //根据Finder查询,封装Map
-func (baseDao *BaseDao) QueryMap(finder *Finder) (map[string]interface{}, error) {
+func (baseDao *BaseDao) QueryMap(finder *Finder) (map[string]ColumnValue, error) {
 
 	//获取到Finder的语句
 	sqlstr, err := wrapSQL(baseDao.config.DBType, finder.GetSQL())
@@ -138,19 +128,12 @@ func (baseDao *BaseDao) QueryMap(finder *Finder) (map[string]interface{}, error)
 		i++
 		//接收数据库返回的值,返回的字段值都是[]byte直接数组,需要使用指针接收.比较恶心......
 
-		values := make([]interface{}, len(columns))
-		for i := range values {
-			values[i] = new(interface{})
-		}
-
+		values := make([]ColumnValue, len(columns))
 		err = rows.Scan(values...)
 		if err != nil {
 			return nil, err
 		}
-
-		for i, column := range columns {
-			result[column] = *(values[i].(*interface{}))
-		}
+		result = wrapMap(columns, values)
 
 	}
 
@@ -335,7 +318,7 @@ func columnAndValue(entity IEntityStruct) ([]reflect.StructField, []interface{},
 	entityName := reflect.TypeOf(entity).Elem().String()
 	exPortStructFields := cacheDBColumnMap[entityName]
 	if len(exPortStructFields) < 1 { //缓存不存在
-		//获取实体类的输出字段和私有字段
+		//获取实体类的输出字段和私有 字段
 		var err error
 		exPortStructFields, _, err = util.StructFieldInfo(entity)
 		if err != nil {
@@ -432,7 +415,7 @@ func checkEntityKind(entity IEntityStruct) error {
 }
 
 //根据数据库返回的sql.Rows,查询出列名和对应的值.
-func wrapStruct(columns []string, values [][]byte, entity IEntityStruct) error {
+func wrapStruct(columns []string, values []ColumnValue, entity IEntityStruct) error {
 	checke := checkEntityKind(entity)
 	if checke != nil {
 		return checke
@@ -456,11 +439,6 @@ func wrapStruct(columns []string, values [][]byte, entity IEntityStruct) error {
 			continue
 		}
 
-		if len(values[i]) < 1 { //数据返回的是空
-			continue
-		} else {
-
-		}
 		v := valueOf.FieldByName(fieldName)
 		kind := v.Type().Kind()
 		if kind == reflect.Ptr { //如果是这个指针类型
@@ -472,13 +450,22 @@ func wrapStruct(columns []string, values [][]byte, entity IEntityStruct) error {
 		}
 		if kind == reflect.String { //string 类型
 			//给字段赋值
-			v.Set(reflect.ValueOf(string(values[i])))
+			v.Set(reflect.ValueOf(values[i]))
 		}
 
 	}
 
 	return nil
 
+}
+
+//根据sql查询结果,返回map
+func wrapMap(columns []string, values []ColumnValue) (map[string]ColumnValue, error) {
+	columnValueMap := make(map[string]ColumnValue)
+	for i, column := range columns {
+		columnValueMap[cloumn] = ColumnValue[i]
+	}
+	return columnValueMap, nil
 }
 
 //更新对象
