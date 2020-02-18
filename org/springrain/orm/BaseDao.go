@@ -55,16 +55,17 @@ func (baseDao *BaseDao) QueryStruct(finder *Finder, entity *struct{}) error {
 }
 
 //根据Finder和封装为指定的entity类型,entity必须是*struct类型
-func (baseDao *BaseDao) QueryStructList(finder *Finder, entity *struct{}, page *Page) ([]IEntityStruct, error) {
+func (baseDao *BaseDao) QueryStructList(finder *Finder, entity struct{}, page *Page) ([]struct{}, error) {
 	mapList, err := baseDao.QueryMapList(finder, page)
 	if err != nil {
 		return nil, err
 	}
-	structList := make([]IEntityStruct, 0)
+	structList := make([]struct{}, 0)
 	for _, resultMap := range mapList {
-		var a IEntityStruct
-		util.DeepCopy(a, entity)
-		e := columnValueMap2EntityStruct(resultMap, a)
+
+		//util.DeepCopy(a, entity)
+		a := entity
+		e := columnValueMap2EntityStruct(resultMap, &a)
 
 		if e != nil {
 			return nil, e
