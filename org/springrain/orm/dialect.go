@@ -19,9 +19,26 @@ func wrapSQL(dbType DBTYPE, sqlstr string) (string, error) {
 }
 
 //包装分页的SQL语句
-func wrapPageSQL(dbType DBTYPE, sqlstr string) (string, error) {
+func wrapPageSQL(dbType DBTYPE, sqlstr string, page Page) (string, error) {
 
-	return "", nil
+	sqlbuilder := strings.Builder
+	sqlbuilder.WriteString(sqlstr)
+	if dbType == DBType_MYSQL || dbType == DBType_UNKNOWN { //MySQL数据库
+		sqlbuilder.WriteString(" limit ")
+		sqlbuilder.WriteString(page.PageSize * (page.PageNo - 1))
+		sqlbuilder.WriteString(",")
+		sqlbuilder.WriteString(page.PageSize)
+
+	} else if dbType == DBType_POSTGRESQL { //postgresql
+		sqlbuilder.WriteString(" limit ")
+		sqlbuilder.WriteString(pageSize)
+		sqlbuilder.WriteString(" offset ")
+		sqlbuilder.WriteString(page.PageSize * (page.PageNo - 1))
+	} else if dbType == DBType_MSSQL { //mssql
+		//先不写啦
+	}
+	sqlstr = sqlbuilder.String()
+	return wrapSQL(dbType, sqlstr)
 }
 
 //包装保存Struct语句
