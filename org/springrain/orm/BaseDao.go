@@ -8,6 +8,9 @@ import (
 	"reflect"
 )
 
+type IBaseInterface interface {
+}
+
 //允许的Type
 //bug(chunanyong) 1.需要完善支持的数据类型和赋值接口,例如sql.NullString.
 var allowTypeMap = map[reflect.Kind]bool{
@@ -57,12 +60,11 @@ func (baseDao *BaseDao) QueryStruct(finder *Finder, entity interface{}) error {
 }
 
 //根据Finder和封装为指定的entity类型,entity必须是[]struct类型,已经初始化好的数组,此方法只Append元素,这样调用方就不需要强制类型转换了.
-func (baseDao *BaseDao) QueryStructList(finder *Finder, structList interface{}, page *Page) error {
+func (baseDao *BaseDao) QueryStructList(finder *Finder, structList []IBaseInterface, page *Page) error {
 	mapList, err := baseDao.QueryMapList(finder, page)
 	if err != nil {
 		return err
 	}
-	//var a []interface{}
 
 	//获取数组内元素的类型
 	structType := reflect.TypeOf(structList).Elem()
@@ -428,10 +430,10 @@ func checkEntityKind(entity interface{}) error {
 //根据数据库返回的sql.Rows,查询出列名和对应的值.
 func columnValueMap2EntityStruct(resultMap map[string]ColumnValue, entity interface{}) error {
 
-	//checkerr := checkEntityKind(entity)
-	//if checkerr != nil {
-	//	return checkerr
-	//}
+	checkerr := checkEntityKind(entity)
+	if checkerr != nil {
+		return checkerr
+	}
 
 	cacheKey := reflect.TypeOf(entity).Elem().String()
 	column2FieldNameMap := cacheColumn2FieldNameMap[cacheKey]
