@@ -22,29 +22,32 @@ func main() {
 		Account: "test",
 	}
 
-	finder := orm.NewSelectFinder(user.GetTableName())
+	finder := orm.NewSelectFinder(user.GetTableName(), "id,account")
+	finder.Append(" WHERE id=?", "id")
 
-	//baseDao.Delete(&user)
-	//baseDao.Save(&user)
+	baseDao.DeleteStruct(&user)
+	baseDao.SaveStruct(&user)
 	baseDao.QueryStruct(finder, &user)
-	user.Account = "update"
-	baseDao.UpdateStruct(&user)
-	baseDao.QueryStruct(finder, &user)
+	/*
+		user.Account = "update"
+		baseDao.UpdateStruct(&user)
+		baseDao.QueryStruct(finder, &user)
 
-	userMap := orm.NewEntityMap("t_user")
+		userMap := orm.NewEntityMap("t_user")
 
-	userMap.Set("id", "mapId")
-	userMap.Set("account", "mapAccount")
-	baseDao.SaveMap(&userMap)
-	userMap.Set("account", "213")
-	baseDao.UpdateMap(&userMap)
-	baseDao.QueryStruct(finder, &user)
+		userMap.Set("id", "mapId")
+		userMap.Set("account", "mapAccount")
+		baseDao.SaveMap(&userMap)
+		userMap.Set("account", "213")
+		baseDao.UpdateMap(&userMap)
+		baseDao.QueryStruct(finder, &user)
 
-	finder2 := orm.NewUpdateFinder(user.GetTableName())
-	finder2.Append("acc")
-	finder2.Append("ount=?", "adad")
-	baseDao.UpdateFinder(finder2)
+		finder2 := orm.NewUpdateFinder(user.GetTableName())
+		finder2.Append("acc")
+		finder2.Append("ount=?", "adad")
+		baseDao.UpdateFinder(finder2)
 
-	baseDao.QueryStruct(finder, &user)
+		baseDao.QueryStruct(finder, &user)
+	*/
 
 }

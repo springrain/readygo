@@ -45,55 +45,15 @@ func (baseDao *BaseDao) QueryStruct(finder *Finder, entity IEntityStruct) error 
 	if checke != nil {
 		return checke
 	}
-	//获取到Finder的语句
-	sqlstr, err := wrapSQL(baseDao.config.DBType, finder.GetSQL())
+
+	//获取map对象
+	resultMap, err := baseDao.QueryMap(finder)
 	if err != nil {
 		return err
 	}
-	//根据语句和参数查询
-	rows, e := baseDao.dataSource.Query(sqlstr, finder.Values...)
-	if e != nil {
-		return e
-	}
-	//记录条数,本方法只能查询一个对象
-	i := 0
-	//数据库返回的列名
-	columns, cne := rows.Columns()
-	if cne != nil {
-		return cne
-	}
-	//循环遍历结果集
-	for rows.Next() {
-		//只能查询出一条,如果查询出多条,只取第一条,然后抛错
-		i++
-		if i > 1 {
-			i++
-			break
-		}
-		i++
-		//接收数据库返回的值,返回的字段值都是[]byte直接数组,需要使用指针接收.比较恶心......
-		values := make([]ColumnValue, len(columns))
+	e := columnValueMap2EntityStruct(resultMap, entity)
 
-		//接收数据库返回值,之后values就有值了
-		rows.Scan(values...)
-
-		//根据列名和[]byte值,包装成Struct对象
-		wse := wrapStruct(columns, values, entity)
-		if wse != nil {
-			return wse
-		}
-		fmt.Println("Query:", entity)
-
-	}
-
-	//如果没有查询出数据
-	if i == 0 {
-		return errors.New("没有查询出数据")
-	} else if i > 1 { //查询出多条数据
-		return errors.New("查询出多条数据")
-	}
-
-	return nil
+	return e
 }
 
 //根据Finder查询,封装Map
@@ -125,13 +85,17 @@ func (baseDao *BaseDao) QueryMap(finder *Finder) (map[string]ColumnValue, error)
 			i++
 			break
 		}
-		i++
 		//接收数据库返回的值,返回的字段值都是[]byte直接数组,需要使用指针接收.比较恶心......
 
 		values := make([]ColumnValue, len(columns))
-		var scan []interface{}
-		scan = values
-		err = rows.Scan(scan...)
+		//使用指针类型接收字段值,需要使用interface{}包装一下
+		scans := make([]interface{}, len(columns))
+		//包装[]byte的指针地址包装
+		for j := range values {
+			scans[j] = &values[j]
+		}
+		//接收数据库返回值,之后values就有值了
+		err = rows.Scan(scans...)
 		if err != nil {
 			return nil, err
 		}
@@ -417,42 +381,26 @@ func checkEntityKind(entity IEntityStruct) error {
 }
 
 //根据数据库返回的sql.Rows,查询出列名和对应的值.
-func wrapStruct(columns []string, values []ColumnValue, entity IEntityStruct) error {
-	checke := checkEntityKind(entity)
-	if checke != nil {
-		return checke
-	}
-	//缓存的key,TypeOf和ValueOf的String()方法,返回值不一样
+func columnValueMap2EntityStruct(resultMap map[string]ColumnValue, entity IEntityStruct) error {
+
 	cacheKey := reflect.TypeOf(entity).Elem().String()
-	//列名和属性名的对照缓存
 	column2FieldNameMap := cacheColumn2FieldNameMap[cacheKey]
-	//如果缓存不存在,调用缓存逻辑
-	if column2FieldNameMap == nil || len(column2FieldNameMap) < 1 {
+	if column2FieldNameMap == nil {
 		columnAndValue(entity)
 	}
-
 	column2FieldNameMap = cacheColumn2FieldNameMap[cacheKey]
-
-	//对象值的操作
-	valueOf := reflect.ValueOf(entity).Elem()
-	for i, column := range columns {
+	for column, columnValue := range resultMap {
 		fieldName := column2FieldNameMap[column]
-		if len(fieldName) < 1 { //不存在列名,可以不接收
+		if len(fieldName) < 1 {
 			continue
 		}
-
-		v := valueOf.FieldByName(fieldName)
-		kind := v.Type().Kind()
-		if kind == reflect.Ptr { //如果是这个指针类型
-			v = v.Elem() //v的下一级
-			kind = v.Type().Kind()
-		}
-		if !allowTypeMap[kind] { //不允许的类型
-			continue
-		}
-		if kind == reflect.String { //string 类型
-			//给字段赋值
-			v.Set(reflect.ValueOf(values[i]))
+		//反射获取字段的值对象
+		fieldValue := reflect.ValueOf(entity).Elem().FieldByName(fieldName)
+		//获取值类型
+		valueKind := fieldValue.Type().Kind()
+		fmt.Println(fieldValue.Type())
+		if valueKind == reflect.String {
+			fieldValue.Set(reflect.ValueOf(columnValue.String()))
 		}
 
 	}
