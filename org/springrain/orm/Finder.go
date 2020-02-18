@@ -10,7 +10,7 @@ type Finder struct {
 	sqlBuilder strings.Builder
 	//SQL的参数值
 	Values []interface{}
-	//默认不允许SQL注入的 ' 单引号
+	//默认false 不允许SQL注入的 ' 单引号
 	InjectionSQL bool
 	// 设置总条数查询的finder.Struct不能为nil,自己引用自己,go无法初始化Finder struct,使用可以为nil的指针,就可以了.
 	//CountFinder Finder

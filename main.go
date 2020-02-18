@@ -23,6 +23,11 @@ func main() {
 		Account: "test",
 	}
 
+	users := []shop.User2{}
+	finder3 := orm.NewSelectFinder("t_user", "id,account")
+	baseDao.QueryStructList(finder3, users, nil)
+	fmt.Println(users)
+
 	finder := orm.NewSelectFinder(user.GetTableName(), "id,account")
 	finder.Append(" WHERE id=?", "id")
 

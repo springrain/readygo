@@ -3,6 +3,7 @@ package orm
 import (
 	"context"
 	"errors"
+	"fmt"
 	"goshop/org/springrain/util"
 	"reflect"
 )
@@ -55,27 +56,34 @@ func (baseDao *BaseDao) QueryStruct(finder *Finder, entity interface{}) error {
 	return nil
 }
 
-//根据Finder和封装为指定的entity类型,entity必须是struct类型.因为要返回数组接收,所以entity是struct,不是指针
-func (baseDao *BaseDao) QueryStructList(finder *Finder, entity interface{}, page *Page) ([]interface{}, error) {
+//根据Finder和封装为指定的entity类型,entity必须是[]struct类型,已经初始化好的数组,此方法只Append元素,这样调用方就不需要强制类型转换了.
+func (baseDao *BaseDao) QueryStructList(finder *Finder, structList interface{}, page *Page) error {
 	mapList, err := baseDao.QueryMapList(finder, page)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	structList := make([]interface{}, 0)
-	for _, resultMap := range mapList {
+	//var a []interface{}
 
+	//获取数组内元素的类型
+	structType := reflect.TypeOf(structList).Elem()
+	//	var a []structType = structList.([]structType)
+	//valueType := reflect.ValueOf(structList).Elem()
+	for _, resultMap := range mapList {
 		//util.DeepCopy(a, entity)
-		//复制一个entity,值传递
-		copy := entity
+
+		//反射初始化一个元素
+		copy := reflect.New(structType).Interface()
 		e := columnValueMap2EntityStruct(resultMap, &copy)
 
 		if e != nil {
-			return nil, e
+			return e
 		}
 		structList = append(structList, copy)
 	}
 
-	return structList, nil
+	fmt.Println(structList)
+
+	return nil
 
 }
 
@@ -420,10 +428,10 @@ func checkEntityKind(entity interface{}) error {
 //根据数据库返回的sql.Rows,查询出列名和对应的值.
 func columnValueMap2EntityStruct(resultMap map[string]ColumnValue, entity interface{}) error {
 
-	checkerr := checkEntityKind(entity)
-	if checkerr != nil {
-		return checkerr
-	}
+	//checkerr := checkEntityKind(entity)
+	//if checkerr != nil {
+	//	return checkerr
+	//}
 
 	cacheKey := reflect.TypeOf(entity).Elem().String()
 	column2FieldNameMap := cacheColumn2FieldNameMap[cacheKey]
