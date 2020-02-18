@@ -81,6 +81,7 @@ func (baseDao *BaseDao) QueryStructList(finder *Finder, entity interface{}, page
 
 //根据Finder查询,封装Map.获取具体的值,需要自己根据类型调用ColumnValue的转化方法,例如ColumnValue.String()
 //golang的sql驱动不支持获取到数据字段的metadata......垃圾.....
+//bug(chunanyong)需要测试一下 in 数组, like ,还有查询一个基础类型(例如 string)的功能
 func (baseDao *BaseDao) QueryMap(finder *Finder) (map[string]ColumnValue, error) {
 	resultMapList, err := baseDao.QueryMapList(finder, nil)
 	if err != nil {
