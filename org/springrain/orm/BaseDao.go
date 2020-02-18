@@ -55,7 +55,7 @@ func (baseDao *BaseDao) QueryStruct(finder *Finder, entity interface{}) error {
 	return nil
 }
 
-//根据Finder和封装为指定的entity类型,entity必须是*struct类型
+//根据Finder和封装为指定的entity类型,entity必须是struct类型
 func (baseDao *BaseDao) QueryStructList(finder *Finder, entity interface{}, page *Page) ([]interface{}, error) {
 	mapList, err := baseDao.QueryMapList(finder, page)
 	if err != nil {
