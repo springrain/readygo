@@ -1,5 +1,6 @@
 package orm
 
+/*
 //Entity实体类接口,所有实体类必须实现,否则baseDao无法执行.baseDao函数形参只有Finder和IBaseEntity
 type IEntityStruct interface {
 	//获取表名称
@@ -19,6 +20,7 @@ type IEntityMap interface {
 	//针对Map类型,记录数据库字段
 	GetDBFieldMap() map[string]interface{}
 }
+*/
 
 //IBaseEntity 的基础实现,所有的实体类都匿名注入.这样就类似实现继承了,如果接口增加方法,调整这个默认实现即可
 type EntityStruct struct {
