@@ -399,14 +399,21 @@ func columnValueMap2EntityStruct(resultMap map[string]ColumnValue, entity IEntit
 		//反射获取字段的值对象
 		fieldValue := reflect.ValueOf(entity).Elem().FieldByName(fieldName)
 		//获取值类型
-		valueType := fieldValue.Type().String()
-
+		kindType := fieldValue.Kind()
+		valueType := fieldValue.Type()
+		if kindType == reflect.Ptr { //如果是指针类型的属性,查找指针下的类型
+			kindType = fieldValue.Elem().Kind()
+			valueType = fieldValue.Elem().Type()
+		}
+		kindTypeStr := kindType.String()
+		valueTypeStr := valueType.String()
 		var v interface{}
-		if valueType == "string" {
+		if kindTypeStr == "string" || valueTypeStr == "string" { //兼容string的扩展类型
 			v = columnValue.String()
-		} else if valueType == "int" {
+		} else if kindTypeStr == "int" || valueTypeStr == "int" { //兼容int的扩展类型
 			v = columnValue.Int()
 		}
+		//这个地方还要添加其他类型的判断,参照ColumnValue.go文件
 
 		fieldValue.Set(reflect.ValueOf(v))
 
