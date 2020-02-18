@@ -19,21 +19,21 @@ func wrapSQL(dbType DBTYPE, sqlstr string) (string, error) {
 }
 
 //包装分页的SQL语句
-func wrapPageSQL(dbType DBTYPE, sqlstr string, page Page) (string, error) {
+func wrapPageSQL(dbType DBTYPE, sqlstr string, page *Page) (string, error) {
 
-	sqlbuilder := strings.Builder
+	var sqlbuilder strings.Builder
 	sqlbuilder.WriteString(sqlstr)
 	if dbType == DBType_MYSQL || dbType == DBType_UNKNOWN { //MySQL数据库
 		sqlbuilder.WriteString(" limit ")
-		sqlbuilder.WriteString(page.PageSize * (page.PageNo - 1))
+		sqlbuilder.WriteString(strconv.Itoa(page.PageSize * (page.PageNo - 1)))
 		sqlbuilder.WriteString(",")
-		sqlbuilder.WriteString(page.PageSize)
+		sqlbuilder.WriteString(strconv.Itoa(page.PageSize))
 
 	} else if dbType == DBType_POSTGRESQL { //postgresql
 		sqlbuilder.WriteString(" limit ")
-		sqlbuilder.WriteString(pageSize)
+		sqlbuilder.WriteString(strconv.Itoa(page.PageSize))
 		sqlbuilder.WriteString(" offset ")
-		sqlbuilder.WriteString(page.PageSize * (page.PageNo - 1))
+		sqlbuilder.WriteString(strconv.Itoa(page.PageSize * (page.PageNo - 1)))
 	} else if dbType == DBType_MSSQL { //mssql
 		//先不写啦
 	}
@@ -42,7 +42,7 @@ func wrapPageSQL(dbType DBTYPE, sqlstr string, page Page) (string, error) {
 }
 
 //包装保存Struct语句
-func wrapSaveStructSQL(dbType DBTYPE, entity *EntityStruct, columns []reflect.StructField, values []interface{}) (string, error) {
+func wrapSaveStructSQL(dbType DBTYPE, entity IEntityStruct, columns []reflect.StructField, values []interface{}) (string, error) {
 
 	//SQL语句的构造器
 	var sqlBuilder strings.Builder
@@ -113,7 +113,7 @@ func wrapSaveStructSQL(dbType DBTYPE, entity *EntityStruct, columns []reflect.St
 }
 
 //包装更新Struct语句
-func wrapUpdateStructSQL(dbType DBTYPE, entity *EntityStruct, columns []reflect.StructField, values []interface{}, onlyupdatenotnull bool) (string, error) {
+func wrapUpdateStructSQL(dbType DBTYPE, entity IEntityStruct, columns []reflect.StructField, values []interface{}, onlyupdatenotnull bool) (string, error) {
 
 	//SQL语句的构造器
 	var sqlBuilder strings.Builder

@@ -60,7 +60,7 @@ func (baseDao *BaseDao) QueryStructList(finder *Finder, entity interface{}, page
 	if err != nil {
 		return nil, err
 	}
-	structList := make([]struct{}, 0)
+	structList := make([]interface{}, 0)
 	for _, resultMap := range mapList {
 
 		//util.DeepCopy(a, entity)
@@ -70,7 +70,7 @@ func (baseDao *BaseDao) QueryStructList(finder *Finder, entity interface{}, page
 		if e != nil {
 			return nil, e
 		}
-		structList = append(structList, a)
+		structList = append(structList, copy)
 	}
 
 	return structList, nil
