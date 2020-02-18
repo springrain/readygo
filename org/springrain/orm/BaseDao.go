@@ -8,6 +8,7 @@ import (
 )
 
 //允许的Type
+//bug(chunanyong) 1.需要完善支持的数据类型和赋值接口,例如sql.NullString.
 var allowTypeMap = map[reflect.Kind]bool{
 	reflect.Float32: true,
 	reflect.Float64: true,
@@ -19,14 +20,13 @@ const (
 	tagColumnName = "column"
 )
 
-//缓存数据列
+//缓存数据列,key是struct的name,是typeOf方法获取到的name.值是它的字段
 var cacheDBColumnMap = make(map[string][]reflect.StructField)
 
-//缓存数据库字段和struct属性名对应的Map
+//缓存数据库字段和struct属性名对应的Map.类似map["t_user"]map["id"]"Id"
 var cacheColumn2FieldNameMap = make(map[string]map[string]string)
 
 //数据库操作基类,隔离原生操作数据库API入口,所有数据库操作必须通过BaseDao进行.
-//bug(chunanyong) 1.需要完善支持的数据类型和赋值接口,例如sql.NullString.
 type BaseDao struct {
 	config     *DataSourceConfig
 	dataSource *dataSource
@@ -38,7 +38,7 @@ func NewBaseDao(config *DataSourceConfig) (*BaseDao, error) {
 	return &BaseDao{config, dataSource}, err
 }
 
-//根据Finder和封装为指定的entity类型,entity必须是*struct类型
+//根据Finder和封装为指定的entity类型,entity必须是*struct类型.把查询的数据赋值给entity,所以要求指针类型
 func (baseDao *BaseDao) QueryStruct(finder *Finder, entity interface{}) error {
 
 	//获取map对象
@@ -55,7 +55,7 @@ func (baseDao *BaseDao) QueryStruct(finder *Finder, entity interface{}) error {
 	return nil
 }
 
-//根据Finder和封装为指定的entity类型,entity必须是struct类型
+//根据Finder和封装为指定的entity类型,entity必须是struct类型.因为要返回数组接收,所以entity是struct,不是指针
 func (baseDao *BaseDao) QueryStructList(finder *Finder, entity interface{}, page *Page) ([]interface{}, error) {
 	mapList, err := baseDao.QueryMapList(finder, page)
 	if err != nil {
@@ -65,6 +65,7 @@ func (baseDao *BaseDao) QueryStructList(finder *Finder, entity interface{}, page
 	for _, resultMap := range mapList {
 
 		//util.DeepCopy(a, entity)
+		//复制一个entity,值传递
 		copy := entity
 		e := columnValueMap2EntityStruct(resultMap, &copy)
 
@@ -78,7 +79,8 @@ func (baseDao *BaseDao) QueryStructList(finder *Finder, entity interface{}, page
 
 }
 
-//根据Finder查询,封装Map
+//根据Finder查询,封装Map.获取具体的值,需要自己根据类型调用ColumnValue的转化方法,例如ColumnValue.String()
+//golang的sql驱动不支持获取到数据字段的metadata......垃圾.....
 func (baseDao *BaseDao) QueryMap(finder *Finder) (map[string]ColumnValue, error) {
 	resultMapList, err := baseDao.QueryMapList(finder, nil)
 	if err != nil {
@@ -93,7 +95,8 @@ func (baseDao *BaseDao) QueryMap(finder *Finder) (map[string]ColumnValue, error)
 	return resultMapList[0], nil
 }
 
-//根据Finder查询,封装Map
+//根据Finder查询,封装Map数组.获取具体的值,需要自己根据类型调用ColumnValue的转化方法,例如ColumnValue.String()
+//golang的sql驱动不支持获取到数据字段的metadata......垃圾.....
 func (baseDao *BaseDao) QueryMapList(finder *Finder, page *Page) ([]map[string]ColumnValue, error) {
 
 	var sqlstr string
@@ -178,7 +181,8 @@ func (baseDao *BaseDao) UpdateFinder(finder *Finder) error {
 	return nil
 }
 
-//保存Struct对象
+//保存Struct对象,必须是IEntityStruct类型
+//bug(chunanuyong) 如果是自增主键,需要返回.需要sql驱动支持
 func (baseDao *BaseDao) SaveStruct(entity IEntityStruct) error {
 	if entity == nil {
 		return errors.New("对象不能为空")
@@ -209,17 +213,17 @@ func (baseDao *BaseDao) SaveStruct(entity IEntityStruct) error {
 
 }
 
-//更新struct所有属性
+//更新struct所有属性,必须是IEntityStruct类型
 func (baseDao *BaseDao) UpdateStruct(entity IEntityStruct) error {
 	return updateStructFunc(baseDao, entity, false)
 }
 
-//更新struct不为nil的属性
+//更新struct不为nil的属性,必须是IEntityStruct类型
 func (baseDao *BaseDao) UpdateStructNotNil(entity IEntityStruct) error {
 	return updateStructFunc(baseDao, entity, true)
 }
 
-// 根据主键删除一个对象
+// 根据主键删除一个对象.必须是IEntityStruct类型
 func (baseDao *BaseDao) DeleteStruct(entity IEntityStruct) error {
 	if entity == nil {
 		return errors.New("对象不能为空")
@@ -249,7 +253,7 @@ func (baseDao *BaseDao) DeleteStruct(entity IEntityStruct) error {
 
 }
 
-//保存对象
+//保存IEntityMap对象.使用Map保存数据,需要在数据中封装好包括Id在内的所有数据.不适用于复杂情况
 func (baseDao *BaseDao) SaveMap(entity IEntityMap) error {
 	if entity == nil {
 		return errors.New("对象不能为空")
@@ -276,7 +280,7 @@ func (baseDao *BaseDao) SaveMap(entity IEntityMap) error {
 
 }
 
-//保存Map
+//更新IEntityMap对象.使用Map修改数据,需要在数据中封装好包括Id在内的所有数据.不适用于复杂情况
 func (baseDao *BaseDao) UpdateMap(entity IEntityMap) error {
 	if entity == nil {
 		return errors.New("对象不能为空")
@@ -455,7 +459,7 @@ func columnValueMap2EntityStruct(resultMap map[string]ColumnValue, entity interf
 		} else if kindTypeStr == "int" || valueTypeStr == "int" { //兼容int的扩展类型
 			v = columnValue.Int()
 		}
-		//这个地方还要添加其他类型的判断,参照ColumnValue.go文件
+		//bug(chunanyong)这个地方还要添加其他类型的判断,参照ColumnValue.go文件
 
 		fieldValue.Set(reflect.ValueOf(v))
 
