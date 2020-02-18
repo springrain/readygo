@@ -308,7 +308,7 @@ func (baseDao *BaseDao) UpdateMap(entity IEntityMap) error {
 func columnAndValue(entity interface{}) ([]reflect.StructField, []interface{}, error) {
 	checkerr := checkEntityKind(entity)
 	if checkerr != nil {
-		return checkerr
+		return nil, nil, checkerr
 	}
 	// 获取实体类的反射
 	valueOf := reflect.ValueOf(entity)
