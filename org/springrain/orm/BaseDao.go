@@ -314,13 +314,8 @@ func columnAndValue(entity interface{}) ([]reflect.StructField, []interface{}, e
 	if checkerr != nil {
 		return nil, nil, checkerr
 	}
-	// 获取实体类的反射
-	valueOf := reflect.ValueOf(entity)
-
-	//获取Kind,验证是否是指针,只能是*Struct结构
-	if valueOf.Kind() != reflect.Ptr {
-		return nil, nil, errors.New("只能是*Struct类型")
-	}
+	// 获取实体类的反射,指针下的struct
+	valueOf := reflect.ValueOf(entity).Elem()
 	//reflect.Indirect
 
 	//先从本地缓存中查找
@@ -341,8 +336,6 @@ func columnAndValue(entity interface{}) ([]reflect.StructField, []interface{}, e
 	columns := make([]reflect.StructField, 0, fLen)
 	//接收值的数组
 	values := make([]interface{}, 0, fLen)
-	//获取指针下struct的反射
-	valueOf = valueOf.Elem()
 
 	//获取数据库列名和struct字段的对照缓存
 	isCacheColumn2Field := true
