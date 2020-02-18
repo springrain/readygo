@@ -3,7 +3,6 @@ package orm
 import (
 	"context"
 	"errors"
-	"fmt"
 	"goshop/org/springrain/util"
 	"reflect"
 )
@@ -53,7 +52,11 @@ func (baseDao *BaseDao) QueryStruct(finder *Finder, entity IEntityStruct) error 
 	}
 	e := columnValueMap2EntityStruct(resultMap, entity)
 
-	return e
+	if e != nil {
+		return e
+	}
+
+	return nil
 }
 
 //根据Finder查询,封装Map
@@ -197,7 +200,6 @@ func (baseDao *BaseDao) DeleteStruct(entity IEntityStruct) error {
 	if err != nil {
 		return err
 	}
-	fmt.Println(sqlstr)
 
 	tx, err := baseDao.dataSource.BeginTx(context.Background(), nil)
 	if err != nil {
@@ -397,11 +399,16 @@ func columnValueMap2EntityStruct(resultMap map[string]ColumnValue, entity IEntit
 		//反射获取字段的值对象
 		fieldValue := reflect.ValueOf(entity).Elem().FieldByName(fieldName)
 		//获取值类型
-		valueKind := fieldValue.Type().Kind()
-		fmt.Println(fieldValue.Type())
-		if valueKind == reflect.String {
-			fieldValue.Set(reflect.ValueOf(columnValue.String()))
+		valueType := fieldValue.Type().String()
+
+		var v interface{}
+		if valueType == "string" {
+			v = columnValue.String()
+		} else if valueType == "int" {
+			v = columnValue.Int()
 		}
+
+		fieldValue.Set(reflect.ValueOf(v))
 
 	}
 

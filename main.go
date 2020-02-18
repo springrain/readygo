@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"goshop/org/springrain/orm"
 	"goshop/shop"
 )
@@ -27,7 +28,11 @@ func main() {
 
 	baseDao.DeleteStruct(&user)
 	baseDao.SaveStruct(&user)
+
+	user = shop.User2{}
+
 	baseDao.QueryStruct(finder, &user)
+	fmt.Println(user.Account)
 	/*
 		user.Account = "update"
 		baseDao.UpdateStruct(&user)
