@@ -304,7 +304,10 @@ func (baseDao *BaseDao) UpdateMap(entity IEntityMap) error {
 
 //根据保存的对象,返回插入的语句,需要插入的字段,字段的值.
 func columnAndValue(entity interface{}) ([]reflect.StructField, []interface{}, error) {
-
+	checkerr := checkEntityKind(entity)
+	if checkerr != nil {
+		return checkerr
+	}
 	// 获取实体类的反射
 	valueOf := reflect.ValueOf(entity)
 
