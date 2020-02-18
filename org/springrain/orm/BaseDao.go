@@ -404,7 +404,7 @@ func entityPKFieldName(entity IEntityStruct) string {
 }
 
 //检查entity类型必须是*struct类型
-func checkEntityKind(entity IEntityStruct) error {
+func checkEntityKind(entity interface{}) error {
 	if entity == nil {
 		return errors.New("参数不能为空,必须是*struct类型")
 	}
