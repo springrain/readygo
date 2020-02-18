@@ -38,12 +38,7 @@ func NewBaseDao(config *DataSourceConfig) (*BaseDao, error) {
 }
 
 //根据Finder和封装为指定的entity类型,entity必须是*struct类型
-func (baseDao *BaseDao) QueryStruct(finder *Finder, entity IEntityStruct) error {
-	//检查Kind
-	checke := checkEntityKind(entity)
-	if checke != nil {
-		return checke
-	}
+func (baseDao *BaseDao) QueryStruct(finder *Finder, entity *struct{}) error {
 
 	//获取map对象
 	resultMap, err := baseDao.QueryMap(finder)
@@ -60,12 +55,7 @@ func (baseDao *BaseDao) QueryStruct(finder *Finder, entity IEntityStruct) error 
 }
 
 //根据Finder和封装为指定的entity类型,entity必须是*struct类型
-func (baseDao *BaseDao) QueryStructList(finder *Finder, entity IEntityStruct, page *Page) ([]IEntityStruct, error) {
-	//检查Kind
-	checke := checkEntityKind(entity)
-	if checke != nil {
-		return nil, checke
-	}
+func (baseDao *BaseDao) QueryStructList(finder *Finder, entity *struct{}, page *Page) ([]IEntityStruct, error) {
 	mapList, err := baseDao.QueryMapList(finder, page)
 	if err != nil {
 		return nil, err
@@ -185,11 +175,14 @@ func (baseDao *BaseDao) UpdateFinder(finder *Finder) error {
 }
 
 //保存Struct对象
-func (baseDao *BaseDao) SaveStruct(entity IEntityStruct) error {
+func (baseDao *BaseDao) SaveStruct(entity *EntityStruct) error {
 	if entity == nil {
 		return errors.New("对象不能为空")
 	}
-	columns, values, err := columnAndValue(entity)
+
+	var a *struct{}
+	a = entity
+	columns, values, err := columnAndValue(a)
 	if err != nil {
 		return err
 	}
@@ -216,17 +209,17 @@ func (baseDao *BaseDao) SaveStruct(entity IEntityStruct) error {
 }
 
 //更新struct所有属性
-func (baseDao *BaseDao) UpdateStruct(entity IEntityStruct) error {
+func (baseDao *BaseDao) UpdateStruct(entity *EntityStruct) error {
 	return updateStructFunc(baseDao, entity, false)
 }
 
 //更新struct不为nil的属性
-func (baseDao *BaseDao) UpdateStructNotNil(entity IEntityStruct) error {
+func (baseDao *BaseDao) UpdateStructNotNil(entity *EntityStruct) error {
 	return updateStructFunc(baseDao, entity, true)
 }
 
 // 根据主键删除一个对象
-func (baseDao *BaseDao) DeleteStruct(entity IEntityStruct) error {
+func (baseDao *BaseDao) DeleteStruct(entity *EntityStruct) error {
 	if entity == nil {
 		return errors.New("对象不能为空")
 	}
@@ -256,7 +249,7 @@ func (baseDao *BaseDao) DeleteStruct(entity IEntityStruct) error {
 }
 
 //保存对象
-func (baseDao *BaseDao) SaveMap(entity IEntityMap) error {
+func (baseDao *BaseDao) SaveMap(entity *EntityMap) error {
 	if entity == nil {
 		return errors.New("对象不能为空")
 	}
@@ -283,7 +276,7 @@ func (baseDao *BaseDao) SaveMap(entity IEntityMap) error {
 }
 
 //保存Map
-func (baseDao *BaseDao) UpdateMap(entity IEntityMap) error {
+func (baseDao *BaseDao) UpdateMap(entity *EntityMap) error {
 	if entity == nil {
 		return errors.New("对象不能为空")
 	}
@@ -311,7 +304,7 @@ func (baseDao *BaseDao) UpdateMap(entity IEntityMap) error {
 }
 
 //根据保存的对象,返回插入的语句,需要插入的字段,字段的值.
-func columnAndValue(entity IEntityStruct) ([]reflect.StructField, []interface{}, error) {
+func columnAndValue(entity *struct{}) ([]reflect.StructField, []interface{}, error) {
 
 	// 获取实体类的反射
 	valueOf := reflect.ValueOf(entity)
@@ -388,7 +381,7 @@ func columnAndValue(entity IEntityStruct) ([]reflect.StructField, []interface{},
 }
 
 //获取实体类主键属性名称
-func entityPKFieldName(entity IEntityStruct) string {
+func entityPKFieldName(entity *EntityStruct) string {
 	//缓存的key,TypeOf和ValueOf的String()方法,返回值不一样
 	cacheKey := reflect.TypeOf(entity).Elem().String()
 	//列名和属性名的对照缓存
@@ -407,7 +400,7 @@ func entityPKFieldName(entity IEntityStruct) string {
 }
 
 //检查entity类型必须是*struct类型
-func checkEntityKind(entity IEntityStruct) error {
+func checkEntityKind(entity *EntityStruct) error {
 	if entity == nil {
 		return errors.New("参数不能为空,必须是*struct类型")
 	}
@@ -423,7 +416,7 @@ func checkEntityKind(entity IEntityStruct) error {
 }
 
 //根据数据库返回的sql.Rows,查询出列名和对应的值.
-func columnValueMap2EntityStruct(resultMap map[string]ColumnValue, entity IEntityStruct) error {
+func columnValueMap2EntityStruct(resultMap map[string]ColumnValue, entity *struct{}) error {
 
 	cacheKey := reflect.TypeOf(entity).Elem().String()
 	column2FieldNameMap := cacheColumn2FieldNameMap[cacheKey]
@@ -473,7 +466,7 @@ func wrapMap(columns []string, values []ColumnValue) (map[string]ColumnValue, er
 }
 
 //更新对象
-func updateStructFunc(baseDao *BaseDao, entity IEntityStruct, onlyupdatenotnull bool) error {
+func updateStructFunc(baseDao *BaseDao, entity *EntityStruct, onlyupdatenotnull bool) error {
 	if entity == nil {
 		return errors.New("对象不能为空")
 	}

@@ -25,7 +25,7 @@ func wrapPageSQL(dbType DBTYPE, sqlstr string) (string, error) {
 }
 
 //包装保存Struct语句
-func wrapSaveStructSQL(dbType DBTYPE, entity IEntityStruct, columns []reflect.StructField, values []interface{}) (string, error) {
+func wrapSaveStructSQL(dbType DBTYPE, entity *EntityStruct, columns []reflect.StructField, values []interface{}) (string, error) {
 
 	//SQL语句的构造器
 	var sqlBuilder strings.Builder
@@ -96,7 +96,7 @@ func wrapSaveStructSQL(dbType DBTYPE, entity IEntityStruct, columns []reflect.St
 }
 
 //包装更新Struct语句
-func wrapUpdateStructSQL(dbType DBTYPE, entity IEntityStruct, columns []reflect.StructField, values []interface{}, onlyupdatenotnull bool) (string, error) {
+func wrapUpdateStructSQL(dbType DBTYPE, entity *EntityStruct, columns []reflect.StructField, values []interface{}, onlyupdatenotnull bool) (string, error) {
 
 	//SQL语句的构造器
 	var sqlBuilder strings.Builder
