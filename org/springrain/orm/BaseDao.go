@@ -417,6 +417,11 @@ func checkEntityKind(entity IEntityStruct) error {
 //根据数据库返回的sql.Rows,查询出列名和对应的值.
 func columnValueMap2EntityStruct(resultMap map[string]ColumnValue, entity interface{}) error {
 
+	checkerr := checkEntityKind(entity)
+	if checkerr != nil {
+		return checkerr
+	}
+
 	cacheKey := reflect.TypeOf(entity).Elem().String()
 	column2FieldNameMap := cacheColumn2FieldNameMap[cacheKey]
 	if column2FieldNameMap == nil {
