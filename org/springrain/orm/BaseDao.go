@@ -102,7 +102,7 @@ func (baseDao *BaseDao) QueryMapList(finder *Finder, page *Page) ([]map[string]C
 	if page == nil {
 		sqlstr, err = wrapSQL(baseDao.config.DBType, finder.GetSQL())
 	} else {
-		sqlstr, err = wrapPageSQL(baseDao.config.DBType, finder.GetSQL())
+		sqlstr, err = wrapPageSQL(baseDao.config.DBType, finder.GetSQL(), page)
 	}
 
 	if err != nil {
