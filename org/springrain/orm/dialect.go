@@ -18,6 +18,12 @@ func wrapSQL(dbType DBTYPE, sqlstr string) (string, error) {
 	return sqlstr, nil
 }
 
+//包装分页的SQL语句
+func wrapPageSQL(dbType DBTYPE, sqlstr string) (string, error) {
+
+	return "", nil
+}
+
 //包装保存Struct语句
 func wrapSaveStructSQL(dbType DBTYPE, entity IEntityStruct, columns []reflect.StructField, values []interface{}) (string, error) {
 

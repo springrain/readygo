@@ -59,11 +59,61 @@ func (baseDao *BaseDao) QueryStruct(finder *Finder, entity IEntityStruct) error 
 	return nil
 }
 
+//根据Finder和封装为指定的entity类型,entity必须是*struct类型
+func (baseDao *BaseDao) QueryStructList(finder *Finder, entity IEntityStruct, page *Page) ([]IEntityStruct, error) {
+	//检查Kind
+	checke := checkEntityKind(entity)
+	if checke != nil {
+		return nil, checke
+	}
+	mapList, err := baseDao.QueryMapList(finder, page)
+	if err != nil {
+		return nil, err
+	}
+	structList := make([]IEntityStruct, 0)
+	for _, resultMap := range mapList {
+		var a IEntityStruct
+		util.DeepCopy(a, entity)
+		e := columnValueMap2EntityStruct(resultMap, a)
+
+		if e != nil {
+			return nil, e
+		}
+		structList = append(structList, a)
+	}
+
+	return structList, nil
+
+}
+
 //根据Finder查询,封装Map
 func (baseDao *BaseDao) QueryMap(finder *Finder) (map[string]ColumnValue, error) {
+	resultMapList, err := baseDao.QueryMapList(finder, nil)
+	if err != nil {
+		return nil, err
+	}
+	if resultMapList == nil {
+		return nil, err
+	}
+	if len(resultMapList) > 1 {
+		return resultMapList[0], errors.New("查询出多条数据")
+	}
+	return resultMapList[0], nil
+}
 
-	//获取到Finder的语句
-	sqlstr, err := wrapSQL(baseDao.config.DBType, finder.GetSQL())
+//根据Finder查询,封装Map
+func (baseDao *BaseDao) QueryMapList(finder *Finder, page *Page) ([]map[string]ColumnValue, error) {
+
+	var sqlstr string
+	var err error
+
+	//获取到没有page的sql的语句
+	if page == nil {
+		sqlstr, err = wrapSQL(baseDao.config.DBType, finder.GetSQL())
+	} else {
+		sqlstr, err = wrapPageSQL(baseDao.config.DBType, finder.GetSQL())
+	}
+
 	if err != nil {
 		return nil, err
 	}
@@ -72,22 +122,15 @@ func (baseDao *BaseDao) QueryMap(finder *Finder) (map[string]ColumnValue, error)
 	if e != nil {
 		return nil, e
 	}
-	//记录条数,本方法只能查询一个对象
-	i := 0
+
 	//数据库返回的列名
 	columns, cne := rows.Columns()
 	if cne != nil {
 		return nil, cne
 	}
-	result := make(map[string]ColumnValue)
+	resultMapList := make([]map[string]ColumnValue, 0)
 	//循环遍历结果集
 	for rows.Next() {
-		//只能查询出一条,如果查询出多条,只取第一条,然后抛错
-		i++
-		if i > 1 {
-			i++
-			break
-		}
 		//接收数据库返回的值,返回的字段值都是[]byte直接数组,需要使用指针接收.比较恶心......
 
 		values := make([]ColumnValue, len(columns))
@@ -102,18 +145,15 @@ func (baseDao *BaseDao) QueryMap(finder *Finder) (map[string]ColumnValue, error)
 		if err != nil {
 			return nil, err
 		}
-		result, err = wrapMap(columns, values)
+		result, e := wrapMap(columns, values)
+		if e != nil {
+			return nil, e
+		}
+		resultMapList = append(resultMapList, result)
 
 	}
 
-	//如果没有查询出数据
-	if i == 0 {
-		return nil, errors.New("没有查询出数据")
-	} else if i > 1 { //查询出多条数据,返回第一条
-		return result, errors.New("查询出多条数据")
-	}
-
-	return result, nil
+	return resultMapList, nil
 }
 
 //更新Finder
