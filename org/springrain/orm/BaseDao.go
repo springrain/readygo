@@ -26,6 +26,7 @@ var cacheDBColumnMap = make(map[string][]reflect.StructField)
 var cacheColumn2FieldNameMap = make(map[string]map[string]string)
 
 //数据库操作基类,隔离原生操作数据库API入口,所有数据库操作必须通过BaseDao进行.
+//bug(chunanyong) 1.需要完善支持的数据类型和赋值接口,例如sql.NullString.
 type BaseDao struct {
 	config     *DataSourceConfig
 	dataSource *dataSource

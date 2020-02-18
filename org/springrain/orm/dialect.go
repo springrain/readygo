@@ -36,6 +36,7 @@ func wrapPageSQL(dbType DBTYPE, sqlstr string, page *Page) (string, error) {
 		sqlbuilder.WriteString(strconv.Itoa(page.PageSize * (page.PageNo - 1)))
 	} else if dbType == DBType_MSSQL { //mssql
 		//先不写啦
+		//bug(chunanyong) 还需要其他的数据库分页语句
 	}
 	sqlstr = sqlbuilder.String()
 	return wrapSQL(dbType, sqlstr)
