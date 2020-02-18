@@ -38,7 +38,7 @@ func NewBaseDao(config *DataSourceConfig) (*BaseDao, error) {
 }
 
 //根据Finder和封装为指定的entity类型,entity必须是*struct类型
-func (baseDao *BaseDao) QueryStruct(finder *Finder, entity *interface{}) error {
+func (baseDao *BaseDao) QueryStruct(finder *Finder, entity interface{}) error {
 
 	//获取map对象
 	resultMap, err := baseDao.QueryMap(finder)
@@ -414,7 +414,7 @@ func checkEntityKind(entity IEntityStruct) error {
 }
 
 //根据数据库返回的sql.Rows,查询出列名和对应的值.
-func columnValueMap2EntityStruct(resultMap map[string]ColumnValue, entity *interface{}) error {
+func columnValueMap2EntityStruct(resultMap map[string]ColumnValue, entity interface{}) error {
 
 	cacheKey := reflect.TypeOf(entity).Elem().String()
 	column2FieldNameMap := cacheColumn2FieldNameMap[cacheKey]
