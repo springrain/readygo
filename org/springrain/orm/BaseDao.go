@@ -145,6 +145,8 @@ func (baseDao *BaseDao) QueryMapList(finder *Finder, page *Page) ([]map[string]C
 
 	}
 
+	//bug(chunanyong) 还缺少查询总条数的逻辑
+
 	return resultMapList, nil
 }
 
