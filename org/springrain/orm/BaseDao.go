@@ -53,14 +53,33 @@ func (baseDao *BaseDao) QueryStruct(finder *Finder, entity interface{}) error {
 
 //根据Finder和封装为指定的entity类型,entity必须是*[]struct类型,已经初始化好的数组,此方法只Append元素,这样调用方就不需要强制类型转换了.
 func (baseDao *BaseDao) QueryStructList(finder *Finder, rowsSlicePtr interface{}, page *Page) error {
+
+	if rowsSlicePtr == nil { //如果为nil
+		return errors.New("数组必须是&[]stuct类型")
+	}
+
+	pv1 := reflect.ValueOf(rowsSlicePtr)
+	if pv1.Kind() != reflect.Ptr { //如果不是指针
+		return errors.New("数组必须是&[]stuct类型")
+	}
+
+	//获取数组内元素的类型
+	sliceValue := reflect.Indirect(pv1)
+
+	if sliceValue.Kind() != reflect.Slice {
+		return errors.New("数组必须是&[]stuct类型")
+	}
+
+	sliceElementType := sliceValue.Type().Elem()
+
+	if sliceElementType.Kind() != reflect.Struct {
+		return errors.New("数组必须是&[]stuct类型")
+	}
+
 	mapList, err := baseDao.QueryMapList(finder, page)
 	if err != nil {
 		return err
 	}
-
-	//获取数组内元素的类型
-	sliceValue := reflect.Indirect(reflect.ValueOf(rowsSlicePtr))
-	sliceElementType := sliceValue.Type().Elem()
 
 	for _, resultMap := range mapList {
 		//deepCopy(a, entity)
