@@ -7,10 +7,10 @@ import (
 
 
 type Model struct {
-	ID        uint `gorm:"primary_key"`
-	CreatedAt time.Time
-	UpdatedAt time.Time
-	DeletedAt *time.Time `sql:"index"`
+	Id        int `column:"id"`
+	CreatedAt time.Time `column:"created_at"`
+	UpdatedAt time.Time  `column:"updated_at"`
+	DeletedAt *time.Time `column:"deleted_at"`
 }
 
 
@@ -34,8 +34,12 @@ func (u User) GetTableName() string {
 type Language struct {
 	orm.EntityStruct
 	Model
-	Name string
+	Name string  `column:"name"`
 	Users []*User
+}
+
+func (l Language) GetTableName() string {
+	return "languages"
 }
 
 type UserLanguages struct {

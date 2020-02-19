@@ -26,9 +26,11 @@ func initDate()  {
 
 	var user User
 	user.CreatedAt = time.Now()
-	user.ID = 3
+	user.Id = 3
 
 	baseDao.SaveStruct(&user)
+
+
 
 	
 }
@@ -45,5 +47,12 @@ func TestAdd(t *testing.T) {
 	table.Set("id",4)
 
 	baseDao.SaveMap(&table)
+
+
+	var l Language
+	l.Id = 9
+
+	l.Name = "englist"
+	baseDao.SaveStruct(&l)
 
 }
