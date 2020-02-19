@@ -18,12 +18,15 @@ func main() {
 	}
 	baseDao, _ := orm.NewBaseDao(&dataSourceConfig)
 
+	finder4 := orm.NewSelectFinder("t_user", "*")
+	maps, err := baseDao.QueryMapList(finder4, nil)
+	fmt.Println(maps, err)
 	users := []shop.User2{}
 	finder3 := orm.NewSelectFinder("t_user", "*")
 	baseDao.QueryStructList(finder3, &users, nil)
 	fmt.Println(users)
-
 	/*
+
 
 		user := shop.User2{
 			Id:      "id",

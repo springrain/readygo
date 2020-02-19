@@ -1,6 +1,9 @@
 package shop
 
-import "goshop/org/springrain/orm"
+import (
+	"database/sql"
+	"goshop/org/springrain/orm"
+)
 
 type User struct {
 	orm.EntityStruct
@@ -10,9 +13,9 @@ type User struct {
 
 type User2 struct {
 	orm.EntityStruct
-	Id      string `column:"id"`
-	Account string `column:"account"`
-	Age     int    `column:"age"`
+	Id      string        `column:"id"`
+	Account string        `column:"account"`
+	Age     sql.NullInt32 `column:"age"`
 	sex     string
 }
 
