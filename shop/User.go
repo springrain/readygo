@@ -22,3 +22,7 @@ type User2 struct {
 func (user *User) GetTableName() string {
 	return "t_user"
 }
+
+func (user *User2) GetTableName() string {
+	return "t_user"
+}

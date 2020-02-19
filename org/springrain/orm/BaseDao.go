@@ -61,8 +61,14 @@ func (baseDao *BaseDao) QueryStruct(finder *Finder, entity interface{}) error {
 	}
 	//声明载体数组,用于存放struct的属性指针
 	values := make([]interface{}, len(columns))
+	i := 0
 	//循环遍历结果集
 	for rows.Next() {
+
+		if i > 1 {
+			return errors.New("查询出多条数据")
+		}
+		i++
 		//遍历数据库的列名
 		for i, column := range columns {
 			//从缓存中获取列名的file字段
