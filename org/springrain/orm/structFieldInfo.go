@@ -196,14 +196,14 @@ func deepCopy(dst, src interface{}) error {
 func getDBColumnFieldMap(typeOf reflect.Type) (map[string]reflect.StructField, error) {
 	entityName := typeOf.String()
 
-	dbColumnFieldMap, dbOk := cacheStructFieldInfoMap.Load(dbPKNamePrefix + entityName)
+	dbColumnFieldMap, dbOk := cacheStructFieldInfoMap.Load(dbColumnNamePrefix + entityName)
 	if !dbOk { //缓存不存在
 		//获取实体类的输出字段和私有 字段
 		err := structFieldInfo(typeOf)
 		if err != nil {
 			return nil, err
 		}
-		dbColumnFieldMap, dbOk = cacheStructFieldInfoMap.Load(dbPKNamePrefix + entityName)
+		dbColumnFieldMap, dbOk = cacheStructFieldInfoMap.Load(dbColumnNamePrefix + entityName)
 	}
 
 	dbMap, efOK := dbColumnFieldMap.(map[string]reflect.StructField)
