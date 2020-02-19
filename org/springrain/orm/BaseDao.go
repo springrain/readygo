@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"goshop/org/springrain/util"
 	"reflect"
+	"strings"
 )
 
 //允许的Type
@@ -56,31 +57,38 @@ func (baseDao *BaseDao) QueryStruct(finder *Finder, entity interface{}) error {
 	return nil
 }
 
-//根据Finder和封装为指定的entity类型,entity必须是[]struct类型,已经初始化好的数组,此方法只Append元素,这样调用方就不需要强制类型转换了.
-func (baseDao *BaseDao) QueryStructList(finder *Finder, structList interface{}, page *Page) error {
+//根据Finder和封装为指定的entity类型,entity必须是*[]struct类型,已经初始化好的数组,此方法只Append元素,这样调用方就不需要强制类型转换了.
+func (baseDao *BaseDao) QueryStructList(finder *Finder, rowsSlicePtr interface{}, page *Page) error {
 	mapList, err := baseDao.QueryMapList(finder, page)
 	if err != nil {
 		return err
 	}
 
 	//获取数组内元素的类型
-	structType := reflect.TypeOf(structList).Elem()
+	sliceValue := reflect.Indirect(reflect.ValueOf(rowsSlicePtr))
+	sliceElementType := sliceValue.Type().Elem()
+
 	//	var a []structType = structList.([]structType)
 	//valueType := reflect.ValueOf(structList).Elem()
 	for _, resultMap := range mapList {
 		//util.DeepCopy(a, entity)
 
+		fmt.Println(resultMap)
+
 		//反射初始化一个元素
-		copy := reflect.New(structType).Interface()
-		e := columnValueMap2EntityStruct(resultMap, &copy)
+		//new 出来的为什么是个指针啊????
+		pv := reflect.New(sliceElementType).Elem()
 
-		if e != nil {
-			return e
+		//columnValueMap2EntityStruct(resultMap, &b)
+
+		for column, columnValue := range resultMap {
+			key := strings.ToUpper(column)
+			value := columnValue.String()
+			pv.FieldByName(key).Set(reflect.ValueOf(value))
 		}
-		structList = append(structList, copy)
-	}
 
-	fmt.Println(structList)
+		sliceValue.Set(reflect.Append(sliceValue, pv))
+	}
 
 	return nil
 

@@ -10,9 +10,9 @@ type User struct {
 }
 
 type User2 struct {
-	User
-	Id      string `column:"id"`
-	Account string `column:"account"`
+	orm.EntityStruct
+	ID      string `column:"id"`
+	ACCOUNT string `column:"account"`
 	Age     string
 	sex     string
 }

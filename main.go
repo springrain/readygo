@@ -18,46 +18,48 @@ func main() {
 	}
 	baseDao, _ := orm.NewBaseDao(&dataSourceConfig)
 
-	user := shop.User2{
-		Id:      "id",
-		Account: "test",
-	}
-
 	users := []shop.User2{}
 	finder3 := orm.NewSelectFinder("t_user", "id,account")
-	baseDao.QueryStructList(finder3, users, nil)
+	baseDao.QueryStructList(finder3, &users, nil)
 	fmt.Println(users)
 
-	finder := orm.NewSelectFinder(user.GetTableName(), "id,account")
-	finder.Append(" WHERE id=?", "id")
+	/*
 
-	baseDao.DeleteStruct(&user)
-	baseDao.SaveStruct(&user)
+		user := shop.User2{
+			Id:      "id",
+			Account: "test",
+		}
+			finder := orm.NewSelectFinder(user.GetTableName(), "id,account")
+			finder.Append(" WHERE id=?", "id")
 
-	user = shop.User2{}
+			baseDao.DeleteStruct(&user)
+			baseDao.SaveStruct(&user)
 
-	baseDao.QueryStruct(finder, &user)
-	fmt.Println(user.Account)
+			user = shop.User2{}
 
-	user.Account = "update"
-	baseDao.UpdateStruct(&user)
-	baseDao.QueryStruct(finder, &user)
+			baseDao.QueryStruct(finder, &user)
+			fmt.Println(user.Account)
 
-	userMap := orm.NewEntityMap("t_user")
+			user.Account = "update"
+			baseDao.UpdateStruct(&user)
+			baseDao.QueryStruct(finder, &user)
 
-	userMap.Set("id", "mapId")
-	userMap.Set("account", "mapAccount")
-	baseDao.SaveMap(&userMap)
-	userMap.Set("account", "213")
-	baseDao.UpdateMap(&userMap)
-	baseDao.QueryStruct(finder, &user)
+			userMap := orm.NewEntityMap("t_user")
 
-	finder2 := orm.NewUpdateFinder(user.GetTableName())
-	finder2.Append("acc")
-	finder2.Append("ount=?", "adad")
-	baseDao.UpdateFinder(finder2)
+			userMap.Set("id", "mapId")
+			userMap.Set("account", "mapAccount")
+			baseDao.SaveMap(&userMap)
+			userMap.Set("account", "213")
+			baseDao.UpdateMap(&userMap)
+			baseDao.QueryStruct(finder, &user)
 
-	baseDao.QueryStruct(finder, &user)
-	fmt.Println(user.Account)
+			finder2 := orm.NewUpdateFinder(user.GetTableName())
+			finder2.Append("acc")
+			finder2.Append("ount=?", "adad")
+			baseDao.UpdateFinder(finder2)
+
+			baseDao.QueryStruct(finder, &user)
+			fmt.Println(user.Account)
+	*/
 
 }
