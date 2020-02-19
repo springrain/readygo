@@ -30,13 +30,20 @@ func NewBaseDao(config *DataSourceConfig) (*BaseDao, error) {
 //根据Finder和封装为指定的entity类型,entity必须是*struct类型.把查询的数据赋值给entity,所以要求指针类型
 func (baseDao *BaseDao) QueryStruct(finder *Finder, entity interface{}) error {
 
+	checkerr := checkEntityKind(entity)
+	if checkerr != nil {
+		return checkerr
+	}
+
 	//获取map对象
 	resultMap, err := baseDao.QueryMap(finder)
 	if err != nil {
 		return err
 	}
-	e := columnValueMap2Struct(resultMap, entity)
-
+	typeOf := reflect.TypeOf(entity).Elem()
+	valueOf := reflect.ValueOf(entity).Elem()
+	//把map封装成struct
+	e := columnValueMap2Struct(resultMap, typeOf, valueOf)
 	if e != nil {
 		return e
 	}
@@ -55,26 +62,18 @@ func (baseDao *BaseDao) QueryStructList(finder *Finder, rowsSlicePtr interface{}
 	sliceValue := reflect.Indirect(reflect.ValueOf(rowsSlicePtr))
 	sliceElementType := sliceValue.Type().Elem()
 
-	dbMap, err := getDBColumnFieldMap(sliceElementType)
-
-	if err != nil {
-		return err
-	}
-
-	//	var a []structType = structList.([]structType)
-	//valueType := reflect.ValueOf(structList).Elem()
 	for _, resultMap := range mapList {
 		//deepCopy(a, entity)
 		//反射初始化一个元素
 		//new 出来的为什么是个指针啊????
 		pv := reflect.New(sliceElementType).Elem()
-
-		//bug(chunanyong)需要重新梳理字段缓存
-		for column, columnValue := range resultMap {
-			field := dbMap[column]
-			pv.FieldByName(field.Name).Set(reflect.ValueOf(columnValue.String()))
+		e := columnValueMap2Struct(resultMap, sliceElementType, pv)
+		if e != nil {
+			return e
 		}
 
+		//bug(chunanyong)需要重新梳理字段缓存
+		//通过反射给slice添加元素
 		sliceValue.Set(reflect.Append(sliceValue, pv))
 	}
 
@@ -394,27 +393,24 @@ func checkEntityKind(entity interface{}) error {
 }
 
 //根据数据库返回的sql.Rows,查询出列名和对应的值.
-func columnValueMap2Struct(resultMap map[string]ColumnValue, entity interface{}) error {
+func columnValueMap2Struct(resultMap map[string]ColumnValue, typeOf reflect.Type, valueOf reflect.Value) error {
 
-	checkerr := checkEntityKind(entity)
-	if checkerr != nil {
-		return checkerr
-	}
-
-	typeOf := reflect.TypeOf(entity).Elem()
 	dbMap, err := getDBColumnFieldMap(typeOf)
 	if err != nil {
 		return err
 	}
 
 	for column, columnValue := range resultMap {
-		field := dbMap[column]
+		field, ok := dbMap[column]
+		if !ok {
+			continue
+		}
 		fieldName := field.Name
 		if len(fieldName) < 1 {
 			continue
 		}
 		//反射获取字段的值对象
-		fieldValue := reflect.ValueOf(entity).Elem().FieldByName(fieldName)
+		fieldValue := valueOf.FieldByName(fieldName)
 		//获取值类型
 		kindType := fieldValue.Kind()
 		valueType := fieldValue.Type()
