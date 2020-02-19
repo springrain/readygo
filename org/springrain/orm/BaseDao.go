@@ -51,6 +51,7 @@ func (baseDao *BaseDao) QueryStruct(finder *Finder, entity interface{}) error {
 	return nil
 }
 
+//bug(chunanyong)数据库字段为null,映射异常
 //根据Finder和封装为指定的entity类型,entity必须是*[]struct类型,已经初始化好的数组,此方法只Append元素,这样调用方就不需要强制类型转换了.
 func (baseDao *BaseDao) QueryStructList(finder *Finder, rowsSlicePtr interface{}, page *Page) error {
 
