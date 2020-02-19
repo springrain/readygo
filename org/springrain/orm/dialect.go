@@ -8,6 +8,20 @@ import (
 	"time"
 )
 
+//数据库连接字符串
+func wrapDBDSN(config *DataSourceConfig) (string, error) {
+	if config == nil {
+		return "", nil
+	}
+	if config.DBType == DBType_MYSQL {
+		//username:password@tcp(127.0.0.1:3306)/dbName
+		dsn := config.UserName + ":" + config.PassWord + "@tcp(" + config.Host + ":" + strconv.Itoa(config.Port) + ")/" + config.DBName
+		return dsn, nil
+	}
+
+	return "", errors.New("不支持的数据库")
+}
+
 //包装基础的SQL语句
 func wrapSQL(dbType DBTYPE, sqlstr string) (string, error) {
 	if dbType == DBType_MYSQL || dbType == DBType_UNKNOWN {
