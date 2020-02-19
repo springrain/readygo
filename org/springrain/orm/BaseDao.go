@@ -17,10 +17,6 @@ var allowTypeMap = map[reflect.Kind]bool{
 	reflect.String:  true,
 }
 
-const (
-	tagColumnName = "column"
-)
-
 //数据库操作基类,隔离原生操作数据库API入口,所有数据库操作必须通过BaseDao进行.
 type BaseDao struct {
 	config     *DataSourceConfig

@@ -9,8 +9,10 @@ import (
 	"sync"
 )
 
-//缓存map的key前缀
 const (
+	//tag标签的名称
+	tagColumnName = "column"
+
 	//输出字段 缓存的前缀
 	exportPrefix = "_exportStructFields_"
 	//私有字段 缓存的前缀
