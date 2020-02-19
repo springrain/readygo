@@ -27,7 +27,7 @@ func main() {
 	fmt.Println(users)
 
 	user5 := shop.User2{}
-	finder5 := orm.NewSelectFinder(user5.GetTableName()).Append(" WHERE id=?", "id")
+	finder5 := orm.NewSelectFinder(user5.GetTableName()).Append(" WHERE id in(?)", []string{"id"})
 	baseDao.QueryStruct(finder5, &user5)
 	fmt.Println(user5)
 
