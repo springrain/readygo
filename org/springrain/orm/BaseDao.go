@@ -8,12 +8,15 @@ import (
 
 //允许的Type
 //bug(chunanyong) 1.需要完善支持的数据类型和赋值接口,例如sql.NullString.
+//废弃,是否支持让数据库自己抛错吧
+/*
 var allowTypeMap = map[reflect.Kind]bool{
 	reflect.Float32: true,
 	reflect.Float64: true,
 	reflect.Int:     true,
 	reflect.String:  true,
 }
+*/
 
 //数据库操作基类,隔离原生操作数据库API入口,所有数据库操作必须通过BaseDao进行.
 type BaseDao struct {
@@ -440,9 +443,9 @@ func columnAndValue(entity interface{}) ([]reflect.StructField, []interface{}, e
 	for _, field := range dbMap {
 		//获取字段类型的Kind
 		fieldKind := field.Type.Kind()
-		if !allowTypeMap[fieldKind] { //不允许的类型
-			continue
-		}
+		//if !allowTypeMap[fieldKind] { //不允许的类型
+		//	continue
+		//}
 
 		columns = append(columns, field)
 		//FieldByName方法返回的是reflect.Value类型,调用Interface()方法,返回原始类型的数据值
