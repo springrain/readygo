@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"goshop/org/springrain/util"
 	"reflect"
 	"strings"
 )
@@ -21,12 +20,6 @@ var allowTypeMap = map[reflect.Kind]bool{
 const (
 	tagColumnName = "column"
 )
-
-//缓存数据列,key是struct的name,是typeOf方法获取到的name.值是它的字段
-var cacheDBColumnMap = make(map[string][]reflect.StructField)
-
-//缓存数据库字段和struct属性名对应的Map.类似map["t_user"]map["id"]"Id"
-var cacheColumn2FieldNameMap = make(map[string]map[string]string)
 
 //数据库操作基类,隔离原生操作数据库API入口,所有数据库操作必须通过BaseDao进行.
 type BaseDao struct {
@@ -67,6 +60,13 @@ func (baseDao *BaseDao) QueryStructList(finder *Finder, rowsSlicePtr interface{}
 	//获取数组内元素的类型
 	sliceValue := reflect.Indirect(reflect.ValueOf(rowsSlicePtr))
 	sliceElementType := sliceValue.Type().Elem()
+
+	for i := 0; i < sliceElementType.NumField(); i++ {
+		field := sliceElementType.Field(i)
+
+		fmt.Println(field.Tag.Get("column"))
+
+	}
 
 	//	var a []structType = structList.([]structType)
 	//valueType := reflect.ValueOf(structList).Elem()
@@ -245,8 +245,12 @@ func (baseDao *BaseDao) DeleteStruct(entity IEntityStruct) error {
 	if entity == nil {
 		return errors.New("对象不能为空")
 	}
-	pkName := entityPKFieldName(entity)
-	value, e := util.StructFieldValue(entity, pkName)
+	pkName, err := entityPKFieldName(entity)
+	if err != nil {
+		return err
+	}
+
+	value, e := structFieldValue(entity, pkName)
 	if e != nil {
 		return e
 	}
@@ -336,51 +340,26 @@ func columnAndValue(entity interface{}) ([]reflect.StructField, []interface{}, e
 	//reflect.Indirect
 
 	//先从本地缓存中查找
-	entityName := reflect.TypeOf(entity).Elem().String()
-	exPortStructFields := cacheDBColumnMap[entityName]
-	if len(exPortStructFields) < 1 { //缓存不存在
-		//获取实体类的输出字段和私有 字段
-		var err error
-		exPortStructFields, _, err = util.StructFieldInfo(entity)
-		if err != nil {
-			return nil, nil, err
-		}
+	typeOf := reflect.TypeOf(entity).Elem()
+
+	dbMap, err := getDBColumnFieldMap(typeOf)
+	if err != nil {
+		return nil, nil, err
 	}
 
 	//实体类公开字段的长度
-	fLen := len(exPortStructFields)
+	fLen := len(dbMap)
 	//接收列的数组
 	columns := make([]reflect.StructField, 0, fLen)
 	//接收值的数组
 	values := make([]interface{}, 0, fLen)
 
-	//获取数据库列名和struct字段的对照缓存
-	isCacheColumn2Field := true
-	column2FieldNameMap := cacheColumn2FieldNameMap[entityName]
-	if column2FieldNameMap == nil || len(column2FieldNameMap) < 1 {
-		isCacheColumn2Field = false
-		column2FieldNameMap = make(map[string]string)
-		cacheColumn2FieldNameMap[entityName] = column2FieldNameMap
-	}
-
-	//遍历所有公共属性
-	for i := 0; i < fLen; i++ {
-		field := exPortStructFields[i]
+	//遍历所有数据库属性
+	for _, field := range dbMap {
 		//获取字段类型的Kind
 		fieldKind := field.Type.Kind()
 		if !allowTypeMap[fieldKind] { //不允许的类型
 			continue
-		}
-
-		// 只处理tag有column的字段
-		tagValue := field.Tag.Get(tagColumnName)
-		if len(tagValue) < 1 {
-			continue
-		}
-
-		//如果没缓存列名和字段对应表
-		if !isCacheColumn2Field {
-			column2FieldNameMap[tagValue] = field.Name
 		}
 
 		columns = append(columns, field)
@@ -392,28 +371,22 @@ func columnAndValue(entity interface{}) ([]reflect.StructField, []interface{}, e
 	}
 
 	//缓存数据库的列
-	cacheDBColumnMap[entityName] = columns
 
 	return columns, values, nil
 
 }
 
 //获取实体类主键属性名称
-func entityPKFieldName(entity IEntityStruct) string {
+func entityPKFieldName(entity IEntityStruct) (string, error) {
 	//缓存的key,TypeOf和ValueOf的String()方法,返回值不一样
-	cacheKey := reflect.TypeOf(entity).Elem().String()
-	//列名和属性名的对照缓存
-	column2FieldNameMap := cacheColumn2FieldNameMap[cacheKey]
-	//如果缓存不存在,调用缓存逻辑
-	if column2FieldNameMap == nil || len(column2FieldNameMap) < 1 {
-		columnAndValue(entity)
+	typeOf := reflect.TypeOf(entity).Elem()
+
+	dbMap, err := getDBColumnFieldMap(typeOf)
+	if err != nil {
+		return "", err
 	}
-
-	column2FieldNameMap = cacheColumn2FieldNameMap[cacheKey]
-	//获取主键的列名
-	pkName := column2FieldNameMap[entity.GetPKColumnName()]
-
-	return pkName
+	field := dbMap[entity.GetPKColumnName()]
+	return field.Name, nil
 
 }
 
@@ -441,14 +414,15 @@ func columnValueMap2EntityStruct(resultMap map[string]ColumnValue, entity interf
 		return checkerr
 	}
 
-	cacheKey := reflect.TypeOf(entity).Elem().String()
-	column2FieldNameMap := cacheColumn2FieldNameMap[cacheKey]
-	if column2FieldNameMap == nil {
-		columnAndValue(entity)
+	typeOf := reflect.TypeOf(entity).Elem()
+	dbMap, err := getDBColumnFieldMap(typeOf)
+	if err != nil {
+		return err
 	}
-	column2FieldNameMap = cacheColumn2FieldNameMap[cacheKey]
+
 	for column, columnValue := range resultMap {
-		fieldName := column2FieldNameMap[column]
+		field := dbMap[column]
+		fieldName := field.Name
 		if len(fieldName) < 1 {
 			continue
 		}

@@ -57,7 +57,11 @@ func wrapSaveStructSQL(dbType DBTYPE, entity IEntityStruct, columns []reflect.St
 
 	for i := 0; i < len(columns); i++ {
 		field := columns[i]
-		if field.Name == entityPKFieldName(entity) { //如果是主键
+		fieldName, e := entityPKFieldName(entity)
+		if e != nil {
+			return "", e
+		}
+		if field.Name == fieldName { //如果是主键
 			pkKind := field.Type.Kind()
 
 			if !(pkKind == reflect.String || pkKind == reflect.Int) { //只支持字符串和int类型的主键
@@ -127,7 +131,13 @@ func wrapUpdateStructSQL(dbType DBTYPE, entity IEntityStruct, columns []reflect.
 
 	for i := 0; i < len(columns); i++ {
 		field := columns[i]
-		if field.Name == entityPKFieldName(entity) { //如果是主键
+
+		fieldName, e := entityPKFieldName(entity)
+		if e != nil {
+			return "", e
+		}
+
+		if field.Name == fieldName { //如果是主键
 			pkValue = values[i]
 			//去掉这一列,最后处理主键
 			columns = append(columns[:i], columns[i+1:]...)

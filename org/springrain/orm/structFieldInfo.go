@@ -1,4 +1,4 @@
-package util
+package orm
 
 import (
 	"bytes"
@@ -11,58 +11,46 @@ import (
 
 //缓存map的key前缀
 const (
-	exPortPrefix  = "_exPortStructFields_"
+	//输出字段 缓存的前缀
+	exportPrefix = "_exportStructFields_"
+	//私有字段 缓存的前缀
 	privatePrefix = "_privateStructFields_"
+	//数据库列名 缓存的前缀
+	dbColumnNamePrefix = "_dbColumnName_"
+	//数据库主键  缓存的前缀
+	dbPKNamePrefix = "_dbPKName_"
 )
 
 // 用于缓存反射的信息,sync.Map内部处理了并发锁.全局变量不能使用:=简写声明
-var cacheStructFieldMap sync.Map
+var cacheStructFieldInfoMap sync.Map
 
 //获取StructField的信息.只对struct或者*struct判断,如果是指针,返回指针下实际的struct类型.
 //第一个返回值是可以输出的字段(首字母大写),第二个是不能输出的字段(首字母小写)
-func StructFieldInfo(s interface{}) ([]reflect.StructField, []reflect.StructField, error) {
+func structFieldInfo(typeOf reflect.Type) error {
 
-	if s == nil {
-		return nil, nil, errors.New("数据为空")
-	}
-	//entity的s类型
-	typeOf := reflect.TypeOf(s)
-
-	kind := typeOf.Kind()
-
-	if !(kind == reflect.Ptr || kind == reflect.Struct) {
-		return nil, nil, errors.New("必须是Struct或者*Struct类型")
+	if typeOf == nil {
+		return errors.New("数据为空")
 	}
 
-	if kind == reflect.Ptr {
-		//获取指针下的Struct类型
-		typeOf = typeOf.Elem()
-		if typeOf.Kind() != reflect.Struct {
-			return nil, nil, errors.New("必须是Struct或者*Struct类型")
-		}
-	}
+	entityName := typeOf.String()
 
 	//缓存的key
-	exPortCacheKey := exPortPrefix + typeOf.String()
-	privateCacheKey := privatePrefix + typeOf.String()
-	//缓存的值
-	cacheExPortStructFields, exportOk := cacheStructFieldMap.Load(exPortCacheKey)
-	cachePrivateStructFields, privateOk := cacheStructFieldMap.Load(privateCacheKey)
-
-	//如果存在值,返回值为true
-	if exportOk && privateOk {
-		//把 interface{} 类型 转为 []reflect.StructField 类型
-		return cacheExPortStructFields.([]reflect.StructField), cachePrivateStructFields.([]reflect.StructField), nil
+	exportCacheKey := exportPrefix + entityName
+	privateCacheKey := privatePrefix + entityName
+	dbColumnCacheKey := dbColumnNamePrefix + entityName
+	//dbPKNameCacheKey := dbPKNamePrefix + entityName
+	//缓存的数据库主键值
+	_, exportOk := cacheStructFieldInfoMap.Load(exportCacheKey)
+	//如果存在值,认为缓存中有所有的信息,不再处理
+	if exportOk {
+		return nil
 	}
 	//获取字段长度
 	fieldNum := typeOf.NumField()
 	//如果没有字段
 	if fieldNum < 1 {
-		return nil, nil, errors.New("entity没有属性")
+		return errors.New("entity没有属性")
 	}
-	//声明承接数组
-	exPortStructFields := make([]reflect.StructField, 0)
-	privateStructFields := make([]reflect.StructField, 0)
 
 	// 声明所有字段的载体
 	var allFieldMap sync.Map
@@ -81,16 +69,28 @@ func StructFieldInfo(s interface{}) ([]reflect.StructField, []reflect.StructFiel
 	//调用匿名struct的递归方法
 	recursiveAnonymousStruct(&allFieldMap, anonymous)
 
+	//缓存的数据
+	exportStructFieldMap := make(map[string]reflect.StructField)
+	privateStructFieldMap := make(map[string]reflect.StructField)
+	dbColumnFieldMap := make(map[string]reflect.StructField)
+
 	//遍历sync.Map,要求输入一个func作为参数
 	//这个函数的入参、出参的类型都已经固定，不能修改
 	//可以在函数体内编写自己的代码,调用map中的k,v
 	f := func(k, v interface{}) bool {
 		// fmt.Println(k, ":", v)
 		field := v.(reflect.StructField)
-		if ast.IsExported(field.Name) { //如果是可以输出的
-			exPortStructFields = append(exPortStructFields, field)
-		} else {
-			privateStructFields = append(privateStructFields, field)
+		fieldName := field.Name
+		if ast.IsExported(fieldName) { //如果是可以输出的
+			exportStructFieldMap[fieldName] = field
+			//如果是数据库字段
+			tagColumnName := field.Tag.Get(tagColumnName)
+			if len(tagColumnName) > 0 {
+				dbColumnFieldMap[tagColumnName] = field
+			}
+
+		} else { //私有属性
+			privateStructFieldMap[fieldName] = field
 		}
 
 		return true
@@ -98,10 +98,11 @@ func StructFieldInfo(s interface{}) ([]reflect.StructField, []reflect.StructFiel
 	allFieldMap.Range(f)
 
 	//加入缓存
-	cacheStructFieldMap.Store(exPortCacheKey, exPortStructFields)
-	cacheStructFieldMap.Store(privateCacheKey, privateStructFields)
+	cacheStructFieldInfoMap.Store(exportCacheKey, exportStructFieldMap)
+	cacheStructFieldInfoMap.Store(privateCacheKey, privateStructFieldMap)
+	cacheStructFieldInfoMap.Store(dbColumnCacheKey, dbColumnFieldMap)
 
-	return exPortStructFields, privateStructFields, nil
+	return nil
 }
 
 //递归调用struct的匿名属性,就近覆盖属性.
@@ -153,7 +154,7 @@ func recursiveAnonymousStruct(allFieldMap *sync.Map, anonymous []reflect.StructF
 }
 
 //获取指定字段的值
-func StructFieldValue(s interface{}, fieldName string) (interface{}, error) {
+func structFieldValue(s interface{}, fieldName string) (interface{}, error) {
 
 	if s == nil || len(fieldName) < 1 {
 		return nil, errors.New("数据为空")
@@ -182,10 +183,30 @@ func StructFieldValue(s interface{}, fieldName string) (interface{}, error) {
 }
 
 //深度拷贝对象.golang没有构造函数,反射复制对象时,对象中struct类型的属性无法初始化,指针属性也会收到影响.使用深度对象拷贝
-func DeepCopy(dst, src interface{}) error {
+func deepCopy(dst, src interface{}) error {
 	var buf bytes.Buffer
 	if err := gob.NewEncoder(&buf).Encode(src); err != nil {
 		return err
 	}
 	return gob.NewDecoder(bytes.NewBuffer(buf.Bytes())).Decode(dst)
+}
+
+func getDBColumnFieldMap(typeOf reflect.Type) (map[string]reflect.StructField, error) {
+	entityName := typeOf.String()
+
+	dbColumnFieldMap, dbOk := cacheStructFieldInfoMap.Load(dbPKNamePrefix + entityName)
+	if !dbOk { //缓存不存在
+		//获取实体类的输出字段和私有 字段
+		err := structFieldInfo(typeOf)
+		if err != nil {
+			return nil, err
+		}
+		dbColumnFieldMap, dbOk = cacheStructFieldInfoMap.Load(dbPKNamePrefix + entityName)
+	}
+
+	dbMap, efOK := dbColumnFieldMap.(map[string]reflect.StructField)
+	if !efOK {
+		return nil, errors.New("缓存公共字段异常")
+	}
+	return dbMap, nil
 }
