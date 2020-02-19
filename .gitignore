@@ -28,6 +28,9 @@ Thumbs.db
 .test
 iprepo.txt
 
+
+
+
 goshop/*/*/cmd/cmd
 goshop/*/*/*/cmd/cmd
 goshop/*/*/cmd/debug
