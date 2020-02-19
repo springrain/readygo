@@ -28,9 +28,11 @@ type EntityStruct struct {
 const defaultPkName = "id"
 
 //获取表名称
+/*
 func (entity *EntityStruct) GetTableName() string {
 	return ""
 }
+*/
 
 //获取数据库表的主键字段名称.因为要兼容Map,只能是数据库的字段名称.对应的struct 属性field,使用cacheStructPKFieldNameMap缓存
 func (entity *EntityStruct) GetPKColumnName() string {

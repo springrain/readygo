@@ -293,6 +293,9 @@ func (baseDao *BaseDao) SaveStruct(entity IEntityStruct) error {
 	if err != nil {
 		return err
 	}
+	if len(columns) < 1 {
+		return errors.New("没有tag信息,请检查struct中 column 的tag")
+	}
 	//SQL语句
 	sqlstr, err := wrapSaveStructSQL(baseDao.config.DBType, entity, columns, values)
 	if err != nil {
@@ -442,7 +445,7 @@ func columnAndValue(entity interface{}) ([]reflect.StructField, []interface{}, e
 	//遍历所有数据库属性
 	for _, field := range dbMap {
 		//获取字段类型的Kind
-	//	fieldKind := field.Type.Kind()
+		//	fieldKind := field.Type.Kind()
 		//if !allowTypeMap[fieldKind] { //不允许的类型
 		//	continue
 		//}
