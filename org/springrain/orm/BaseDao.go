@@ -100,6 +100,7 @@ func (baseDao *BaseDao) QueryStruct(finder *Finder, entity interface{}) error {
 
 //bug(chunanyong)数据库字段为null,映射异常
 //bug(chunanyong)需要处理查询总条数的逻辑
+//bug(chunanyong)需要处理查询一个基础类型的情况,例如 int,[]int
 //根据Finder和封装为指定的entity类型,entity必须是*[]struct类型,已经初始化好的数组,此方法只Append元素,这样调用方就不需要强制类型转换了.
 func (baseDao *BaseDao) QueryStructList(finder *Finder, rowsSlicePtr interface{}, page *Page) error {
 
@@ -178,7 +179,6 @@ func (baseDao *BaseDao) QueryStructList(finder *Finder, rowsSlicePtr interface{}
 		}
 
 		//values[i] = f.Addr().Interface()
-		//bug(chunanyong)需要重新梳理字段缓存
 		//通过反射给slice添加元素
 		sliceValue.Set(reflect.Append(sliceValue, pv))
 	}
