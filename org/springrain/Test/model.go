@@ -27,6 +27,10 @@ type User struct {
  	Languages []*Language
 }
 
+func (u User) GetTableName() string {
+	return "user"
+}
+
 type Language struct {
 	orm.EntityStruct
 	Model

@@ -2,7 +2,6 @@ package main
 
 import (
 	"goshop/org/springrain/orm"
-	"math/rand"
 	"testing"
 	"time"
 )
@@ -27,7 +26,7 @@ func initDate()  {
 
 	var user User
 	user.CreatedAt = time.Now()
-	user.ID = uint(rand.Int())
+	user.ID = 3
 
 	baseDao.SaveStruct(&user)
 
@@ -39,6 +38,12 @@ func TestAdd(t *testing.T) {
 
 	initDatabase()
 
-	initDate()
+	//initDate()
+
+	table := orm.NewEntityMap("user")
+
+	table.Set("id",4)
+
+	baseDao.SaveMap(&table)
 
 }
