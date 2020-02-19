@@ -3,9 +3,7 @@ package orm
 import (
 	"context"
 	"errors"
-	"fmt"
 	"reflect"
-	"strings"
 )
 
 //允许的Type
@@ -37,7 +35,7 @@ func (baseDao *BaseDao) QueryStruct(finder *Finder, entity interface{}) error {
 	if err != nil {
 		return err
 	}
-	e := columnValueMap2EntityStruct(resultMap, entity)
+	e := columnValueMap2Struct(resultMap, entity)
 
 	if e != nil {
 		return e
@@ -57,31 +55,24 @@ func (baseDao *BaseDao) QueryStructList(finder *Finder, rowsSlicePtr interface{}
 	sliceValue := reflect.Indirect(reflect.ValueOf(rowsSlicePtr))
 	sliceElementType := sliceValue.Type().Elem()
 
-	for i := 0; i < sliceElementType.NumField(); i++ {
-		field := sliceElementType.Field(i)
+	dbMap, err := getDBColumnFieldMap(sliceElementType)
 
-		fmt.Println(field.Tag.Get("column"))
-
+	if err != nil {
+		return err
 	}
 
 	//	var a []structType = structList.([]structType)
 	//valueType := reflect.ValueOf(structList).Elem()
 	for _, resultMap := range mapList {
-		//util.DeepCopy(a, entity)
-
-		fmt.Println(resultMap)
-
+		//deepCopy(a, entity)
 		//反射初始化一个元素
 		//new 出来的为什么是个指针啊????
 		pv := reflect.New(sliceElementType).Elem()
 
-		//columnValueMap2EntityStruct(resultMap, &b)
-
 		//bug(chunanyong)需要重新梳理字段缓存
 		for column, columnValue := range resultMap {
-			key := strings.ToUpper(column)
-			value := columnValue.String()
-			pv.FieldByName(key).Set(reflect.ValueOf(value))
+			field := dbMap[column]
+			pv.FieldByName(field.Name).Set(reflect.ValueOf(columnValue.String()))
 		}
 
 		sliceValue.Set(reflect.Append(sliceValue, pv))
@@ -403,7 +394,7 @@ func checkEntityKind(entity interface{}) error {
 }
 
 //根据数据库返回的sql.Rows,查询出列名和对应的值.
-func columnValueMap2EntityStruct(resultMap map[string]ColumnValue, entity interface{}) error {
+func columnValueMap2Struct(resultMap map[string]ColumnValue, entity interface{}) error {
 
 	checkerr := checkEntityKind(entity)
 	if checkerr != nil {

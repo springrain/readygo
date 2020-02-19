@@ -208,7 +208,7 @@ func getDBColumnFieldMap(typeOf reflect.Type) (map[string]reflect.StructField, e
 
 	dbMap, efOK := dbColumnFieldMap.(map[string]reflect.StructField)
 	if !efOK {
-		return nil, errors.New("缓存公共字段异常")
+		return nil, errors.New("缓存数据库字段异常")
 	}
 	return dbMap, nil
 }
