@@ -442,7 +442,7 @@ func columnAndValue(entity interface{}) ([]reflect.StructField, []interface{}, e
 	//遍历所有数据库属性
 	for _, field := range dbMap {
 		//获取字段类型的Kind
-		fieldKind := field.Type.Kind()
+		//fieldKind := field.Type.Kind()
 		//if !allowTypeMap[fieldKind] { //不允许的类型
 		//	continue
 		//}
