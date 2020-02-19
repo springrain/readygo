@@ -34,18 +34,56 @@ func (baseDao *BaseDao) QueryStruct(finder *Finder, entity interface{}) error {
 	if checkerr != nil {
 		return checkerr
 	}
-
-	//获取map对象
-	resultMap, err := baseDao.QueryMap(finder)
+	//获取到sql语句
+	sqlstr, err := wrapQuerySQL(baseDao.config.DBType, finder, nil)
 	if err != nil {
 		return err
 	}
-	typeOf := reflect.TypeOf(entity).Elem()
-	valueOf := reflect.ValueOf(entity).Elem()
-	//把map封装成struct
-	e := columnValueMap2Struct(resultMap, typeOf, valueOf)
+
+	//根据语句和参数查询
+	rows, e := baseDao.dataSource.Query(sqlstr, finder.Values...)
 	if e != nil {
 		return e
+	}
+
+	//数据库返回的列名
+	columns, cne := rows.Columns()
+	if cne != nil {
+		return cne
+	}
+
+	typeOf := reflect.TypeOf(entity).Elem()
+	valueOf := reflect.ValueOf(entity).Elem()
+	//获取到类型的字段缓存
+	dbColumnFieldMap, e := getDBColumnFieldMap(typeOf)
+	if e != nil {
+		return err
+	}
+	//声明载体数组,用于存放struct的属性指针
+	values := make([]interface{}, len(columns))
+	//循环遍历结果集
+	for rows.Next() {
+		//遍历数据库的列名
+		for i, column := range columns {
+			//从缓存中获取列名的file字段
+			field, fok := dbColumnFieldMap[column]
+			if !fok { //如果列名不存在,就初始化一个空值
+				values[i] = new(interface{})
+				continue
+			}
+			//获取struct的属性值的指针地址
+			value := valueOf.FieldByName(field.Name).Addr().Interface()
+			//把指针地址放到数组
+			values[i] = value
+		}
+		//scan赋值.是一个指针数组,已经根据struct的属性类型初始化了,sql驱动能感知到参数类型,所以可以直接赋值给struct的指针.这样struct的属性就有值了
+		//困扰了我2天,sql驱动真恶心......
+		//再说一遍,sql驱动垃圾......
+		err = rows.Scan(values...)
+		if err != nil {
+			return err
+		}
+
 	}
 
 	return nil
@@ -80,15 +118,7 @@ func (baseDao *BaseDao) QueryStructList(finder *Finder, rowsSlicePtr interface{}
 		return errors.New("数组必须是&[]stuct类型")
 	}
 
-	//SQL语句
-	var sqlstr string
-	var err error
-
-	if page == nil { //不分页的sql语句
-		sqlstr, err = wrapSQL(baseDao.config.DBType, finder.GetSQL())
-	} else { //分页的sql语句
-		sqlstr, err = wrapPageSQL(baseDao.config.DBType, finder.GetSQL(), page)
-	}
+	sqlstr, err := wrapQuerySQL(baseDao.config.DBType, finder, nil)
 	if err != nil {
 		return err
 	}
@@ -169,19 +199,11 @@ func (baseDao *BaseDao) QueryMap(finder *Finder) (map[string]interface{}, error)
 //golang的sql驱动不支持获取到数据字段的metadata......垃圾.....
 func (baseDao *BaseDao) QueryMapList(finder *Finder, page *Page) ([]map[string]interface{}, error) {
 
-	var sqlstr string
-	var err error
-
-	//获取到没有page的sql的语句
-	if page == nil {
-		sqlstr, err = wrapSQL(baseDao.config.DBType, finder.GetSQL())
-	} else {
-		sqlstr, err = wrapPageSQL(baseDao.config.DBType, finder.GetSQL(), page)
-	}
-
+	sqlstr, err := wrapQuerySQL(baseDao.config.DBType, finder, nil)
 	if err != nil {
 		return nil, err
 	}
+
 	//根据语句和参数查询
 	rows, e := baseDao.dataSource.Query(sqlstr, finder.Values...)
 	if e != nil {
@@ -460,9 +482,10 @@ func checkEntityKind(entity interface{}) error {
 	return nil
 }
 
-//根据数据库返回的sql.Rows,查询出列名和对应的值.
+//根据数据库返回的sql.Rows,查询出列名和对应的值.废弃
+/*
 func columnValueMap2Struct(resultMap map[string]interface{}, typeOf reflect.Type, valueOf reflect.Value) error {
-	/*
+
 
 		dbMap, err := getDBColumnFieldMap(typeOf)
 		if err != nil {
@@ -500,19 +523,21 @@ func columnValueMap2Struct(resultMap map[string]interface{}, typeOf reflect.Type
 			fieldValue.Set(reflect.ValueOf(v))
 
 		}
-	*/
+
 	return nil
 
 }
-
-//根据sql查询结果,返回map
-func wrapMap(columns []string, values []ColumnValue) (map[string]ColumnValue, error) {
-	columnValueMap := make(map[string]ColumnValue)
+*/
+//根据sql查询结果,返回map.废弃
+/*
+func wrapMap(columns []string, values []columnValue) (map[string]columnValue, error) {
+	columnValueMap := make(map[string]columnValue)
 	for i, column := range columns {
 		columnValueMap[column] = values[i]
 	}
 	return columnValueMap, nil
 }
+*/
 
 //更新对象
 func updateStructFunc(baseDao *BaseDao, entity IEntityStruct, onlyupdatenotnull bool) error {
