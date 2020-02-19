@@ -6,14 +6,13 @@ type User struct {
 	orm.EntityStruct
 	Id      string
 	Account string
-	age     int
 }
 
 type User2 struct {
 	orm.EntityStruct
-	ID      string `column:"id"`
-	ACCOUNT string `column:"account"`
-	Age     string
+	Id      string `column:"id"`
+	Account string `column:"account"`
+	Age     int    `column:"age"`
 	sex     string
 }
 

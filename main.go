@@ -19,7 +19,7 @@ func main() {
 	baseDao, _ := orm.NewBaseDao(&dataSourceConfig)
 
 	users := []shop.User2{}
-	finder3 := orm.NewSelectFinder("t_user", "id,account")
+	finder3 := orm.NewSelectFinder("t_user", "*")
 	baseDao.QueryStructList(finder3, &users, nil)
 	fmt.Println(users)
 
