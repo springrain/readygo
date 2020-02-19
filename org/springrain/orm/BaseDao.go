@@ -81,6 +81,7 @@ func (baseDao *BaseDao) QueryStructList(finder *Finder, rowsSlicePtr interface{}
 
 		//columnValueMap2EntityStruct(resultMap, &b)
 
+		//bug(chunanyong)需要重新梳理字段缓存
 		for column, columnValue := range resultMap {
 			key := strings.ToUpper(column)
 			value := columnValue.String()
