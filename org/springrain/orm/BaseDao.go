@@ -391,11 +391,11 @@ func (baseDao *BaseDao) SaveStruct(entity IEntityStruct) error {
 	if err != nil {
 		return err
 	}
-	//如果是自增,获取到Id
+	//如果是自增主键
 	if autoIncrement {
-		//需要数据库支持
+		//需要数据库支持,获取自增主键
 		autoIncrementId, e := res.LastInsertId()
-		if err != nil {
+		if e != nil {
 			return e
 		}
 		pkName := entity.GetPKColumnName()
