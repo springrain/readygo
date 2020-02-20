@@ -31,7 +31,7 @@ func NewFinder() *Finder {
 
 //根据表名初始化查询的Finder
 //NewSelectFinder("tableName") SELECT * FROM tableName
-//NewSelectFinder("tableName", "id") SELECT id FROM tableName
+//NewSelectFinder("tableName", "id,name") SELECT id,name FROM tableName
 func NewSelectFinder(tableName string, strs ...string) *Finder {
 	finder := NewFinder()
 	finder.sqlBuilder.WriteString("SELECT ")
