@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"reflect"
+	"strings"
 )
 
 //允许的Type
@@ -189,6 +190,14 @@ func (baseDao *BaseDao) QueryStructList(finder *Finder, rowsSlicePtr interface{}
 			sliceValue.Set(reflect.Append(sliceValue, pv.Elem()))
 		}
 
+		//查询总条数
+		if page != nil && page.SelectPageCount {
+			count, err := selectCount(baseDao, finder)
+			if err != nil {
+				return err
+			}
+			page.SetTotalCount(count)
+		}
 		return nil
 	}
 
@@ -230,6 +239,16 @@ func (baseDao *BaseDao) QueryStructList(finder *Finder, rowsSlicePtr interface{}
 		//通过反射给slice添加元素
 		sliceValue.Set(reflect.Append(sliceValue, pv))
 	}
+
+	//查询总条数
+	if page != nil && page.SelectPageCount {
+		count, err := selectCount(baseDao, finder)
+		if err != nil {
+			return err
+		}
+		page.SetTotalCount(count)
+	}
+
 	return nil
 
 }
@@ -300,6 +319,15 @@ func (baseDao *BaseDao) QueryMapList(finder *Finder, page *Page) ([]map[string]i
 	}
 
 	//bug(springrain) 还缺少查询总条数的逻辑
+	//查询总条数
+	if page != nil && page.SelectPageCount {
+		count, err := selectCount(baseDao, finder)
+		if err != nil {
+			return resultMapList, err
+		}
+		page.SetTotalCount(count)
+	}
+
 	return resultMapList, nil
 }
 
@@ -626,5 +654,62 @@ func updateStructFunc(baseDao *BaseDao, entity IEntityStruct, onlyupdatenotnull 
 
 	//fmt.Println(entity.GetTableName() + " update success")
 	return nil
+
+}
+
+//根据finder查询总条数
+func selectCount(baseDao *BaseDao, finder *Finder) (int, error) {
+
+	if finder == nil {
+		return -1, errors.New("参数为nil")
+	}
+	//自定义的查询总条数Finder,主要是为了在group by等复杂情况下,为了性能,手动编写总条数语句
+	if finder.CountFinder != nil {
+		count := -1
+		err := baseDao.QueryStruct(finder.CountFinder, &count)
+		if err != nil {
+			return -1, err
+		}
+		return count, nil
+	}
+
+	countsql, err := finder.GetSQL()
+	if err != nil {
+		return -1, err
+	}
+
+	//查询order by 的位置
+	locOrderBy := findOrderByIndex(countsql)
+	if len(locOrderBy) > 0 { //如果存在order by
+		countsql = countsql[:locOrderBy[0]]
+	}
+	s := strings.ToLower(countsql)
+	gbi := -1
+	locGroupBy := findGroupByIndex(countsql)
+	if len(locGroupBy) > 0 {
+		gbi = locGroupBy[0]
+	}
+	//特殊关键字,包装SQL
+	if strings.Index(s, " distinct ") > -1 || strings.Index(s, " union ") > -1 || gbi > -1 {
+		countsql = "SELECT COUNT(*)  frame_row_count FROM (" + countsql + ") temp_frame_noob_table_name WHERE 1=1 "
+	} else {
+		locFrom := findFromIndex(countsql)
+		//没有找到FROM关键字,认为是异常语句
+		if len(locFrom) < 0 {
+			return -1, errors.New("没有FROM关键字,语句错误")
+		}
+		countsql = "SELECT COUNT(*) " + countsql[locFrom[0]:]
+	}
+
+	countFinder := NewFinder()
+	countFinder.Append(countsql)
+	countFinder.Values = finder.Values
+
+	count := -1
+	cerr := baseDao.QueryStruct(countFinder, &count)
+	if cerr != nil {
+		return -1, cerr
+	}
+	return count, nil
 
 }

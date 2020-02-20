@@ -28,8 +28,10 @@ func main() {
 	*/
 	ids := []string{}
 	finder5 := orm.NewSelectFinder("t_user", "id")
-	baseDao.QueryStructList(finder5, &ids, nil)
-	fmt.Println(ids)
+	page := orm.NewPage()
+	err := baseDao.QueryStructList(finder5, &ids, &page)
+
+	fmt.Println(ids, page.TotalCount, err)
 
 	/*
 

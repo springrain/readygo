@@ -3,6 +3,7 @@ package orm
 import (
 	"errors"
 	"reflect"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -335,4 +336,34 @@ func rebind(dbType DBTYPE, query string) string {
 	}
 
 	return string(append(rqb, query...))
+}
+
+//查询order by在sql中出现的开始位置和结束位置
+var orderByExpr = "\\s+(order)\\s+(by)+\\s"
+var orderByRegexp, _ = regexp.Compile(orderByExpr)
+
+//查询order by在sql中出现的开始位置和结束位置
+func findOrderByIndex(strsql string) []int {
+	loc := orderByRegexp.FindStringIndex(strings.ToLower(strsql))
+	return loc
+}
+
+//查询group by在sql中出现的开始位置和结束位置
+var groupByExpr = "\\s+(group)\\s+(by)+\\s"
+var groupByRegexp, _ = regexp.Compile(groupByExpr)
+
+//查询group by在sql中出现的开始位置和结束位置
+func findGroupByIndex(strsql string) []int {
+	loc := groupByRegexp.FindStringIndex(strings.ToLower(strsql))
+	return loc
+}
+
+//查询 from 在sql中出现的开始位置和结束位置
+var fromExpr = "\\s+(from)+\\s"
+var fromRegexp, _ = regexp.Compile(fromExpr)
+
+//查询from在sql中出现的开始位置和结束位置
+func findFromIndex(strsql string) []int {
+	loc := fromRegexp.FindStringIndex(strings.ToLower(strsql))
+	return loc
 }
