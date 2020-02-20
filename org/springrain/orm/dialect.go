@@ -97,7 +97,7 @@ func wrapSaveStructSQL(dbType DBTYPE, entity IEntityStruct, columns []reflect.St
 				continue
 
 			} else if (pkKind == reflect.String) && (pkValue.(string) == "") { //主键是字符串类型,并且值为"",赋值id
-				id := strconv.FormatInt(time.Now().UnixNano(), 10)
+				id := generateStringID()
 				values[i] = id
 				//给对象主键赋值
 				v := reflect.ValueOf(entity).Elem()
@@ -366,4 +366,10 @@ var fromRegexp, _ = regexp.Compile(fromExpr)
 func findFromIndex(strsql string) []int {
 	loc := fromRegexp.FindStringIndex(strings.ToLower(strsql))
 	return loc
+}
+
+//生成主键字符串
+func generateStringID() string {
+	pk := strconv.FormatInt(time.Now().UnixNano(), 10)
+	return pk
 }
