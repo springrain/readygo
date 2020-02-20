@@ -9,14 +9,24 @@ import (
 //允许的Type
 //bug(springrain) 1.需要完善支持的数据类型和赋值接口,例如sql.NullString.
 //废弃,是否支持让数据库自己抛错吧
-/*
-var allowTypeMap = map[reflect.Kind]bool{
+var allowBaseTypeMap = map[reflect.Kind]bool{
+	reflect.String: true,
+
+	reflect.Int:   true,
+	reflect.Int8:  true,
+	reflect.Int16: true,
+	reflect.Int32: true,
+	reflect.Int64: true,
+
+	reflect.Uint:   true,
+	reflect.Uint8:  true,
+	reflect.Uint16: true,
+	reflect.Uint32: true,
+	reflect.Uint64: true,
+
 	reflect.Float32: true,
 	reflect.Float64: true,
-	reflect.Int:     true,
-	reflect.String:  true,
 }
-*/
 
 //数据库操作基类,隔离原生操作数据库API入口,所有数据库操作必须通过BaseDao进行.
 type BaseDao struct {
@@ -49,13 +59,32 @@ func (baseDao *BaseDao) QueryStruct(finder *Finder, entity interface{}) error {
 		return e
 	}
 
+	typeOf := reflect.TypeOf(entity).Elem()
+
 	//数据库返回的列名
 	columns, cne := rows.Columns()
 	if cne != nil {
 		return cne
 	}
 
-	typeOf := reflect.TypeOf(entity).Elem()
+	//如果是基础类型,就查询一个字段
+	if allowBaseTypeMap[typeOf.Kind()] && len(columns) == 1 {
+		i := 0
+		//循环遍历结果集
+		for rows.Next() {
+			if i > 1 {
+				return errors.New("查询出多条数据")
+			}
+			i++
+			err = rows.Scan(entity)
+			if err != nil {
+				return err
+			}
+		}
+
+		return nil
+	}
+
 	valueOf := reflect.ValueOf(entity).Elem()
 	//获取到类型的字段缓存
 	dbColumnFieldMap, e := getDBColumnFieldMap(typeOf)
@@ -124,7 +153,7 @@ func (baseDao *BaseDao) QueryStructList(finder *Finder, rowsSlicePtr interface{}
 	sliceElementType := sliceValue.Type().Elem()
 
 	//如果不是struct
-	if sliceElementType.Kind() != reflect.Struct {
+	if !(sliceElementType.Kind() == reflect.Struct || allowBaseTypeMap[sliceElementType.Kind()]) {
 		return errors.New("数组必须是&[]stuct类型")
 	}
 
@@ -487,7 +516,7 @@ func checkEntityKind(entity interface{}) error {
 		return errors.New("必须是*struct类型")
 	}
 	typeOf = typeOf.Elem()
-	if typeOf.Kind() != reflect.Struct { //如果不是指针
+	if !(typeOf.Kind() == reflect.Struct || allowBaseTypeMap[typeOf.Kind()]) { //如果不是指针
 		return errors.New("必须是*struct类型")
 	}
 	return nil
