@@ -399,7 +399,7 @@ func (baseDao *BaseDao) SaveStruct(entity IEntityStruct) error {
 			return e
 		}
 		pkName := entity.GetPKColumnName()
-		//设置值
+		//设置自增主键的值
 		setFieldValueByColumnName(entity, pkName, autoIncrementId)
 	}
 
