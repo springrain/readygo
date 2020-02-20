@@ -42,8 +42,8 @@ func NewBaseDao(config *DataSourceConfig) (*BaseDao, error) {
 	return &BaseDao{config, dataSource}, err
 }
 
-//事务方法
-func (baseDao *BaseDao) Transaction(doTransaction func(session *Session) (interface{}, error)) (interface{}, error) {
+//事务方法,隔离session相关的API.必须通过这个方法进行事务处理,统一事务方式
+func (baseDao *BaseDao) Transaction(doTransaction func(sesion *Session) (interface{}, error)) (interface{}, error) {
 	session := baseDao.dataSource.getSession()
 	session.begin()
 	defer func() {
