@@ -375,7 +375,7 @@ func (baseDao *BaseDao) SaveStruct(entity IEntityStruct) error {
 		return errors.New("没有tag信息,请检查struct中 column 的tag")
 	}
 	//SQL语句
-	sqlstr, err := wrapSaveStructSQL(baseDao.config.DBType, entity, columns, values)
+	sqlstr, autoIncrement, err := wrapSaveStructSQL(baseDao.config.DBType, entity, columns, values)
 	if err != nil {
 		return err
 	}
@@ -387,7 +387,21 @@ func (baseDao *BaseDao) SaveStruct(entity IEntityStruct) error {
 	defer tx.Rollback()
 
 	//流弊的...,把数组展开变成多个参数的形式
-	tx.Exec(sqlstr, values...)
+	res, err := tx.Exec(sqlstr, values...)
+	if err != nil {
+		return err
+	}
+	//如果是自增,获取到Id
+	if autoIncrement {
+		//需要数据库支持
+		autoIncrementId, e := res.LastInsertId()
+		if err != nil {
+			return e
+		}
+		pkName := entity.GetPKColumnName()
+		//设置值
+		setFieldValueByColumnName(entity, pkName, autoIncrementId)
+	}
 
 	tx.Commit()
 

@@ -57,9 +57,11 @@ func wrapPageSQL(dbType DBTYPE, sqlstr string, page *Page) (string, error) {
 	return wrapSQL(dbType, sqlstr)
 }
 
-//包装保存Struct语句
-func wrapSaveStructSQL(dbType DBTYPE, entity IEntityStruct, columns []reflect.StructField, values []interface{}) (string, error) {
+//包装保存Struct语句.返回语句,是否自增,错误信息
+func wrapSaveStructSQL(dbType DBTYPE, entity IEntityStruct, columns []reflect.StructField, values []interface{}) (string, bool, error) {
 
+	//是否自增,默认false
+	autoIncrement := false
 	//SQL语句的构造器
 	var sqlBuilder strings.Builder
 	sqlBuilder.WriteString("INSERT INTO ")
@@ -74,13 +76,13 @@ func wrapSaveStructSQL(dbType DBTYPE, entity IEntityStruct, columns []reflect.St
 		field := columns[i]
 		fieldName, e := entityPKFieldName(entity)
 		if e != nil {
-			return "", e
+			return "", autoIncrement, e
 		}
 		if field.Name == fieldName { //如果是主键
 			pkKind := field.Type.Kind()
 
 			if !(pkKind == reflect.String || pkKind == reflect.Int) { //只支持字符串和int类型的主键
-				return "", errors.New("不支持的主键类型")
+				return "", autoIncrement, errors.New("不支持的主键类型")
 			}
 			//主键的值
 			pkValue := values[i]
@@ -102,8 +104,9 @@ func wrapSaveStructSQL(dbType DBTYPE, entity IEntityStruct, columns []reflect.St
 				//给对象主键赋值
 				v := reflect.ValueOf(entity).Elem()
 				v.FieldByName(field.Name).Set(reflect.ValueOf(id))
-				//如果是数字类型,并且值为0,需要从数组中删除掉主键的信息,让数据库自己生成
+				//如果是数字类型,并且值为0,认为是数据库自增,从数组中删除掉主键的信息,让数据库自己生成
 			} else if (pkKind == reflect.Int) && (pkValue.(int) == 0) {
+				autoIncrement = true
 				//去掉这一列,后续不再处理
 				columns = append(columns[:i], columns[i+1:]...)
 				values = append(values[:i], values[i+1:]...)
@@ -127,8 +130,8 @@ func wrapSaveStructSQL(dbType DBTYPE, entity IEntityStruct, columns []reflect.St
 		valuestr = valuestr[:len(valuestr)-1]
 	}
 	sqlstr = sqlstr + ")" + valuestr + ")"
-
-	return wrapSQL(dbType, sqlstr)
+	savesql, err := wrapSQL(dbType, sqlstr)
+	return savesql, autoIncrement, err
 
 }
 

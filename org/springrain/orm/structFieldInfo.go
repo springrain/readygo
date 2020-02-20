@@ -155,6 +155,28 @@ func recursiveAnonymousStruct(allFieldMap *sync.Map, anonymous []reflect.StructF
 
 }
 
+//根据数据库的字段名,找到struct映射的字段,并赋值
+func setFieldValueByColumnName(entity interface{}, columnName string, value interface{}) error {
+	//先从本地缓存中查找
+	typeOf := reflect.TypeOf(entity)
+	valueOf := reflect.ValueOf(entity)
+	if typeOf.Kind() == reflect.Ptr { //如果是指针
+		typeOf = typeOf.Elem()
+		valueOf = valueOf.Elem()
+	}
+
+	dbMap, err := getDBColumnFieldMap(typeOf)
+	if err != nil {
+		return err
+	}
+	f, ok := dbMap[columnName]
+	if ok { //给主键赋值
+		valueOf.FieldByName(f.Name).Set(reflect.ValueOf(value))
+	}
+	return nil
+
+}
+
 //获取指定字段的值
 func structFieldValue(s interface{}, fieldName string) (interface{}, error) {
 
