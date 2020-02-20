@@ -8,7 +8,7 @@ import (
 
 //允许的Type
 //bug(springrain) 1.需要完善支持的数据类型和赋值接口,例如sql.NullString.
-//废弃,是否支持让数据库自己抛错吧
+//处理基础类型的查询
 var allowBaseTypeMap = map[reflect.Kind]bool{
 	reflect.String: true,
 
