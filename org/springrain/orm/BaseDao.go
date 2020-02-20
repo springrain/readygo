@@ -7,7 +7,7 @@ import (
 )
 
 //允许的Type
-//bug(chunanyong) 1.需要完善支持的数据类型和赋值接口,例如sql.NullString.
+//bug(springrain) 1.需要完善支持的数据类型和赋值接口,例如sql.NullString.
 //废弃,是否支持让数据库自己抛错吧
 /*
 var allowTypeMap = map[reflect.Kind]bool{
@@ -98,9 +98,9 @@ func (baseDao *BaseDao) QueryStruct(finder *Finder, entity interface{}) error {
 	return nil
 }
 
-//bug(chunanyong)数据库字段为null,映射异常
-//bug(chunanyong)需要处理查询总条数的逻辑
-//bug(chunanyong)需要处理查询一个基础类型的情况,例如 int,[]int
+//bug(springrain)数据库字段为null,映射异常
+//bug(springrain)需要处理查询总条数的逻辑
+//bug(springrain)需要处理查询一个基础类型的情况,例如 int,[]int
 //根据Finder和封装为指定的entity类型,entity必须是*[]struct类型,已经初始化好的数组,此方法只Append元素,这样调用方就不需要强制类型转换了.
 func (baseDao *BaseDao) QueryStructList(finder *Finder, rowsSlicePtr interface{}, page *Page) error {
 
@@ -188,7 +188,7 @@ func (baseDao *BaseDao) QueryStructList(finder *Finder, rowsSlicePtr interface{}
 
 //根据Finder查询,封装Map.获取具体的值,需要自己根据类型调用ColumnValue的转化方法,例如ColumnValue.String()
 //golang的sql驱动不支持获取到数据字段的metadata......垃圾.....
-//bug(chunanyong)需要测试一下 in 数组, like ,还有查询一个基础类型(例如 string)的功能
+//bug(springrain)需要测试一下 in 数组, like ,还有查询一个基础类型(例如 string)的功能
 func (baseDao *BaseDao) QueryMap(finder *Finder) (map[string]interface{}, error) {
 	resultMapList, err := baseDao.QueryMapList(finder, nil)
 	if err != nil {
@@ -204,7 +204,7 @@ func (baseDao *BaseDao) QueryMap(finder *Finder) (map[string]interface{}, error)
 }
 
 //根据Finder查询,封装Map数组.获取具体的值,需要自己根据类型调用ColumnValue的转化方法,例如ColumnValue.String()
-//bug(chunanyong)需要处理查询总条数的逻辑
+//bug(springrain)需要处理查询总条数的逻辑
 //golang的sql驱动不支持获取到数据字段的metadata......垃圾.....
 func (baseDao *BaseDao) QueryMapList(finder *Finder, page *Page) ([]map[string]interface{}, error) {
 
@@ -251,7 +251,7 @@ func (baseDao *BaseDao) QueryMapList(finder *Finder, page *Page) ([]map[string]i
 
 	}
 
-	//bug(chunanyong) 还缺少查询总条数的逻辑
+	//bug(springrain) 还缺少查询总条数的逻辑
 	return resultMapList, nil
 }
 
@@ -529,7 +529,7 @@ func columnValueMap2Struct(resultMap map[string]interface{}, typeOf reflect.Type
 			} else if kindTypeStr == "int" || valueTypeStr == "int" { //兼容int的扩展类型
 				v = columnValue.Int()
 			}
-			//bug(chunanyong)这个地方还要添加其他类型的判断,参照ColumnValue.go文件
+			//bug(springrain)这个地方还要添加其他类型的判断,参照ColumnValue.go文件
 
 			fieldValue.Set(reflect.ValueOf(v))
 
