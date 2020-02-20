@@ -52,19 +52,19 @@ func (baseDao *BaseDao) GetSession() *Session {
 //事务方法
 func (baseDao *BaseDao) Transaction(doTransaction func(session *Session) (interface{}, error)) (interface{}, error) {
 	session := baseDao.GetSession()
-	session.Begin()
+	session.begin()
 	defer func() {
 		if r := recover(); r != nil {
-			session.Rollback()
+			session.rollback()
 		}
 	}()
 
 	info, err := doTransaction(session)
 	if err != nil {
-		session.Rollback()
+		session.rollback()
 		return info, err
 	}
-	session.Commit()
+	session.commit()
 	return nil, nil
 }
 
@@ -83,7 +83,7 @@ func (baseDao *BaseDao) QueryStruct(session *Session, finder *Finder, entity int
 	}
 
 	//根据语句和参数查询
-	rows, e := session.Query(sqlstr, finder.Values...)
+	rows, e := session.query(sqlstr, finder.Values...)
 	if e != nil {
 		return e
 	}
@@ -191,7 +191,7 @@ func (baseDao *BaseDao) QueryStructList(session *Session, finder *Finder, rowsSl
 		return err
 	}
 	//根据语句和参数查询
-	rows, e := session.Query(sqlstr, finder.Values...)
+	rows, e := session.query(sqlstr, finder.Values...)
 	if e != nil {
 		return e
 	}
@@ -373,7 +373,10 @@ func (baseDao *BaseDao) UpdateFinder(session *Session, finder *Finder) error {
 		return err
 	}
 	//流弊的...,把数组展开变成多个参数的形式
-	session.Exec(sqlstr, finder.Values...)
+	_, errexec := session.exec(sqlstr, finder.Values...)
+	if errexec != nil {
+		return errexec
+	}
 	return nil
 }
 
@@ -397,7 +400,7 @@ func (baseDao *BaseDao) SaveStruct(session *Session, entity IEntityStruct) error
 	}
 
 	//流弊的...,把数组展开变成多个参数的形式
-	res, err := session.Exec(sqlstr, values...)
+	res, err := session.exec(sqlstr, values...)
 	if err != nil {
 		return err
 	}
@@ -447,7 +450,10 @@ func (baseDao *BaseDao) DeleteStruct(session *Session, entity IEntityStruct) err
 		return err
 	}
 
-	session.Exec(sqlstr, value)
+	_, errexec := session.exec(sqlstr, value)
+	if errexec != nil {
+		return errexec
+	}
 
 	return nil
 
@@ -465,7 +471,10 @@ func (baseDao *BaseDao) SaveMap(session *Session, entity IEntityMap) error {
 	}
 
 	//流弊的...,把数组展开变成多个参数的形式
-	session.Exec(sqlstr, values...)
+	_, errexec := session.exec(sqlstr, values...)
+	if errexec != nil {
+		return errexec
+	}
 
 	return nil
 
@@ -483,7 +492,10 @@ func (baseDao *BaseDao) UpdateMap(session *Session, entity IEntityMap) error {
 	}
 	//fmt.Println(sqlstr)
 	//流弊的...,把数组展开变成多个参数的形式
-	session.Exec(sqlstr, values...)
+	_, errexec := session.exec(sqlstr, values...)
+	if errexec != nil {
+		return errexec
+	}
 
 	//fmt.Println(entity.GetTableName() + " update success")
 	return nil
@@ -640,7 +652,10 @@ func (baseDao *BaseDao) updateStructFunc(session *Session, entity IEntityStruct,
 	}
 
 	//流弊的...,把数组展开变成多个参数的形式
-	session.Exec(sqlstr, values...)
+	_, errexec := session.exec(sqlstr, values...)
+	if errexec != nil {
+		return errexec
+	}
 
 	//fmt.Println(entity.GetTableName() + " update success")
 	return nil

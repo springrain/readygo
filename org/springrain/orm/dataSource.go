@@ -76,7 +76,7 @@ type Session struct {
 }
 
 // Begin 开启事务
-func (s *Session) Begin() error {
+func (s *Session) begin() error {
 	//s.rollbackSign = true
 	if s.tx == nil {
 		tx, err := s.db.Begin()
@@ -92,7 +92,7 @@ func (s *Session) Begin() error {
 }
 
 // Rollback 回滚事务
-func (s *Session) Rollback() error {
+func (s *Session) rollback() error {
 	//if s.tx != nil && s.rollbackSign == true {
 	if s.tx != nil {
 		err := s.tx.Rollback()
@@ -106,7 +106,7 @@ func (s *Session) Rollback() error {
 }
 
 // Commit 提交事务
-func (s *Session) Commit() error {
+func (s *Session) commit() error {
 	//s.rollbackSign = false
 	if s.tx == nil {
 		return nil
@@ -122,7 +122,7 @@ func (s *Session) Commit() error {
 }
 
 // Exec 执行sql语句，如果已经开启事务，就以事务方式执行，如果没有开启事务，就以非事务方式执行
-func (s *Session) Exec(query string, args ...interface{}) (sql.Result, error) {
+func (s *Session) exec(query string, args ...interface{}) (sql.Result, error) {
 	if s.tx != nil {
 		return s.tx.Exec(query, args...)
 	}
@@ -130,7 +130,7 @@ func (s *Session) Exec(query string, args ...interface{}) (sql.Result, error) {
 }
 
 // QueryRow 如果已经开启事务，就以事务方式执行，如果没有开启事务，就以非事务方式执行
-func (s *Session) QueryRow(query string, args ...interface{}) *sql.Row {
+func (s *Session) queryRow(query string, args ...interface{}) *sql.Row {
 	if s.tx != nil {
 		return s.tx.QueryRow(query, args...)
 	}
@@ -138,7 +138,7 @@ func (s *Session) QueryRow(query string, args ...interface{}) *sql.Row {
 }
 
 // Query 查询数据，如果已经开启事务，就以事务方式执行，如果没有开启事务，就以非事务方式执行
-func (s *Session) Query(query string, args ...interface{}) (*sql.Rows, error) {
+func (s *Session) query(query string, args ...interface{}) (*sql.Rows, error) {
 	if s.tx != nil {
 		return s.tx.Query(query, args...)
 	}
@@ -146,7 +146,7 @@ func (s *Session) Query(query string, args ...interface{}) (*sql.Rows, error) {
 }
 
 // Prepare 预执行，如果已经开启事务，就以事务方式执行，如果没有开启事务，就以非事务方式执行
-func (s *Session) Prepare(query string) (*sql.Stmt, error) {
+func (s *Session) prepare(query string) (*sql.Stmt, error) {
 	if s.tx != nil {
 		return s.tx.Prepare(query)
 	}

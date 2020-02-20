@@ -44,7 +44,9 @@ func TestAdd(t *testing.T) {
 	table.Set("id", 11)
 
 	baseDao.Transaction(func(session *orm.Session) (interface{}, error) {
+
 		e1 := baseDao.SaveMap(session, &table)
+
 		if e1 != nil {
 			return nil, e1
 		}
