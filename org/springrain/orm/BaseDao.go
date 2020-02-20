@@ -1,7 +1,6 @@
 package orm
 
 import (
-	"context"
 	"errors"
 	"reflect"
 	"strings"
@@ -43,9 +42,35 @@ func NewBaseDao(config *DataSourceConfig) (*BaseDao, error) {
 	return &BaseDao{config, dataSource}, err
 }
 
+// GetSession 获取一个Session
+func (baseDao *BaseDao) GetSession() *Session {
+	session := new(Session)
+	session.db = baseDao.dataSource.DB
+	return session
+}
+
+//事务方法
+func (baseDao *BaseDao) Transaction(doTransaction func(session *Session) (interface{}, error)) (interface{}, error) {
+	session := baseDao.GetSession()
+	session.Begin()
+	defer func() {
+		if r := recover(); r != nil {
+			session.Rollback()
+		}
+	}()
+
+	info, err := doTransaction(session)
+	if err != nil {
+		session.Rollback()
+		return info, err
+	}
+	session.Commit()
+	return nil, nil
+}
+
 //bug(springrain)日期类型需要测试一下
 //根据Finder和封装为指定的entity类型,entity必须是*struct类型或者基础类型的指针.把查询的数据赋值给entity,所以要求指针类型
-func (baseDao *BaseDao) QueryStruct(finder *Finder, entity interface{}) error {
+func (baseDao *BaseDao) QueryStruct(session *Session, finder *Finder, entity interface{}) error {
 
 	checkerr := checkEntityKind(entity)
 	if checkerr != nil {
@@ -58,7 +83,7 @@ func (baseDao *BaseDao) QueryStruct(finder *Finder, entity interface{}) error {
 	}
 
 	//根据语句和参数查询
-	rows, e := baseDao.dataSource.Query(sqlstr, finder.Values...)
+	rows, e := session.Query(sqlstr, finder.Values...)
 	if e != nil {
 		return e
 	}
@@ -135,7 +160,7 @@ func (baseDao *BaseDao) QueryStruct(finder *Finder, entity interface{}) error {
 //bug(springrain)需要处理查询总条数的逻辑
 //bug(springrain)需要处理查询一个基础类型的情况,例如 int,[]int
 //根据Finder和封装为指定的entity类型,entity必须是*[]struct类型,已经初始化好的数组,此方法只Append元素,这样调用方就不需要强制类型转换了.
-func (baseDao *BaseDao) QueryStructList(finder *Finder, rowsSlicePtr interface{}, page *Page) error {
+func (baseDao *BaseDao) QueryStructList(session *Session, finder *Finder, rowsSlicePtr interface{}, page *Page) error {
 
 	if rowsSlicePtr == nil { //如果为nil
 		return errors.New("数组必须是&[]stuct类型或者基础类型数组的指针")
@@ -166,7 +191,7 @@ func (baseDao *BaseDao) QueryStructList(finder *Finder, rowsSlicePtr interface{}
 		return err
 	}
 	//根据语句和参数查询
-	rows, e := baseDao.dataSource.Query(sqlstr, finder.Values...)
+	rows, e := session.Query(sqlstr, finder.Values...)
 	if e != nil {
 		return e
 	}
@@ -195,7 +220,7 @@ func (baseDao *BaseDao) QueryStructList(finder *Finder, rowsSlicePtr interface{}
 
 		//查询总条数
 		if page != nil && page.SelectPageCount {
-			count, err := selectCount(baseDao, finder)
+			count, err := baseDao.selectCount(session, finder)
 			if err != nil {
 				return err
 			}
@@ -245,7 +270,7 @@ func (baseDao *BaseDao) QueryStructList(finder *Finder, rowsSlicePtr interface{}
 
 	//查询总条数
 	if page != nil && page.SelectPageCount {
-		count, err := selectCount(baseDao, finder)
+		count, err := baseDao.selectCount(session, finder)
 		if err != nil {
 			return err
 		}
@@ -259,8 +284,8 @@ func (baseDao *BaseDao) QueryStructList(finder *Finder, rowsSlicePtr interface{}
 //根据Finder查询,封装Map.获取具体的值,需要自己根据类型调用ColumnValue的转化方法,例如ColumnValue.String()
 //golang的sql驱动不支持获取到数据字段的metadata......垃圾.....
 //bug(springrain)需要测试一下 in 数组, like ,还有查询一个基础类型(例如 string)的功能
-func (baseDao *BaseDao) QueryMap(finder *Finder) (map[string]interface{}, error) {
-	resultMapList, err := baseDao.QueryMapList(finder, nil)
+func (baseDao *BaseDao) QueryMap(session *Session, finder *Finder) (map[string]interface{}, error) {
+	resultMapList, err := baseDao.QueryMapList(session, finder, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -276,7 +301,7 @@ func (baseDao *BaseDao) QueryMap(finder *Finder) (map[string]interface{}, error)
 //根据Finder查询,封装Map数组.获取具体的值,需要自己根据类型调用ColumnValue的转化方法,例如ColumnValue.String()
 //bug(springrain)需要处理查询总条数的逻辑
 //golang的sql驱动不支持获取到数据字段的metadata......垃圾.....
-func (baseDao *BaseDao) QueryMapList(finder *Finder, page *Page) ([]map[string]interface{}, error) {
+func (baseDao *BaseDao) QueryMapList(session *Session, finder *Finder, page *Page) ([]map[string]interface{}, error) {
 
 	sqlstr, err := wrapQuerySQL(baseDao.config.DBType, finder, nil)
 	if err != nil {
@@ -324,7 +349,7 @@ func (baseDao *BaseDao) QueryMapList(finder *Finder, page *Page) ([]map[string]i
 	//bug(springrain) 还缺少查询总条数的逻辑
 	//查询总条数
 	if page != nil && page.SelectPageCount {
-		count, err := selectCount(baseDao, finder)
+		count, err := baseDao.selectCount(session, finder)
 		if err != nil {
 			return resultMapList, err
 		}
@@ -335,7 +360,7 @@ func (baseDao *BaseDao) QueryMapList(finder *Finder, page *Page) ([]map[string]i
 }
 
 //更新Finder
-func (baseDao *BaseDao) UpdateFinder(finder *Finder) error {
+func (baseDao *BaseDao) UpdateFinder(session *Session, finder *Finder) error {
 	if finder == nil {
 		return errors.New("finder不能为空")
 	}
@@ -347,25 +372,14 @@ func (baseDao *BaseDao) UpdateFinder(finder *Finder) error {
 	if err != nil {
 		return err
 	}
-
-	tx, err := baseDao.dataSource.BeginTx(context.Background(), nil)
-	if err != nil {
-		return err
-	}
-	defer tx.Rollback()
-
 	//流弊的...,把数组展开变成多个参数的形式
-	tx.Exec(sqlstr, finder.Values...)
-
-	tx.Commit()
-
-	//fmt.Println(entity.GetTableName() + " save success")
+	session.Exec(sqlstr, finder.Values...)
 	return nil
 }
 
 //保存Struct对象,必须是IEntityStruct类型
 //bug(chunanuyong) 如果是自增主键,需要返回.需要sql驱动支持
-func (baseDao *BaseDao) SaveStruct(entity IEntityStruct) error {
+func (baseDao *BaseDao) SaveStruct(session *Session, entity IEntityStruct) error {
 	if entity == nil {
 		return errors.New("对象不能为空")
 	}
@@ -382,14 +396,8 @@ func (baseDao *BaseDao) SaveStruct(entity IEntityStruct) error {
 		return err
 	}
 
-	tx, err := baseDao.dataSource.BeginTx(context.Background(), nil)
-	if err != nil {
-		return err
-	}
-	defer tx.Rollback()
-
 	//流弊的...,把数组展开变成多个参数的形式
-	res, err := tx.Exec(sqlstr, values...)
+	res, err := session.Exec(sqlstr, values...)
 	if err != nil {
 		return err
 	}
@@ -405,24 +413,22 @@ func (baseDao *BaseDao) SaveStruct(entity IEntityStruct) error {
 		setFieldValueByColumnName(entity, pkName, autoIncrementId)
 	}
 
-	tx.Commit()
-
 	return nil
 
 }
 
 //更新struct所有属性,必须是IEntityStruct类型
-func (baseDao *BaseDao) UpdateStruct(entity IEntityStruct) error {
-	return updateStructFunc(baseDao, entity, false)
+func (baseDao *BaseDao) UpdateStruct(session *Session, entity IEntityStruct) error {
+	return baseDao.updateStructFunc(session, entity, false)
 }
 
 //更新struct不为nil的属性,必须是IEntityStruct类型
-func (baseDao *BaseDao) UpdateStructNotNil(entity IEntityStruct) error {
-	return updateStructFunc(baseDao, entity, true)
+func (baseDao *BaseDao) UpdateStructNotNil(session *Session, entity IEntityStruct) error {
+	return baseDao.updateStructFunc(session, entity, true)
 }
 
 // 根据主键删除一个对象.必须是IEntityStruct类型
-func (baseDao *BaseDao) DeleteStruct(entity IEntityStruct) error {
+func (baseDao *BaseDao) DeleteStruct(session *Session, entity IEntityStruct) error {
 	if entity == nil {
 		return errors.New("对象不能为空")
 	}
@@ -441,22 +447,14 @@ func (baseDao *BaseDao) DeleteStruct(entity IEntityStruct) error {
 		return err
 	}
 
-	tx, err := baseDao.dataSource.BeginTx(context.Background(), nil)
-	if err != nil {
-		return err
-	}
-	defer tx.Rollback()
-
-	tx.Exec(sqlstr, value)
-
-	tx.Commit()
+	session.Exec(sqlstr, value)
 
 	return nil
 
 }
 
 //保存IEntityMap对象.使用Map保存数据,需要在数据中封装好包括Id在内的所有数据.不适用于复杂情况
-func (baseDao *BaseDao) SaveMap(entity IEntityMap) error {
+func (baseDao *BaseDao) SaveMap(session *Session, entity IEntityMap) error {
 	if entity == nil {
 		return errors.New("对象不能为空")
 	}
@@ -466,23 +464,15 @@ func (baseDao *BaseDao) SaveMap(entity IEntityMap) error {
 		return err
 	}
 
-	tx, err := baseDao.dataSource.BeginTx(context.Background(), nil)
-	if err != nil {
-		return err
-	}
-	defer tx.Rollback()
-
 	//流弊的...,把数组展开变成多个参数的形式
-	tx.Exec(sqlstr, values...)
-
-	tx.Commit()
+	session.Exec(sqlstr, values...)
 
 	return nil
 
 }
 
 //更新IEntityMap对象.使用Map修改数据,需要在数据中封装好包括Id在内的所有数据.不适用于复杂情况
-func (baseDao *BaseDao) UpdateMap(entity IEntityMap) error {
+func (baseDao *BaseDao) UpdateMap(session *Session, entity IEntityMap) error {
 	if entity == nil {
 		return errors.New("对象不能为空")
 	}
@@ -492,17 +482,8 @@ func (baseDao *BaseDao) UpdateMap(entity IEntityMap) error {
 		return err
 	}
 	//fmt.Println(sqlstr)
-
-	tx, err := baseDao.dataSource.BeginTx(context.Background(), nil)
-	if err != nil {
-		return err
-	}
-	defer tx.Rollback()
-
 	//流弊的...,把数组展开变成多个参数的形式
-	tx.Exec(sqlstr, values...)
-
-	tx.Commit()
+	session.Exec(sqlstr, values...)
 
 	//fmt.Println(entity.GetTableName() + " update success")
 	return nil
@@ -644,7 +625,7 @@ func wrapMap(columns []string, values []columnValue) (map[string]columnValue, er
 */
 
 //更新对象
-func updateStructFunc(baseDao *BaseDao, entity IEntityStruct, onlyupdatenotnull bool) error {
+func (baseDao *BaseDao) updateStructFunc(session *Session, entity IEntityStruct, onlyupdatenotnull bool) error {
 	if entity == nil {
 		return errors.New("对象不能为空")
 	}
@@ -658,16 +639,8 @@ func updateStructFunc(baseDao *BaseDao, entity IEntityStruct, onlyupdatenotnull 
 		return err
 	}
 
-	tx, err := baseDao.dataSource.BeginTx(context.Background(), nil)
-	if err != nil {
-		return err
-	}
-	defer tx.Rollback()
-
 	//流弊的...,把数组展开变成多个参数的形式
-	tx.Exec(sqlstr, values...)
-
-	tx.Commit()
+	session.Exec(sqlstr, values...)
 
 	//fmt.Println(entity.GetTableName() + " update success")
 	return nil
@@ -675,7 +648,7 @@ func updateStructFunc(baseDao *BaseDao, entity IEntityStruct, onlyupdatenotnull 
 }
 
 //根据finder查询总条数
-func selectCount(baseDao *BaseDao, finder *Finder) (int, error) {
+func (baseDao *BaseDao) selectCount(session *Session, finder *Finder) (int, error) {
 
 	if finder == nil {
 		return -1, errors.New("参数为nil")
@@ -683,7 +656,7 @@ func selectCount(baseDao *BaseDao, finder *Finder) (int, error) {
 	//自定义的查询总条数Finder,主要是为了在group by等复杂情况下,为了性能,手动编写总条数语句
 	if finder.CountFinder != nil {
 		count := -1
-		err := baseDao.QueryStruct(finder.CountFinder, &count)
+		err := baseDao.QueryStruct(session, finder.CountFinder, &count)
 		if err != nil {
 			return -1, err
 		}
@@ -723,7 +696,7 @@ func selectCount(baseDao *BaseDao, finder *Finder) (int, error) {
 	countFinder.Values = finder.Values
 
 	count := -1
-	cerr := baseDao.QueryStruct(countFinder, &count)
+	cerr := baseDao.QueryStruct(session, countFinder, &count)
 	if cerr != nil {
 		return -1, cerr
 	}

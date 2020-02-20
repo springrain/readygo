@@ -16,61 +16,62 @@ func main() {
 		DBType:   orm.DBType_MYSQL,
 	}
 	baseDao, _ := orm.NewBaseDao(&dataSourceConfig)
+	baseDao.Transaction(func(session *orm.Session) (interface{}, error) {
+		/*
+			finder4 := orm.NewSelectFinder("t_user", "*")
+			maps, err := baseDao.QueryMapList(session,finder4, nil)
+			fmt.Println(maps, err)
+			users := []shop.User2{}
+			finder3 := orm.NewSelectFinder("t_user", "*")
+			baseDao.QueryStructList(session,finder3, &users, nil)
+			fmt.Println(users)
+		*/
+		ids := []string{}
+		finder5 := orm.NewSelectFinder("t_user", "id")
+		page := orm.NewPage()
+		err := baseDao.QueryStructList(session, finder5, &ids, &page)
 
-	/*
-		finder4 := orm.NewSelectFinder("t_user", "*")
-		maps, err := baseDao.QueryMapList(finder4, nil)
-		fmt.Println(maps, err)
-		users := []shop.User2{}
-		finder3 := orm.NewSelectFinder("t_user", "*")
-		baseDao.QueryStructList(finder3, &users, nil)
-		fmt.Println(users)
-	*/
-	ids := []string{}
-	finder5 := orm.NewSelectFinder("t_user", "id")
-	page := orm.NewPage()
-	err := baseDao.QueryStructList(finder5, &ids, &page)
+		fmt.Println(ids, page.TotalCount, err)
 
-	fmt.Println(ids, page.TotalCount, err)
-
-	/*
+		/*
 
 
-		user := shop.User2{
-			Id:      "id",
-			Account: "test",
-		}
-			finder := orm.NewSelectFinder(user.GetTableName(), "id,account")
-			finder.Append(" WHERE id=?", "id")
+			user := shop.User2{
+				Id:      "id",
+				Account: "test",
+			}
+				finder := orm.NewSelectFinder(user.GetTableName(), "id,account")
+				finder.Append(" WHERE id=?", "id")
 
-			baseDao.DeleteStruct(&user)
-			baseDao.SaveStruct(&user)
+				baseDao.DeleteStruct(&user)
+				baseDao.SaveStruct(&user)
 
-			user = shop.User2{}
+				user = shop.User2{}
 
-			baseDao.QueryStruct(finder, &user)
-			fmt.Println(user.Account)
+				baseDao.QueryStruct(finder, &user)
+				fmt.Println(user.Account)
 
-			user.Account = "update"
-			baseDao.UpdateStruct(&user)
-			baseDao.QueryStruct(finder, &user)
+				user.Account = "update"
+				baseDao.UpdateStruct(&user)
+				baseDao.QueryStruct(finder, &user)
 
-			userMap := orm.NewEntityMap("t_user")
+				userMap := orm.NewEntityMap("t_user")
 
-			userMap.Set("id", "mapId")
-			userMap.Set("account", "mapAccount")
-			baseDao.SaveMap(&userMap)
-			userMap.Set("account", "213")
-			baseDao.UpdateMap(&userMap)
-			baseDao.QueryStruct(finder, &user)
+				userMap.Set("id", "mapId")
+				userMap.Set("account", "mapAccount")
+				baseDao.SaveMap(&userMap)
+				userMap.Set("account", "213")
+				baseDao.UpdateMap(&userMap)
+				baseDao.QueryStruct(finder, &user)
 
-			finder2 := orm.NewUpdateFinder(user.GetTableName())
-			finder2.Append("acc")
-			finder2.Append("ount=?", "adad")
-			baseDao.UpdateFinder(finder2)
+				finder2 := orm.NewUpdateFinder(user.GetTableName())
+				finder2.Append("acc")
+				finder2.Append("ount=?", "adad")
+				baseDao.UpdateFinder(finder2)
 
-			baseDao.QueryStruct(finder, &user)
-			fmt.Println(user.Account)
-	*/
-
+				baseDao.QueryStruct(finder, &user)
+				fmt.Println(user.Account)
+		*/
+		return nil, nil
+	})
 }
