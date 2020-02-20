@@ -1,6 +1,7 @@
 package orm
 
 import (
+	"database/sql"
 	"errors"
 	"reflect"
 	"strings"
@@ -76,7 +77,14 @@ func (baseDao *BaseDao) QueryStruct(session *Session, finder *Finder, entity int
 	}
 
 	//根据语句和参数查询
-	rows, e := session.query(sqlstr, finder.Values...)
+	var rows *sql.Rows
+	var e error
+	if session != nil {
+		rows, e = session.query(sqlstr, finder.Values...)
+	} else {
+		rows, e = baseDao.dataSource.Query(sqlstr, finder.Values...)
+	}
+
 	if e != nil {
 		return e
 	}
@@ -184,11 +192,16 @@ func (baseDao *BaseDao) QueryStructList(session *Session, finder *Finder, rowsSl
 		return err
 	}
 	//根据语句和参数查询
-	rows, e := session.query(sqlstr, finder.Values...)
+	var rows *sql.Rows
+	var e error
+	if session != nil {
+		rows, e = session.query(sqlstr, finder.Values...)
+	} else {
+		rows, e = baseDao.dataSource.Query(sqlstr, finder.Values...)
+	}
 	if e != nil {
 		return e
 	}
-
 	//数据库返回的列名
 	columns, cne := rows.Columns()
 	if cne != nil {
@@ -366,7 +379,12 @@ func (baseDao *BaseDao) UpdateFinder(session *Session, finder *Finder) error {
 		return err
 	}
 	//流弊的...,把数组展开变成多个参数的形式
-	_, errexec := session.exec(sqlstr, finder.Values...)
+	var errexec error
+	if session != nil {
+		_, errexec = session.exec(sqlstr, finder.Values...)
+	} else {
+		_, errexec = baseDao.dataSource.Exec(sqlstr, finder.Values...)
+	}
 	if errexec != nil {
 		return errexec
 	}
@@ -393,9 +411,15 @@ func (baseDao *BaseDao) SaveStruct(session *Session, entity IEntityStruct) error
 	}
 
 	//流弊的...,把数组展开变成多个参数的形式
-	res, err := session.exec(sqlstr, values...)
-	if err != nil {
-		return err
+	var res sql.Result
+	var errexec error
+	if session != nil {
+		res, errexec = session.exec(sqlstr, values...)
+	} else {
+		res, errexec = baseDao.dataSource.Exec(sqlstr, values...)
+	}
+	if errexec != nil {
+		return errexec
 	}
 	//如果是自增主键
 	if autoIncrement {
@@ -443,7 +467,12 @@ func (baseDao *BaseDao) DeleteStruct(session *Session, entity IEntityStruct) err
 		return err
 	}
 
-	_, errexec := session.exec(sqlstr, value)
+	var errexec error
+	if session != nil {
+		_, errexec = session.exec(sqlstr, value)
+	} else {
+		_, errexec = baseDao.dataSource.Exec(sqlstr, value)
+	}
 	if errexec != nil {
 		return errexec
 	}
@@ -464,7 +493,13 @@ func (baseDao *BaseDao) SaveMap(session *Session, entity IEntityMap) error {
 	}
 
 	//流弊的...,把数组展开变成多个参数的形式
-	_, errexec := session.exec(sqlstr, values...)
+	var errexec error
+	if session != nil {
+		_, errexec = session.exec(sqlstr, values...)
+
+	} else {
+		_, errexec = baseDao.dataSource.Exec(sqlstr, values...)
+	}
 	if errexec != nil {
 		return errexec
 	}
@@ -485,11 +520,16 @@ func (baseDao *BaseDao) UpdateMap(session *Session, entity IEntityMap) error {
 	}
 	//fmt.Println(sqlstr)
 	//流弊的...,把数组展开变成多个参数的形式
-	_, errexec := session.exec(sqlstr, values...)
+	var errexec error
+	if session != nil {
+		_, errexec = session.exec(sqlstr, values...)
+
+	} else {
+		_, errexec = baseDao.dataSource.Exec(sqlstr, values...)
+	}
 	if errexec != nil {
 		return errexec
 	}
-
 	//fmt.Println(entity.GetTableName() + " update success")
 	return nil
 
@@ -645,7 +685,13 @@ func (baseDao *BaseDao) updateStructFunc(session *Session, entity IEntityStruct,
 	}
 
 	//流弊的...,把数组展开变成多个参数的形式
-	_, errexec := session.exec(sqlstr, values...)
+	var errexec error
+	if session != nil {
+		_, errexec = session.exec(sqlstr, values...)
+
+	} else {
+		_, errexec = baseDao.dataSource.Exec(sqlstr, values...)
+	}
 	if errexec != nil {
 		return errexec
 	}
