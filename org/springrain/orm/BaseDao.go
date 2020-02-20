@@ -42,16 +42,9 @@ func NewBaseDao(config *DataSourceConfig) (*BaseDao, error) {
 	return &BaseDao{config, dataSource}, err
 }
 
-// GetSession 获取一个Session
-func (baseDao *BaseDao) GetSession() *Session {
-	session := new(Session)
-	session.db = baseDao.dataSource.DB
-	return session
-}
-
 //事务方法
 func (baseDao *BaseDao) Transaction(doTransaction func(session *Session) (interface{}, error)) (interface{}, error) {
-	session := baseDao.GetSession()
+	session := baseDao.dataSource.getSession()
 	session.begin()
 	defer func() {
 		if r := recover(); r != nil {

@@ -75,6 +75,13 @@ type Session struct {
 	//rollbackSign bool    // 回滚标记，控制是否回滚事务
 }
 
+// getSession 获取一个Session
+func (dataSource *dataSource) getSession() *Session {
+	session := new(Session)
+	session.db = dataSource.DB
+	return session
+}
+
 // Begin 开启事务
 func (s *Session) begin() error {
 	//s.rollbackSign = true
