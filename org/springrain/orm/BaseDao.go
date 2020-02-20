@@ -35,6 +35,8 @@ type BaseDao struct {
 	dataSource *dataSource
 }
 
+//代码只执行一次
+//var once sync.Once
 //创建baseDao
 func NewBaseDao(config *DataSourceConfig) (*BaseDao, error) {
 	dataSource, err := newDataSource(config)
