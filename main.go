@@ -18,16 +18,17 @@ func main() {
 	}
 	baseDao, _ := orm.NewBaseDao(&dataSourceConfig)
 
-	finder4 := orm.NewSelectFinder("t_user", "*")
-	maps, err := baseDao.QueryMapList(finder4, nil)
-	fmt.Println(maps, err)
-	users := []shop.User2{}
-	finder3 := orm.NewSelectFinder("t_user", "*")
-	baseDao.QueryStructList(finder3, &users, nil)
-	fmt.Println(users)
-
+	/*
+		finder4 := orm.NewSelectFinder("t_user", "*")
+		maps, err := baseDao.QueryMapList(finder4, nil)
+		fmt.Println(maps, err)
+		users := []shop.User2{}
+		finder3 := orm.NewSelectFinder("t_user", "*")
+		baseDao.QueryStructList(finder3, &users, nil)
+		fmt.Println(users)
+	*/
 	user5 := shop.User2{}
-	finder5 := orm.NewSelectFinder(user5.GetTableName()).Append(" WHERE id in(?)", []string{"id"})
+	finder5 := orm.NewSelectFinder(user5.GetTableName()).Append(" WHERE id=? and id in (?) and id=?", "id", []string{"id", "abc", "sfsdf"}, "id")
 	baseDao.QueryStruct(finder5, &user5)
 	fmt.Println(user5)
 

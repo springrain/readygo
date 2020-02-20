@@ -2,16 +2,14 @@ package main
 
 import (
 	"fmt"
-	"github.com/joho/godotenv"
-	"os"
+	"strings"
 )
 
+func test(a []string) []string {
+	return a
+}
 func main() {
-
-	godotenv.Load()
-
-	conn := os.Getenv("MYSQL_DSN")
-
-	fmt.Println(conn)
-	
+	str := "select * from t_user where a=? and b=?"
+	values := strings.Split(str, "?")
+	fmt.Println(len(values), values[0], ":", values[1], ":", len(values[2]))
 }

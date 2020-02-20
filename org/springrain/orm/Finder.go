@@ -1,6 +1,8 @@
 package orm
 
 import (
+	"reflect"
+	"strconv"
 	"strings"
 )
 
@@ -99,5 +101,76 @@ func (finder *Finder) GetSQL() string {
 		return "SQL语句请不要直接拼接字符串参数!!!使用标准的占位符实现,例如  finder.Append(' and id=? and name=? ','123','abc')"
 	}
 
+	//处理sql语句中的in,实际就是把数组变量展开,例如 id in(?) ["1","2","3"] 语句变更为 id in (?,?,?) 参数也展开到参数数组里
+	//这里认为 slice类型的参数就是in
+	if finder.Values == nil || len(finder.Values) < 1 { //如果没有参数
+		return sqlstr
+	}
+
+	//?问号切割的数组
+	questions := strings.Split(sqlstr, "?")
+
+	//语句中没有?问号
+	if len(questions) < 1 {
+		return sqlstr
+	}
+
+	//重新记录参数值
+	newValues := make([]interface{}, 0)
+	//新的sql
+	var newSqlStr strings.Builder
+	newSqlStr.WriteString(questions[0])
+	for i, v := range finder.Values {
+
+		//拼接?
+		newSqlStr.WriteString("?")
+
+		valueOf := reflect.ValueOf(v)
+		typeOf := reflect.TypeOf(v)
+		kind := valueOf.Kind()
+		if kind == reflect.Ptr { //如果是指针
+			valueOf = valueOf.Elem()
+			typeOf = typeOf.Elem()
+			kind = valueOf.Kind()
+		}
+		//获取数组长度
+		sliceLen := valueOf.Len()
+		//没有长度
+		if sliceLen < 1 {
+			return "语句:" + sqlstr + ",第" + strconv.Itoa(i+1) + "个参数,类型是Array或者Slice,值的长度为0,请检查sql参数有效性"
+		}
+
+		//如果不是数组或者slice
+		if !(kind == reflect.Array || kind == reflect.Slice) {
+			//记录新值
+			newValues = append(newValues, v)
+			//记录SQL
+			newSqlStr.WriteString(questions[i+1])
+			continue
+		}
+		//字节数组是特殊的情况
+		if typeOf == reflect.TypeOf([]byte{}) {
+			//记录新值
+			newValues = append(newValues, v)
+			//记录SQL
+			newSqlStr.WriteString(questions[i+1])
+			continue
+		}
+		for j := 0; j < sliceLen; j++ {
+			//每多一个参数,对应",?" 两个符号.增加的问号长度总计是(sliceLen-1)*2.
+			if j >= 1 {
+				//记录SQL
+				newSqlStr.WriteString(",?")
+			}
+			//记录新值
+			sliceValue := valueOf.Index(j).Interface()
+			newValues = append(newValues, sliceValue)
+		}
+		//记录SQL
+		newSqlStr.WriteString(questions[i+1])
+	}
+	//重新赋值
+	sqlstr = newSqlStr.String()
+	finder.Values = newValues
 	return sqlstr
 }
