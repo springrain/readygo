@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"goshop/org/springrain/orm"
 	"goshop/shop"
+	"reflect"
 )
 
 func main() {
@@ -28,9 +29,10 @@ func main() {
 		fmt.Println(users)
 	*/
 	user5 := shop.User2{}
-	finder5 := orm.NewSelectFinder(user5.GetTableName()).Append(" WHERE id=? and id in (?) and id=?", "id", []string{"id", "abc", "sfsdf"}, "id")
+	finder5 := orm.NewSelectFinder(user5.GetTableName()).Append(" WHERE id=? and id in (?) and id=?", "id", &[]string{"id", "abc", "sfsdf"}, "id")
 	baseDao.QueryStruct(finder5, &user5)
 	fmt.Println(user5)
+	fmt.Println(reflect.TypeOf([]byte{}))
 
 	/*
 

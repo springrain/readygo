@@ -314,7 +314,6 @@ func (baseDao *BaseDao) SaveStruct(entity IEntityStruct) error {
 
 	tx.Commit()
 
-	//fmt.Println(entity.GetTableName() + " save success")
 	return nil
 
 }
@@ -385,7 +384,6 @@ func (baseDao *BaseDao) SaveMap(entity IEntityMap) error {
 
 	tx.Commit()
 
-	//fmt.Println(entity.GetTableName() + " save success")
 	return nil
 
 }

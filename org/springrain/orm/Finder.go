@@ -18,6 +18,8 @@ type Finder struct {
 	// 设置总条数查询的finder.Struct不能为nil,自己引用自己,go无法初始化Finder struct,使用可以为nil的指针,就可以了.
 	//CountFinder Finder
 	CountFinder *Finder
+	//SQL语句
+	sqlstr string
 }
 
 // 初始化一个Finder,生成一个空的Finder
@@ -69,6 +71,9 @@ func NewDeleteFinder(tableName string) *Finder {
 func (finder *Finder) Append(s string, values ...interface{}) *Finder {
 
 	if len(s) > 0 {
+		if len(finder.sqlstr) > 0 {
+			finder.sqlstr = ""
+		}
 		finder.sqlBuilder.WriteString(s)
 	}
 	if values == nil || len(values) < 1 {
@@ -91,6 +96,7 @@ func (finder *Finder) AppendFinder(f *Finder) (*Finder, error) {
 	if err != nil {
 		return nil, err
 	}
+	finder.sqlstr = ""
 	finder.sqlBuilder.WriteString(sqlstr)
 	//添加f的值
 	finder.Values = append(finder.Values, f.Values...)
@@ -99,7 +105,11 @@ func (finder *Finder) AppendFinder(f *Finder) (*Finder, error) {
 
 // 返回Finder封装的SQL语句
 func (finder *Finder) GetSQL() (string, error) {
+	if len(finder.sqlstr) > 0 {
+		return finder.sqlstr, nil
+	}
 	sqlstr := finder.sqlBuilder.String()
+	finder.sqlstr = sqlstr
 	//包含单引号,属于非法字符串
 	if !finder.InjectionSQL && (strings.Index(sqlstr, "'") >= 0) {
 		return sqlstr, errors.New("SQL语句请不要直接拼接字符串参数!!!使用标准的占位符实现,例如  finder.Append(' and id=? and name=? ','123','abc')")
@@ -177,7 +187,7 @@ func (finder *Finder) GetSQL() (string, error) {
 		newSqlStr.WriteString(questions[i+1])
 	}
 	//重新赋值
-	sqlstr = newSqlStr.String()
+	finder.sqlstr = newSqlStr.String()
 	finder.Values = newValues
-	return sqlstr, nil
+	return finder.sqlstr, nil
 }
