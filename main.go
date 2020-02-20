@@ -26,10 +26,10 @@ func main() {
 		baseDao.QueryStructList(finder3, &users, nil)
 		fmt.Println(users)
 	*/
-	id := ""
-	finder5 := orm.NewSelectFinder("t_user", "id").Append(" WHERE id=? and id in (?) and id=?", "id", &[]string{"id", "abc", "sfsdf"}, "id")
-	baseDao.QueryStruct(finder5, &id)
-	fmt.Println(id)
+	ids := []string{}
+	finder5 := orm.NewSelectFinder("t_user", "id")
+	baseDao.QueryStructList(finder5, &ids, nil)
+	fmt.Println(ids)
 
 	/*
 

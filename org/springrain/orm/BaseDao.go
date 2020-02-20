@@ -40,7 +40,7 @@ func NewBaseDao(config *DataSourceConfig) (*BaseDao, error) {
 	return &BaseDao{config, dataSource}, err
 }
 
-//根据Finder和封装为指定的entity类型,entity必须是*struct类型.把查询的数据赋值给entity,所以要求指针类型
+//根据Finder和封装为指定的entity类型,entity必须是*struct类型或者基础类型的指针.把查询的数据赋值给entity,所以要求指针类型
 func (baseDao *BaseDao) QueryStruct(finder *Finder, entity interface{}) error {
 
 	checkerr := checkEntityKind(entity)
@@ -134,12 +134,12 @@ func (baseDao *BaseDao) QueryStruct(finder *Finder, entity interface{}) error {
 func (baseDao *BaseDao) QueryStructList(finder *Finder, rowsSlicePtr interface{}, page *Page) error {
 
 	if rowsSlicePtr == nil { //如果为nil
-		return errors.New("数组必须是&[]stuct类型")
+		return errors.New("数组必须是&[]stuct类型或者基础类型数组的指针")
 	}
 
 	pv1 := reflect.ValueOf(rowsSlicePtr)
 	if pv1.Kind() != reflect.Ptr { //如果不是指针
-		return errors.New("数组必须是&[]stuct类型")
+		return errors.New("数组必须是&[]stuct类型或者基础类型数组的指针")
 	}
 
 	//获取数组元素
@@ -147,14 +147,14 @@ func (baseDao *BaseDao) QueryStructList(finder *Finder, rowsSlicePtr interface{}
 
 	//如果不是数组
 	if sliceValue.Kind() != reflect.Slice {
-		return errors.New("数组必须是&[]stuct类型")
+		return errors.New("数组必须是&[]stuct类型或者基础类型数组的指针")
 	}
 	//获取数组内的元素类型
 	sliceElementType := sliceValue.Type().Elem()
 
 	//如果不是struct
 	if !(sliceElementType.Kind() == reflect.Struct || allowBaseTypeMap[sliceElementType.Kind()]) {
-		return errors.New("数组必须是&[]stuct类型")
+		return errors.New("数组必须是&[]stuct类型或者基础类型数组的指针")
 	}
 
 	sqlstr, err := wrapQuerySQL(baseDao.config.DBType, finder, nil)
@@ -171,6 +171,25 @@ func (baseDao *BaseDao) QueryStructList(finder *Finder, rowsSlicePtr interface{}
 	columns, cne := rows.Columns()
 	if cne != nil {
 		return cne
+	}
+
+	//如果是基础类型,就查询一个字段
+	if allowBaseTypeMap[sliceElementType.Kind()] {
+
+		//循环遍历结果集
+		for rows.Next() {
+			//初始化一个基本类型,new出来的是指针.
+			pv := reflect.New(sliceElementType)
+			//把数据库值赋给指针
+			err = rows.Scan(pv.Interface())
+			if err != nil {
+				return err
+			}
+			//通过反射给slice添加元素.添加指针下的真实元素
+			sliceValue.Set(reflect.Append(sliceValue, pv.Elem()))
+		}
+
+		return nil
 	}
 
 	//获取到类型的字段缓存
@@ -506,18 +525,18 @@ func entityPKFieldName(entity IEntityStruct) (string, error) {
 
 }
 
-//检查entity类型必须是*struct类型
+//检查entity类型必须是*struct类型或者基础类型的指针
 func checkEntityKind(entity interface{}) error {
 	if entity == nil {
-		return errors.New("参数不能为空,必须是*struct类型")
+		return errors.New("参数不能为空,必须是*struct类型或者基础类型的指针")
 	}
 	typeOf := reflect.TypeOf(entity)
 	if typeOf.Kind() != reflect.Ptr { //如果不是指针
-		return errors.New("必须是*struct类型")
+		return errors.New("必须是*struct类型或者基础类型的指针")
 	}
 	typeOf = typeOf.Elem()
 	if !(typeOf.Kind() == reflect.Struct || allowBaseTypeMap[typeOf.Kind()]) { //如果不是指针
-		return errors.New("必须是*struct类型")
+		return errors.New("必须是*struct类型或者基础类型的指针")
 	}
 	return nil
 }
