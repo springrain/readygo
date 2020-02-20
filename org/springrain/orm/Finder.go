@@ -1,6 +1,7 @@
 package orm
 
 import (
+	"errors"
 	"reflect"
 	"strconv"
 	"strings"
@@ -81,30 +82,33 @@ func (finder *Finder) Append(s string, values ...interface{}) *Finder {
 }
 
 //添加另一个Finder finder.AppendFinder(f)
-func (finder *Finder) AppendFinder(f *Finder) *Finder {
+func (finder *Finder) AppendFinder(f *Finder) (*Finder, error) {
 	if f == nil {
-		return nil
+		return nil, errors.New("参数是nil")
 	}
 	//添加f的SQL
-	sqlstr := f.GetSQL()
+	sqlstr, err := f.GetSQL()
+	if err != nil {
+		return nil, err
+	}
 	finder.sqlBuilder.WriteString(sqlstr)
 	//添加f的值
 	finder.Values = append(finder.Values, f.Values...)
-	return finder
+	return finder, nil
 }
 
 // 返回Finder封装的SQL语句
-func (finder *Finder) GetSQL() string {
+func (finder *Finder) GetSQL() (string, error) {
 	sqlstr := finder.sqlBuilder.String()
 	//包含单引号,属于非法字符串
 	if !finder.InjectionSQL && (strings.Index(sqlstr, "'") >= 0) {
-		return "SQL语句请不要直接拼接字符串参数!!!使用标准的占位符实现,例如  finder.Append(' and id=? and name=? ','123','abc')"
+		return sqlstr, errors.New("SQL语句请不要直接拼接字符串参数!!!使用标准的占位符实现,例如  finder.Append(' and id=? and name=? ','123','abc')")
 	}
 
 	//处理sql语句中的in,实际就是把数组变量展开,例如 id in(?) ["1","2","3"] 语句变更为 id in (?,?,?) 参数也展开到参数数组里
 	//这里认为 slice类型的参数就是in
 	if finder.Values == nil || len(finder.Values) < 1 { //如果没有参数
-		return sqlstr
+		return sqlstr, nil
 	}
 
 	//?问号切割的数组
@@ -112,32 +116,35 @@ func (finder *Finder) GetSQL() string {
 
 	//语句中没有?问号
 	if len(questions) < 1 {
-		return sqlstr
+		return sqlstr, nil
 	}
 
 	//重新记录参数值
 	newValues := make([]interface{}, 0)
 	//新的sql
 	var newSqlStr strings.Builder
+	//?切割的语句实际长度比?号个数多1,先把第一个语句片段加上,后面就是比参数的索引大1
 	newSqlStr.WriteString(questions[0])
-	for i, v := range finder.Values {
 
-		//拼接?
+	//遍历所有的参数
+	for i, v := range finder.Values {
+		//先拼接?,?号切割之后,?号就丢失了,先补充上
 		newSqlStr.WriteString("?")
 
 		valueOf := reflect.ValueOf(v)
 		typeOf := reflect.TypeOf(v)
 		kind := valueOf.Kind()
+		//如果参数是个指针类型
 		if kind == reflect.Ptr { //如果是指针
 			valueOf = valueOf.Elem()
 			typeOf = typeOf.Elem()
 			kind = valueOf.Kind()
 		}
-		//获取数组长度
+		//获取数组类型参数值的长度
 		sliceLen := valueOf.Len()
-		//没有长度
+		//数组类型的参数长度小于1,认为是有异常的参数
 		if sliceLen < 1 {
-			return "语句:" + sqlstr + ",第" + strconv.Itoa(i+1) + "个参数,类型是Array或者Slice,值的长度为0,请检查sql参数有效性"
+			return sqlstr, errors.New("语句:" + sqlstr + ",第" + strconv.Itoa(i+1) + "个参数,类型是Array或者Slice,值的长度为0,请检查sql参数有效性")
 		}
 
 		//如果不是数组或者slice
@@ -172,5 +179,5 @@ func (finder *Finder) GetSQL() string {
 	//重新赋值
 	sqlstr = newSqlStr.String()
 	finder.Values = newValues
-	return sqlstr
+	return sqlstr, nil
 }

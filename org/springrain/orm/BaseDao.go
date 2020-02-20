@@ -260,9 +260,10 @@ func (baseDao *BaseDao) UpdateFinder(finder *Finder) error {
 	if finder == nil {
 		return errors.New("finder不能为空")
 	}
-
-	sqlstr := finder.GetSQL()
-	var err error
+	sqlstr, err := finder.GetSQL()
+	if err != nil {
+		return err
+	}
 	sqlstr, err = wrapSQL(baseDao.config.DBType, sqlstr)
 	if err != nil {
 		return err

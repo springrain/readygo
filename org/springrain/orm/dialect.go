@@ -294,14 +294,16 @@ func wrapUpdateMapSQL(dbType DBTYPE, entity IEntityMap) (string, []interface{}, 
 
 //封装查询语句
 func wrapQuerySQL(dbType DBTYPE, finder *Finder, page *Page) (string, error) {
-	var sqlstr string
-	var err error
 
 	//获取到没有page的sql的语句
+	sqlstr, err := finder.GetSQL()
+	if err != nil {
+		return "", err
+	}
 	if page == nil {
-		sqlstr, err = wrapSQL(dbType, finder.GetSQL())
+		sqlstr, err = wrapSQL(dbType, sqlstr)
 	} else {
-		sqlstr, err = wrapPageSQL(dbType, finder.GetSQL(), page)
+		sqlstr, err = wrapPageSQL(dbType, sqlstr, page)
 	}
 
 	if err != nil {
