@@ -58,7 +58,7 @@ type EntityMap struct {
 	TransientMap map[string]interface{}
 }
 
-//获取表名称
+//初始化Map,必须传入表名称
 func NewEntityMap(tbName string) EntityMap {
 	entityMap := EntityMap{}
 	entityMap.DBFieldMap = map[string]interface{}{}
