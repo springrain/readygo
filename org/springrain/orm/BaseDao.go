@@ -41,6 +41,7 @@ func NewBaseDao(config *DataSourceConfig) (*BaseDao, error) {
 	return &BaseDao{config, dataSource}, err
 }
 
+//bug(springrain)日期类型需要测试一下
 //根据Finder和封装为指定的entity类型,entity必须是*struct类型或者基础类型的指针.把查询的数据赋值给entity,所以要求指针类型
 func (baseDao *BaseDao) QueryStruct(finder *Finder, entity interface{}) error {
 
