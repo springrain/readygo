@@ -61,7 +61,7 @@ func newDataSource(config *DataSourceConfig) (*dataSource, error) {
 	db.SetMaxIdleConns(10)
 
 	//验证连接
-	if pingerr := db.Ping(); err != nil {
+	if pingerr := db.Ping(); pingerr != nil {
 		pingerr = fmt.Errorf("ping数据库失败:%w", pingerr)
 		logger.Error(pingerr)
 		return nil, pingerr
@@ -96,7 +96,7 @@ func (s *Session) begin() error {
 		tx, err := s.db.Begin()
 		if err != nil {
 			err = fmt.Errorf("事务开启失败:%w", err)
-			logger.Error(err)
+			//logger.Error(err)
 			return err
 		}
 		s.tx = tx
@@ -114,7 +114,7 @@ func (s *Session) rollback() error {
 		err := s.tx.Rollback()
 		if err != nil {
 			err = fmt.Errorf("事务回滚失败:%w", err)
-			logger.Error(err)
+			//logger.Error(err)
 			return err
 		}
 		s.tx = nil
@@ -127,14 +127,13 @@ func (s *Session) rollback() error {
 func (s *Session) commit() error {
 	//s.rollbackSign = false
 	if s.tx == nil {
-		logger.Error(errors.New("事务为空"))
-		return nil
+		return errors.New("事务为空")
 
 	}
 	err := s.tx.Commit()
 	if err != nil {
 		err = fmt.Errorf("事务提交失败:%w", err)
-		logger.Error(err)
+		//logger.Error(err)
 		return err
 	}
 	s.tx = nil

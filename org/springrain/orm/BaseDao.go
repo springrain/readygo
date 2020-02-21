@@ -3,6 +3,8 @@ package orm
 import (
 	"database/sql"
 	"errors"
+	"fmt"
+	"goshop/org/springrain/logger"
 	"reflect"
 	"strconv"
 	"strings"
@@ -50,7 +52,14 @@ func NewBaseDao(config *DataSourceConfig) (*BaseDao, error) {
 	defaultZeroTime, _ = time.Parse("2006-01-02 15:04:05", "1970-01-01 00:00:00")
 
 	dataSource, err := newDataSource(config)
-	return &BaseDao{config, dataSource}, err
+
+	if err != nil {
+		err = fmt.Errorf("创建dataSource失败:%w", err)
+		logger.Error(err)
+		return nil, err
+	}
+
+	return &BaseDao{config, dataSource}, nil
 }
 
 /*
@@ -68,19 +77,32 @@ baseDao.Transaction(func(session *orm.Session) (interface{}, error) {
 //return的error如果不为nil,事务就会回滚
 func (baseDao *BaseDao) Transaction(doTransaction func(sesion *Session) (interface{}, error)) (interface{}, error) {
 	session := baseDao.dataSource.getSession()
-	session.begin()
+	beginerr := session.begin()
+	if beginerr != nil {
+		beginerr = fmt.Errorf("事务开启失败:%w ", beginerr)
+		logger.Error(beginerr)
+		return nil, beginerr
+	}
 	defer func() {
 		if r := recover(); r != nil {
+			//err = fmt.Errorf("事务开启失败:%w ", err)
+
 			session.rollback()
 		}
 	}()
 
 	info, err := doTransaction(session)
 	if err != nil {
+		err = fmt.Errorf("事务执行失败:%w", err)
+		logger.Error(err)
 		session.rollback()
 		return info, err
 	}
-	session.commit()
+	commitError := session.commit()
+	if commitError != nil {
+		commitError = fmt.Errorf("事务提交失败:%w", commitError)
+		logger.Error(commitError)
+	}
 	return nil, nil
 }
 

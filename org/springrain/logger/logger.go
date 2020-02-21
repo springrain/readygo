@@ -73,8 +73,10 @@ func init() {
 	development := zap.Development()
 	// 设置初始化字段
 	filed := zap.Fields(zap.String("app", appName))
+	//因为对zap做了封装,在记录日志时,跳过本次封装,这样才能记录到真实的异常信息文件和行数,不然一直显示是本文件的方法行数
+	skip := zap.AddCallerSkip(1)
 	// 构造日志
-	logger = zap.New(core, caller, development, filed)
+	logger = zap.New(core, caller, development, filed, skip)
 
 	//logger = logger.Sugar()
 }
@@ -94,8 +96,9 @@ func Warn(msg string, fields ...logField) {
 	logger.Warn(msg, fields...)
 }
 
-func Error(msg error, fields ...logField) {
-	logger.Error(msg.Error(), fields...)
+func Error(err error, fields ...logField) {
+
+	logger.Error(err.Error(), fields...)
 }
 
 func DPanic(msg string, fields ...logField) {
