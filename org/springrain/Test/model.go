@@ -5,10 +5,9 @@ import (
 	"time"
 )
 
-
 type Model struct {
-	Id        int `column:"id"`
-	CreatedAt time.Time `column:"created_at"`
+	Id        int        `column:"id"`
+	CreatedAt time.Time  `column:"created_at"`
 	UpdatedAt time.Time  `column:"updated_at"`
 	DeletedAt *time.Time `column:"deleted_at"`
 }
@@ -40,7 +39,7 @@ type User struct {
 	Nickname       string
 	Status         string
 	Avatar         string
- 	Languages []*Language
+	Languages      []*Language
 }
 
 func (u User) GetTableName() string {
@@ -50,7 +49,7 @@ func (u User) GetTableName() string {
 type Language struct {
 	orm.EntityStruct
 	Model
-	Name string  `column:"name"`
+	Name  string `column:"name"`
 	Users []*User
 }
 
@@ -61,36 +60,31 @@ func (l Language) GetTableName() string {
 type UserLanguages struct {
 	orm.EntityStruct
 	Model
-	UserId    uint
+	UserId     uint
 	LanguageId uint
 }
-
-
-
 
 type Product struct {
 	orm.EntityStruct
 	Model
-	Name string
+	Name   string
 	Amount float32
-
 }
 
 type OrderDetail struct {
-
 	orm.EntityStruct
 	Model
-	Product Product
-	ProductId uint
-	Discount float32
+	Product    Product
+	ProductId  uint
+	Discount   float32
 	LastAmount float32
-	OrderId uint
+	OrderId    uint
 }
 
 type Order struct {
 	orm.EntityStruct
 	Model
-	Total float32
-	Coupon float32
+	Total        float32
+	Coupon       float32
 	OrderDetails []OrderDetail
 }

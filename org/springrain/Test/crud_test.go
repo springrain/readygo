@@ -16,25 +16,48 @@ func init()  {
 		Port:     3306,
 		DBName:   "goshop",
 		UserName: "root",
-		PassWord: "123456789",
+		PassWord: "root",
 		DBType:   orm.DBType_MYSQL,
 	}
 	baseDao, _ = orm.NewBaseDao(&dataSourceConfig)
 }
 
-func initDate()  {
+func initDate() {
 
 	var user User
 	user.CreatedAt = time.Now()
 	user.Id = 3
+	baseDao.Transaction(func(session *orm.Session) (interface{}, error) {
+		baseDao.SaveStruct(session, &user)
+		return nil, nil
+	})
 
-	baseDao.SaveStruct(&user)
-
-
-
-	
 }
 
+func TestTranc(t *testing.T){
+	table := orm.NewEntityMap("user")
+
+	table.Set("id", 11)
+
+	baseDao.Transaction(func(session *orm.Session) (interface{}, error) {
+
+		e1 := baseDao.SaveMap(session, &table)
+
+		if e1 != nil {
+			return nil, e1
+		}
+		var l Language
+		l.Id = 11
+
+		l.Name = "englist"
+		e2 := baseDao.SaveStruct(session, &l)
+		if e2 != nil {
+			return nil, e2
+		}
+		return nil, nil
+	})
+
+}
 
 func TestAdd(t *testing.T) {
 
@@ -43,5 +66,7 @@ func TestAdd(t *testing.T) {
 	toy := Toy{Name: "toy"}
 
 	baseDao.SaveStruct(&toy)
+
+
 
 }
