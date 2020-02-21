@@ -7,8 +7,9 @@ import (
 	"strings"
 )
 
+//注释如果是 . 句号结尾,IDE的提示就截止了,注释结尾不要用 . 结束
 //允许的Type
-//bug(springrain) 1.需要完善支持的数据类型和赋值接口,例如sql.NullString.
+//bug(springrain) 1.需要完善支持的数据类型和赋值接口,例如sql.NullString
 //处理基础类型的查询
 var allowBaseTypeMap = map[reflect.Kind]bool{
 	reflect.String: true,
@@ -48,13 +49,12 @@ func NewBaseDao(config *DataSourceConfig) (*BaseDao, error) {
 baseDao.Transaction(func(session *orm.Session) (interface{}, error) {
 
 	//在此编写业务代码
-	//......
+
 
 	//return的error如果不为nil,事务就会回滚
     return nil, nil
 })
 */
-
 //事务方法,隔离session相关的API.必须通过这个方法进行事务处理,统一事务方式
 //return的error如果不为nil,事务就会回滚
 func (baseDao *BaseDao) Transaction(doTransaction func(sesion *Session) (interface{}, error)) (interface{}, error) {
@@ -175,13 +175,9 @@ func (baseDao *BaseDao) QueryStruct(session *Session, finder *Finder, entity int
 	return nil
 }
 
-//bug(springrain)数据库字段为null,映射异常
-//bug(springrain)需要处理查询总条数的逻辑
-//bug(springrain)需要处理查询一个基础类型的情况,例如 int,[]int
-//根据Finder和封装为指定的entity类型,entity必须是*[]struct类型,已经初始化好的数组,此方法只Append元素,这样调用方就不需要强制类型转换了.
+//根据Finder和封装为指定的entity类型,entity必须是*[]struct类型,已经初始化好的数组,此方法只Append元素,这样调用方就不需要强制类型转换了
 //如果没有事务,session传入nil.如果有事务,参照使用BaseDao.Transaction方法传入session.请不要自己构建Session
 func (baseDao *BaseDao) QueryStructList(session *Session, finder *Finder, rowsSlicePtr interface{}, page *Page) error {
-
 	if session != nil && session.db == nil { //禁止外部构建
 		return errors.New("如果没有事务,session传入nil.如果有事务,参照使用BaseDao.Transaction方法传入session.请不要自己构建Session")
 	}
@@ -309,8 +305,7 @@ func (baseDao *BaseDao) QueryStructList(session *Session, finder *Finder, rowsSl
 
 }
 
-//根据Finder查询,封装Map.获取具体的值,需要自己根据类型调用ColumnValue的转化方法,例如ColumnValue.String()
-//golang的sql驱动不支持获取到数据字段的metadata......垃圾.....
+//根据Finder查询,封装Map
 //bug(springrain)需要测试一下 in 数组, like ,还有查询一个基础类型(例如 string)的功能
 //如果没有事务,session传入nil.如果有事务,参照使用BaseDao.Transaction方法传入session.请不要自己构建Session
 func (baseDao *BaseDao) QueryMap(session *Session, finder *Finder) (map[string]interface{}, error) {
@@ -331,9 +326,7 @@ func (baseDao *BaseDao) QueryMap(session *Session, finder *Finder) (map[string]i
 	return resultMapList[0], nil
 }
 
-//根据Finder查询,封装Map数组.获取具体的值,需要自己根据类型调用ColumnValue的转化方法,例如ColumnValue.String()
-//bug(springrain)需要处理查询总条数的逻辑
-//golang的sql驱动不支持获取到数据字段的metadata......垃圾.....
+//根据Finder查询,封装Map数组
 //如果没有事务,session传入nil.如果有事务,参照使用BaseDao.Transaction方法传入session.请不要自己构建Session
 func (baseDao *BaseDao) QueryMapList(session *Session, finder *Finder, page *Page) ([]map[string]interface{}, error) {
 
