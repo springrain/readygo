@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"reflect"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -459,16 +460,16 @@ func (baseDao *BaseDao) SaveStruct(session *Session, entity IEntityStruct) error
 	//如果是自增主键
 	if autoIncrement {
 		//需要数据库支持,获取自增主键
-		autoIncrementId, e := res.LastInsertId()
-		if e != nil {
-			return e
+		autoIncrementIdInt64, e := res.LastInsertId()
+		if e != nil { //如果数据库不支持,不再赋值给struct属性
+			return nil
 		}
 		pkName := entity.GetPKColumnName()
 		//int64 转 int
-		//strInt64 := strconv.FormatInt(autoIncrementIdInt64, 10)
-		//autoIncrementIdInt16, _ := strconv.Atoi(strInt64)
+		strInt64 := strconv.FormatInt(autoIncrementIdInt64, 10)
+		autoIncrementIdInt, _ := strconv.Atoi(strInt64)
 		//设置自增主键的值
-		seterr := setFieldValueByColumnName(entity, pkName, autoIncrementId)
+		seterr := setFieldValueByColumnName(entity, pkName, autoIncrementIdInt)
 		if seterr != nil {
 			return seterr
 		}
