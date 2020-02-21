@@ -181,9 +181,11 @@ func (baseDao *BaseDao) QueryStruct(session *Session, finder *Finder, entity int
 				return errors.New("查询出多条数据")
 			}
 			i++
-			err = rows.Scan(entity)
-			if err != nil {
-				return err
+			scanerr := rows.Scan(entity)
+			if scanerr != nil {
+				scanerr = fmt.Errorf("rows.Scan异常:%w", scanerr)
+				logger.Error(scanerr)
+				return scanerr
 			}
 		}
 
@@ -196,7 +198,7 @@ func (baseDao *BaseDao) QueryStruct(session *Session, finder *Finder, entity int
 	if dbe != nil {
 		dbe = fmt.Errorf("获取字段缓存错误:%w", dbe)
 		logger.Error(dbe)
-		return e
+		return dbe
 	}
 	//声明载体数组,用于存放struct的属性指针
 	values := make([]interface{}, len(columns))
@@ -329,7 +331,7 @@ func (baseDao *BaseDao) QueryStructList(session *Session, finder *Finder, rowsSl
 	if dbe != nil {
 		dbe = fmt.Errorf("获取字段缓存错误:%w", dbe)
 		logger.Error(dbe)
-		return e
+		return dbe
 	}
 	//声明载体数组,用于存放struct的属性指针
 	values := make([]interface{}, len(columns))
