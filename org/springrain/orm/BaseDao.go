@@ -465,11 +465,13 @@ func (baseDao *BaseDao) SaveStruct(session *Session, entity IEntityStruct) error
 }
 
 //更新struct所有属性,必须是IEntityStruct类型
+//session不能为nil,参照使用BaseDao.Transaction方法传入session.请不要自己构建Session
 func (baseDao *BaseDao) UpdateStruct(session *Session, entity IEntityStruct) error {
 	return baseDao.updateStructFunc(session, entity, false)
 }
 
 //更新struct不为nil的属性,必须是IEntityStruct类型
+//session不能为nil,参照使用BaseDao.Transaction方法传入session.请不要自己构建Session
 func (baseDao *BaseDao) UpdateStructNotNil(session *Session, entity IEntityStruct) error {
 	return baseDao.updateStructFunc(session, entity, true)
 }
