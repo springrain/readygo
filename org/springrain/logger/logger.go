@@ -94,8 +94,8 @@ func Warn(msg string, fields ...logField) {
 	logger.Warn(msg, fields...)
 }
 
-func Error(msg string, fields ...logField) {
-	logger.Error(msg, fields...)
+func Error(msg error, fields ...logField) {
+	logger.Error(msg.Error(), fields...)
 }
 
 func DPanic(msg string, fields ...logField) {

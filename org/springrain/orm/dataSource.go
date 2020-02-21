@@ -2,7 +2,9 @@ package orm
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
+	"goshop/org/springrain/logger"
 
 	_ "github.com/go-sql-driver/mysql"
 )
@@ -41,11 +43,15 @@ type DataSourceConfig struct {
 func newDataSource(config *DataSourceConfig) (*dataSource, error) {
 	dsn, e := wrapDBDSN(config)
 	if e != nil {
+		e = fmt.Errorf("获取数据库连接字符串失败:%w", e)
+		logger.Error(e)
 		return nil, e
 	}
 
 	db, err := sql.Open(string(config.DBType), dsn)
 	if err != nil {
+		err = fmt.Errorf("数据库打开失败:%w", err)
+		logger.Error(err)
 		return nil, err
 	}
 
@@ -55,12 +61,13 @@ func newDataSource(config *DataSourceConfig) (*dataSource, error) {
 	db.SetMaxIdleConns(10)
 
 	//验证连接
-	if err := db.Ping(); err != nil {
-		fmt.Println("open database fail")
-		return nil, err
+	if pingerr := db.Ping(); err != nil {
+		pingerr = fmt.Errorf("ping数据库失败:%w", pingerr)
+		logger.Error(pingerr)
+		return nil, pingerr
 	}
 
-	return &dataSource{db}, err
+	return &dataSource{db}, nil
 }
 
 //事务参照:https://www.jianshu.com/p/2a144332c3db
@@ -88,6 +95,8 @@ func (s *Session) begin() error {
 	if s.tx == nil {
 		tx, err := s.db.Begin()
 		if err != nil {
+			err = fmt.Errorf("事务开启失败:%w", err)
+			logger.Error(err)
 			return err
 		}
 		s.tx = tx
@@ -104,6 +113,8 @@ func (s *Session) rollback() error {
 	if s.tx != nil {
 		err := s.tx.Rollback()
 		if err != nil {
+			err = fmt.Errorf("事务回滚失败:%w", err)
+			logger.Error(err)
 			return err
 		}
 		s.tx = nil
@@ -116,11 +127,14 @@ func (s *Session) rollback() error {
 func (s *Session) commit() error {
 	//s.rollbackSign = false
 	if s.tx == nil {
+		logger.Error(errors.New("事务为空"))
 		return nil
 
 	}
 	err := s.tx.Commit()
 	if err != nil {
+		err = fmt.Errorf("事务提交失败:%w", err)
+		logger.Error(err)
 		return err
 	}
 	s.tx = nil
