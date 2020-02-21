@@ -44,6 +44,16 @@ func NewBaseDao(config *DataSourceConfig) (*BaseDao, error) {
 }
 
 //事务方法,隔离session相关的API.必须通过这个方法进行事务处理,统一事务方式
+//return的error如果不为nil,事务就会回滚
+/*
+baseDao.Transaction(func(session *orm.Session) (interface{}, error) {
+
+	//业务代码
+
+    return nil, nil
+})
+
+*/
 func (baseDao *BaseDao) Transaction(doTransaction func(sesion *Session) (interface{}, error)) (interface{}, error) {
 	session := baseDao.dataSource.getSession()
 	session.begin()
