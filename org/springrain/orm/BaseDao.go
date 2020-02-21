@@ -3,9 +3,14 @@ package orm
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 	"reflect"
 	"strings"
+	"time"
 )
+
+//默认的零时时间 1970-01-01 00:00:00,兼容数据库,避免0001-01-01 00:00:00 +0000 UTC的零值
+var defaultZeroTime time.Time
 
 //注释如果是 . 句号结尾,IDE的提示就截止了,注释结尾不要用 . 结束
 //允许的Type
@@ -40,6 +45,9 @@ type BaseDao struct {
 //var once sync.Once
 //创建baseDao
 func NewBaseDao(config *DataSourceConfig) (*BaseDao, error) {
+	//初始化日期,放到外部为什么不行啊???
+	defaultZeroTime, _ = time.Parse("2006-01-02 15:04:05", "1970-01-01 00:00:00")
+
 	dataSource, err := newDataSource(config)
 	return &BaseDao{config, dataSource}, err
 }
@@ -602,9 +610,12 @@ func columnAndValue(entity interface{}) ([]reflect.StructField, []interface{}, e
 		columns = append(columns, field)
 		//FieldByName方法返回的是reflect.Value类型,调用Interface()方法,返回原始类型的数据值
 		value := valueOf.FieldByName(field.Name).Interface()
-
-		if field.Type.String() == "time.Time" { //如果是日期类型,需要设置一个初始值,兼容mac系统
-			//fmt.Println(value)
+		if value != nil { //如果不是nil
+			timeValue, ok := value.(time.Time)
+			if ok && timeValue.IsZero() { //如果是日期零时,需要设置一个初始值1970-01-01 00:00:00,兼容数据库
+				value = defaultZeroTime
+				fmt.Println(value)
+			}
 		}
 
 		//添加到记录值的数组
