@@ -120,6 +120,7 @@ func (baseDao *BaseDao) Transaction(doTransaction func(sesion *Session) (interfa
 	if commitError != nil {
 		commitError = fmt.Errorf("事务提交失败:%w", commitError)
 		logger.Error(commitError)
+		return info, commitError
 	}
 	return nil, nil
 }
@@ -392,11 +393,11 @@ func (baseDao *BaseDao) QueryMap(session *Session, finder *Finder) (map[string]i
 	if session != nil && session.db == nil { //禁止外部构建
 		return nil, errors.New("如果没有事务,session传入nil.如果有事务,参照使用BaseDao.Transaction方法传入session.请不要自己构建Session")
 	}
-	resultMapList, err := baseDao.QueryMapList(session, finder, nil)
-	if err != nil {
-		err = fmt.Errorf("QueryMapList查询错误:%w", err)
-		logger.Error(err)
-		return nil, err
+	resultMapList, listerr := baseDao.QueryMapList(session, finder, nil)
+	if listerr != nil {
+		listerr = fmt.Errorf("QueryMapList查询错误:%w", listerr)
+		logger.Error(listerr)
+		return nil, listerr
 	}
 	if resultMapList == nil {
 		return nil, nil
