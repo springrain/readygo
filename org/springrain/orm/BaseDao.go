@@ -382,10 +382,12 @@ func (baseDao *BaseDao) QueryMap(session *Session, finder *Finder) (map[string]i
 	}
 	resultMapList, err := baseDao.QueryMapList(session, finder, nil)
 	if err != nil {
+		err = fmt.Errorf("QueryMapList查询错误:%w", err)
+		logger.Error(err)
 		return nil, err
 	}
 	if resultMapList == nil {
-		return nil, err
+		return nil, nil
 	}
 	if len(resultMapList) > 1 {
 		return resultMapList[0], errors.New("查询出多条数据")
@@ -402,18 +404,24 @@ func (baseDao *BaseDao) QueryMapList(session *Session, finder *Finder, page *Pag
 	}
 	sqlstr, err := wrapQuerySQL(baseDao.config.DBType, finder, nil)
 	if err != nil {
+		err = fmt.Errorf("QueryMapList查询错误:%w", err)
+		logger.Error(err)
 		return nil, err
 	}
 
 	//根据语句和参数查询
 	rows, e := baseDao.dataSource.Query(sqlstr, finder.Values...)
 	if e != nil {
+		e = fmt.Errorf("查询rows错误:%w", e)
+		logger.Error(e)
 		return nil, e
 	}
 
 	//数据库返回的列名
 	columns, cne := rows.Columns()
 	if cne != nil {
+		cne = fmt.Errorf("数据库返回列名错误:%w", cne)
+		logger.Error(cne)
 		return nil, cne
 	}
 	resultMapList := make([]map[string]interface{}, 0)
@@ -428,9 +436,11 @@ func (baseDao *BaseDao) QueryMapList(session *Session, finder *Finder, page *Pag
 			values[i] = new(interface{})
 		}
 		//scan赋值
-		err = rows.Scan(values...)
-		if err != nil {
-			return nil, err
+		scanerr := rows.Scan(values...)
+		if scanerr != nil {
+			scanerr = fmt.Errorf("rows.Scan异常:%w", scanerr)
+			logger.Error(scanerr)
+			return nil, scanerr
 		}
 		//获取每一列的值
 		for i, column := range columns {
@@ -446,9 +456,11 @@ func (baseDao *BaseDao) QueryMapList(session *Session, finder *Finder, page *Pag
 	//bug(springrain) 还缺少查询总条数的逻辑
 	//查询总条数
 	if page != nil && finder.SelectPageCount {
-		count, err := baseDao.selectCount(session, finder)
-		if err != nil {
-			return resultMapList, err
+		count, counterr := baseDao.selectCount(session, finder)
+		if counterr != nil {
+			counterr = fmt.Errorf("查询总条数错误:%w", counterr)
+			logger.Error(counterr)
+			return resultMapList, counterr
 		}
 		page.SetTotalCount(count)
 	}
@@ -470,16 +482,22 @@ func (baseDao *BaseDao) UpdateFinder(session *Session, finder *Finder) error {
 	}
 	sqlstr, err := finder.GetSQL()
 	if err != nil {
+		err = fmt.Errorf("finder.GetSQL()错误:%w", err)
+		logger.Error(err)
 		return err
 	}
 	sqlstr, err = wrapSQL(baseDao.config.DBType, sqlstr)
 	if err != nil {
+		err = fmt.Errorf("UpdateFinder-->wrapSQL错误:%w", err)
+		logger.Error(err)
 		return err
 	}
 	//流弊的...,把数组展开变成多个参数的形式
 	_, errexec := session.exec(sqlstr, finder.Values...)
 
 	if errexec != nil {
+		errexec = fmt.Errorf("执行更新错误:%w", errexec)
+		logger.Error(errexec)
 		return errexec
 	}
 	return nil
@@ -496,9 +514,11 @@ func (baseDao *BaseDao) SaveStruct(session *Session, entity IEntityStruct) error
 	if entity == nil {
 		return errors.New("对象不能为空")
 	}
-	columns, values, err := columnAndValue(entity)
-	if err != nil {
-		return err
+	columns, values, columnAndValueErr := columnAndValue(entity)
+	if columnAndValueErr != nil {
+		columnAndValueErr = fmt.Errorf("SaveStruct-->columnAndValue获取实体类的列和值异常:%w", columnAndValueErr)
+		logger.Error(columnAndValueErr)
+		return columnAndValueErr
 	}
 	if len(columns) < 1 {
 		return errors.New("没有tag信息,请检查struct中 column 的tag")
@@ -506,6 +526,8 @@ func (baseDao *BaseDao) SaveStruct(session *Session, entity IEntityStruct) error
 	//SQL语句
 	sqlstr, autoIncrement, err := wrapSaveStructSQL(baseDao.config.DBType, entity, &columns, &values)
 	if err != nil {
+		err = fmt.Errorf("SaveStruct-->wrapSaveStructSQL获取保存语句错误:%w", err)
+		logger.Error(err)
 		return err
 	}
 
@@ -513,13 +535,17 @@ func (baseDao *BaseDao) SaveStruct(session *Session, entity IEntityStruct) error
 	res, errexec := session.exec(sqlstr, values...)
 
 	if errexec != nil {
+		errexec = fmt.Errorf("SaveStruct执行保存错误:%w", errexec)
+		logger.Error(errexec)
 		return errexec
 	}
 	//如果是自增主键
 	if autoIncrement {
 		//需要数据库支持,获取自增主键
 		autoIncrementIdInt64, e := res.LastInsertId()
-		if e != nil { //如果数据库不支持,不再赋值给struct属性
+		if e != nil { //数据库不支持自增主键,不再赋值给struct属性
+			e = fmt.Errorf("数据库不支持自增主键,不再赋值给struct属性:%w", e)
+			logger.Error(e)
 			return nil
 		}
 		pkName := entity.GetPKColumnName()
@@ -529,6 +555,8 @@ func (baseDao *BaseDao) SaveStruct(session *Session, entity IEntityStruct) error
 		//设置自增主键的值
 		seterr := setFieldValueByColumnName(entity, pkName, autoIncrementIdInt)
 		if seterr != nil {
+			seterr = fmt.Errorf("反射赋值数据库返回的自增主键错误:%w", seterr)
+			logger.Error(seterr)
 			return seterr
 		}
 	}
@@ -540,13 +568,23 @@ func (baseDao *BaseDao) SaveStruct(session *Session, entity IEntityStruct) error
 //更新struct所有属性,必须是IEntityStruct类型
 //session不能为nil,参照使用BaseDao.Transaction方法传入session.请不要自己构建Session
 func (baseDao *BaseDao) UpdateStruct(session *Session, entity IEntityStruct) error {
-	return baseDao.updateStructFunc(session, entity, false)
+	err := baseDao.updateStructFunc(session, entity, false)
+	if err != nil {
+		err = fmt.Errorf("UpdateStruct-->updateStructFunc更新错误:%w", err)
+		return err
+	}
+	return nil
 }
 
 //更新struct不为nil的属性,必须是IEntityStruct类型
 //session不能为nil,参照使用BaseDao.Transaction方法传入session.请不要自己构建Session
 func (baseDao *BaseDao) UpdateStructNotNil(session *Session, entity IEntityStruct) error {
-	return baseDao.updateStructFunc(session, entity, true)
+	err := baseDao.updateStructFunc(session, entity, true)
+	if err != nil {
+		err = fmt.Errorf("UpdateStructNotNil-->updateStructFunc更新错误:%w", err)
+		return err
+	}
+	return nil
 }
 
 // 根据主键删除一个对象.必须是IEntityStruct类型
@@ -559,24 +597,32 @@ func (baseDao *BaseDao) DeleteStruct(session *Session, entity IEntityStruct) err
 	if entity == nil {
 		return errors.New("对象不能为空")
 	}
-	pkName, err := entityPKFieldName(entity)
-	if err != nil {
-		return err
+	pkName, pkNameErr := entityPKFieldName(entity)
+	if pkNameErr != nil {
+		pkNameErr = fmt.Errorf("DeleteStruct-->entityPKFieldName获取主键名称错误:%w", pkNameErr)
+		logger.Error(pkNameErr)
+		return pkNameErr
 	}
 
 	value, e := structFieldValue(entity, pkName)
 	if e != nil {
+		e = fmt.Errorf("DeleteStruct-->structFieldValue获取主键值错误:%w", e)
+		logger.Error(e)
 		return e
 	}
 	//SQL语句
 	sqlstr, err := wrapDeleteStructSQL(baseDao.config.DBType, entity)
 	if err != nil {
+		err = fmt.Errorf("DeleteStruct-->wrapDeleteStructSQL获取SQL语句错误:%w", err)
+		logger.Error(err)
 		return err
 	}
 
 	_, errexec := session.exec(sqlstr, value)
 
 	if errexec != nil {
+		errexec = fmt.Errorf("DeleteStruct执行删除错误:%w", errexec)
+		logger.Error(errexec)
 		return errexec
 	}
 
@@ -597,6 +643,8 @@ func (baseDao *BaseDao) SaveMap(session *Session, entity IEntityMap) error {
 	//SQL语句
 	sqlstr, values, err := wrapSaveMapSQL(baseDao.config.DBType, entity)
 	if err != nil {
+		err = fmt.Errorf("SaveMap-->wrapSaveMapSQL获取SQL语句错误:%w", err)
+		logger.Error(err)
 		return err
 	}
 
@@ -605,6 +653,8 @@ func (baseDao *BaseDao) SaveMap(session *Session, entity IEntityMap) error {
 	_, errexec := session.exec(sqlstr, values...)
 
 	if errexec != nil {
+		errexec = fmt.Errorf("SaveMap执行保存错误:%w", errexec)
+		logger.Error(errexec)
 		return errexec
 	}
 
@@ -625,6 +675,8 @@ func (baseDao *BaseDao) UpdateMap(session *Session, entity IEntityMap) error {
 	//SQL语句
 	sqlstr, values, err := wrapUpdateMapSQL(baseDao.config.DBType, entity)
 	if err != nil {
+		err = fmt.Errorf("UpdateMap-->wrapUpdateMapSQL获取SQL语句错误:%w", err)
+		logger.Error(err)
 		return err
 	}
 	//fmt.Println(sqlstr)
@@ -632,6 +684,8 @@ func (baseDao *BaseDao) UpdateMap(session *Session, entity IEntityMap) error {
 	_, errexec := session.exec(sqlstr, values...)
 
 	if errexec != nil {
+		errexec = fmt.Errorf("UpdateMap执行更新错误:%w", errexec)
+		logger.Error(errexec)
 		return errexec
 	}
 	//fmt.Println(entity.GetTableName() + " update success")
@@ -790,9 +844,9 @@ func (baseDao *BaseDao) updateStructFunc(session *Session, entity IEntityStruct,
 	if entity == nil {
 		return errors.New("对象不能为空")
 	}
-	columns, values, err := columnAndValue(entity)
-	if err != nil {
-		return err
+	columns, values, columnAndValueErr := columnAndValue(entity)
+	if columnAndValueErr != nil {
+		return columnAndValueErr
 	}
 	//SQL语句
 	sqlstr, err := wrapUpdateStructSQL(baseDao.config.DBType, entity, columns, values, onlyupdatenotnull)
@@ -832,9 +886,9 @@ func (baseDao *BaseDao) selectCount(session *Session, finder *Finder) (int, erro
 		return count, nil
 	}
 
-	countsql, err := finder.GetSQL()
-	if err != nil {
-		return -1, err
+	countsql, counterr := finder.GetSQL()
+	if counterr != nil {
+		return -1, counterr
 	}
 
 	//查询order by 的位置
