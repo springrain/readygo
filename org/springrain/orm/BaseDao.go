@@ -464,8 +464,14 @@ func (baseDao *BaseDao) SaveStruct(session *Session, entity IEntityStruct) error
 			return e
 		}
 		pkName := entity.GetPKColumnName()
+		//int64 转 int
+		//strInt64 := strconv.FormatInt(autoIncrementIdInt64, 10)
+		//autoIncrementIdInt16, _ := strconv.Atoi(strInt64)
 		//设置自增主键的值
-		setFieldValueByColumnName(entity, pkName, autoIncrementId)
+		seterr := setFieldValueByColumnName(entity, pkName, autoIncrementId)
+		if seterr != nil {
+			return seterr
+		}
 	}
 
 	return nil
