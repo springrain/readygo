@@ -65,6 +65,10 @@ func (baseDao *BaseDao) Transaction(doTransaction func(sesion *Session) (interfa
 //bug(springrain)日期类型需要测试一下
 //根据Finder和封装为指定的entity类型,entity必须是*struct类型或者基础类型的指针.把查询的数据赋值给entity,所以要求指针类型
 func (baseDao *BaseDao) QueryStruct(session *Session, finder *Finder, entity interface{}) error {
+	//禁止外部构建
+	if session != nil && session.db == nil {
+		return errors.New("请不要自己构建session")
+	}
 
 	checkerr := checkEntityKind(entity)
 	if checkerr != nil {
@@ -163,6 +167,9 @@ func (baseDao *BaseDao) QueryStruct(session *Session, finder *Finder, entity int
 //根据Finder和封装为指定的entity类型,entity必须是*[]struct类型,已经初始化好的数组,此方法只Append元素,这样调用方就不需要强制类型转换了.
 func (baseDao *BaseDao) QueryStructList(session *Session, finder *Finder, rowsSlicePtr interface{}, page *Page) error {
 
+	if session != nil && session.db == nil { //禁止外部构建
+		return errors.New("请不要自己构建session")
+	}
 	if rowsSlicePtr == nil { //如果为nil
 		return errors.New("数组必须是&[]stuct类型或者基础类型数组的指针")
 	}
@@ -291,6 +298,10 @@ func (baseDao *BaseDao) QueryStructList(session *Session, finder *Finder, rowsSl
 //golang的sql驱动不支持获取到数据字段的metadata......垃圾.....
 //bug(springrain)需要测试一下 in 数组, like ,还有查询一个基础类型(例如 string)的功能
 func (baseDao *BaseDao) QueryMap(session *Session, finder *Finder) (map[string]interface{}, error) {
+
+	if session != nil && session.db == nil { //禁止外部构建
+		return nil, errors.New("请不要自己构建session")
+	}
 	resultMapList, err := baseDao.QueryMapList(session, finder, nil)
 	if err != nil {
 		return nil, err
@@ -309,6 +320,9 @@ func (baseDao *BaseDao) QueryMap(session *Session, finder *Finder) (map[string]i
 //golang的sql驱动不支持获取到数据字段的metadata......垃圾.....
 func (baseDao *BaseDao) QueryMapList(session *Session, finder *Finder, page *Page) ([]map[string]interface{}, error) {
 
+	if session != nil && session.db == nil { //禁止外部构建
+		return nil, errors.New("请不要自己构建session")
+	}
 	sqlstr, err := wrapQuerySQL(baseDao.config.DBType, finder, nil)
 	if err != nil {
 		return nil, err
@@ -367,6 +381,12 @@ func (baseDao *BaseDao) QueryMapList(session *Session, finder *Finder, page *Pag
 
 //更新Finder
 func (baseDao *BaseDao) UpdateFinder(session *Session, finder *Finder) error {
+
+	//必须要有session和事务
+	if session == nil || session.tx == nil {
+		return errors.New("请不要自己构建session,更新方法必须要有事务")
+	}
+
 	if finder == nil {
 		return errors.New("finder不能为空")
 	}
@@ -379,12 +399,8 @@ func (baseDao *BaseDao) UpdateFinder(session *Session, finder *Finder) error {
 		return err
 	}
 	//流弊的...,把数组展开变成多个参数的形式
-	var errexec error
-	if session != nil {
-		_, errexec = session.exec(sqlstr, finder.Values...)
-	} else {
-		_, errexec = baseDao.dataSource.Exec(sqlstr, finder.Values...)
-	}
+	_, errexec := session.exec(sqlstr, finder.Values...)
+
 	if errexec != nil {
 		return errexec
 	}
@@ -394,6 +410,10 @@ func (baseDao *BaseDao) UpdateFinder(session *Session, finder *Finder) error {
 //保存Struct对象,必须是IEntityStruct类型
 //bug(chunanuyong) 如果是自增主键,需要返回.需要sql驱动支持
 func (baseDao *BaseDao) SaveStruct(session *Session, entity IEntityStruct) error {
+	//必须要有session和事务
+	if session == nil || session.tx == nil {
+		return errors.New("请不要自己构建session,更新方法必须要有事务")
+	}
 	if entity == nil {
 		return errors.New("对象不能为空")
 	}
@@ -411,13 +431,8 @@ func (baseDao *BaseDao) SaveStruct(session *Session, entity IEntityStruct) error
 	}
 
 	//流弊的...,把数组展开变成多个参数的形式
-	var res sql.Result
-	var errexec error
-	if session != nil {
-		res, errexec = session.exec(sqlstr, values...)
-	} else {
-		res, errexec = baseDao.dataSource.Exec(sqlstr, values...)
-	}
+	res, errexec := session.exec(sqlstr, values...)
+
 	if errexec != nil {
 		return errexec
 	}
@@ -449,6 +464,10 @@ func (baseDao *BaseDao) UpdateStructNotNil(session *Session, entity IEntityStruc
 
 // 根据主键删除一个对象.必须是IEntityStruct类型
 func (baseDao *BaseDao) DeleteStruct(session *Session, entity IEntityStruct) error {
+	//必须要有session和事务
+	if session == nil || session.tx == nil {
+		return errors.New("请不要自己构建session,更新方法必须要有事务")
+	}
 	if entity == nil {
 		return errors.New("对象不能为空")
 	}
@@ -467,12 +486,8 @@ func (baseDao *BaseDao) DeleteStruct(session *Session, entity IEntityStruct) err
 		return err
 	}
 
-	var errexec error
-	if session != nil {
-		_, errexec = session.exec(sqlstr, value)
-	} else {
-		_, errexec = baseDao.dataSource.Exec(sqlstr, value)
-	}
+	_, errexec := session.exec(sqlstr, value)
+
 	if errexec != nil {
 		return errexec
 	}
@@ -483,6 +498,10 @@ func (baseDao *BaseDao) DeleteStruct(session *Session, entity IEntityStruct) err
 
 //保存IEntityMap对象.使用Map保存数据,需要在数据中封装好包括Id在内的所有数据.不适用于复杂情况
 func (baseDao *BaseDao) SaveMap(session *Session, entity IEntityMap) error {
+	//必须要有session和事务
+	if session == nil || session.tx == nil {
+		return errors.New("请不要自己构建session,更新方法必须要有事务")
+	}
 	if entity == nil {
 		return errors.New("对象不能为空")
 	}
@@ -493,13 +512,9 @@ func (baseDao *BaseDao) SaveMap(session *Session, entity IEntityMap) error {
 	}
 
 	//流弊的...,把数组展开变成多个参数的形式
-	var errexec error
-	if session != nil {
-		_, errexec = session.exec(sqlstr, values...)
 
-	} else {
-		_, errexec = baseDao.dataSource.Exec(sqlstr, values...)
-	}
+	_, errexec := session.exec(sqlstr, values...)
+
 	if errexec != nil {
 		return errexec
 	}
@@ -510,6 +525,10 @@ func (baseDao *BaseDao) SaveMap(session *Session, entity IEntityMap) error {
 
 //更新IEntityMap对象.使用Map修改数据,需要在数据中封装好包括Id在内的所有数据.不适用于复杂情况
 func (baseDao *BaseDao) UpdateMap(session *Session, entity IEntityMap) error {
+	//必须要有session和事务
+	if session == nil || session.tx == nil {
+		return errors.New("请不要自己构建session,更新方法必须要有事务")
+	}
 	if entity == nil {
 		return errors.New("对象不能为空")
 	}
@@ -520,13 +539,8 @@ func (baseDao *BaseDao) UpdateMap(session *Session, entity IEntityMap) error {
 	}
 	//fmt.Println(sqlstr)
 	//流弊的...,把数组展开变成多个参数的形式
-	var errexec error
-	if session != nil {
-		_, errexec = session.exec(sqlstr, values...)
+	_, errexec := session.exec(sqlstr, values...)
 
-	} else {
-		_, errexec = baseDao.dataSource.Exec(sqlstr, values...)
-	}
 	if errexec != nil {
 		return errexec
 	}
@@ -671,6 +685,10 @@ func wrapMap(columns []string, values []columnValue) (map[string]columnValue, er
 
 //更新对象
 func (baseDao *BaseDao) updateStructFunc(session *Session, entity IEntityStruct, onlyupdatenotnull bool) error {
+	//必须要有session和事务
+	if session == nil || session.tx == nil {
+		return errors.New("请不要自己构建session,更新方法必须要有事务")
+	}
 	if entity == nil {
 		return errors.New("对象不能为空")
 	}
@@ -685,13 +703,8 @@ func (baseDao *BaseDao) updateStructFunc(session *Session, entity IEntityStruct,
 	}
 
 	//流弊的...,把数组展开变成多个参数的形式
-	var errexec error
-	if session != nil {
-		_, errexec = session.exec(sqlstr, values...)
+	_, errexec := session.exec(sqlstr, values...)
 
-	} else {
-		_, errexec = baseDao.dataSource.Exec(sqlstr, values...)
-	}
 	if errexec != nil {
 		return errexec
 	}
@@ -703,7 +716,10 @@ func (baseDao *BaseDao) updateStructFunc(session *Session, entity IEntityStruct,
 
 //根据finder查询总条数
 func (baseDao *BaseDao) selectCount(session *Session, finder *Finder) (int, error) {
-
+	//禁止外部构建
+	if session != nil && session.db == nil {
+		return -1, errors.New("请不要自己构建session")
+	}
 	if finder == nil {
 		return -1, errors.New("参数为nil")
 	}
