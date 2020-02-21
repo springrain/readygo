@@ -252,7 +252,7 @@ func (baseDao *BaseDao) QueryStructList(session *Session, finder *Finder, rowsSl
 		}
 
 		//查询总条数
-		if page != nil && page.SelectPageCount {
+		if page != nil && finder.SelectPageCount {
 			count, err := baseDao.selectCount(session, finder)
 			if err != nil {
 				return err
@@ -302,7 +302,7 @@ func (baseDao *BaseDao) QueryStructList(session *Session, finder *Finder, rowsSl
 	}
 
 	//查询总条数
-	if page != nil && page.SelectPageCount {
+	if page != nil && finder.SelectPageCount {
 		count, err := baseDao.selectCount(session, finder)
 		if err != nil {
 			return err
@@ -387,7 +387,7 @@ func (baseDao *BaseDao) QueryMapList(session *Session, finder *Finder, page *Pag
 
 	//bug(springrain) 还缺少查询总条数的逻辑
 	//查询总条数
-	if page != nil && page.SelectPageCount {
+	if page != nil && finder.SelectPageCount {
 		count, err := baseDao.selectCount(session, finder)
 		if err != nil {
 			return resultMapList, err

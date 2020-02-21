@@ -17,8 +17,6 @@ type Page struct {
 	HasNext bool
 	//是否是最后一页
 	LastPage bool
-	//是否自动查询总页数,默认true
-	SelectPageCount bool
 }
 
 //创建Page对象
@@ -26,7 +24,6 @@ func NewPage() Page {
 	page := Page{}
 	page.PageNo = 1
 	page.PageSize = 20
-	page.SelectPageCount = true
 	return page
 }
 

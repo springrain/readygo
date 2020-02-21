@@ -18,6 +18,8 @@ type Finder struct {
 	// 设置总条数查询的finder.Struct不能为nil,自己引用自己,go无法初始化Finder struct,使用可以为nil的指针,就可以了.
 	//CountFinder Finder
 	CountFinder *Finder
+	//是否自动查询总页数,默认true
+	SelectPageCount bool
 	//SQL语句
 	sqlstr string
 }
@@ -25,6 +27,7 @@ type Finder struct {
 // 初始化一个Finder,生成一个空的Finder
 func NewFinder() *Finder {
 	finder := Finder{}
+	finder.SelectPageCount = true
 	finder.Values = make([]interface{}, 0)
 	return &finder
 }
