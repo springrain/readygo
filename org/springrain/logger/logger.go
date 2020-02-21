@@ -2,6 +2,7 @@ package logger
 
 import (
 	"os"
+	"time"
 
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -10,6 +11,8 @@ import (
 
 //  logger
 var logger *zap.Logger
+
+const appName = "goshop"
 
 var levelMap = map[string]zapcore.Level{
 	"debug":  zapcore.DebugLevel,
@@ -31,7 +34,7 @@ func getLoggerLevel(lvl string) zapcore.Level {
 
 //初始化日志
 func init() {
-	fileName := "./logs/goshop.log"
+	fileName := "./logs/" + appName + ".log"
 	level := getLoggerLevel("debug")
 	hook := lumberjack.Logger{
 		Filename:   fileName, // 日志文件路径
@@ -69,9 +72,10 @@ func init() {
 	// 开启文件及行号
 	development := zap.Development()
 	// 设置初始化字段
-	filed := zap.Fields(zap.String("app", "goshop"))
+	filed := zap.Fields(zap.String("app", appName))
 	// 构造日志
 	logger = zap.New(core, caller, development, filed)
+
 	//logger = logger.Sugar()
 }
 
@@ -104,4 +108,35 @@ func Panic(msg string, fields ...logField) {
 
 func Fatal(msg string, fields ...logField) {
 	logger.Fatal(msg, fields...)
+}
+
+func String(key string, val string) logField {
+	return zap.String(key, val)
+}
+
+func Int(key string, val int) logField {
+	return zap.Int(key, val)
+}
+func Int32(key string, val int32) logField {
+	return zap.Int32(key, val)
+}
+func Int64(key string, val int64) logField {
+	return zap.Int64(key, val)
+}
+func Bool(key string, val bool) logField {
+	return zap.Bool(key, val)
+}
+
+func Duration(key string, val time.Duration) logField {
+	return zap.Duration(key, val)
+}
+func Time(key string, val time.Time) logField {
+	return zap.Time(key, val)
+}
+func Float32(key string, val float32) logField {
+	return zap.Float32(key, val)
+}
+func Float64(key string, val float64) logField {
+
+	return zap.Float64(key, val)
 }
