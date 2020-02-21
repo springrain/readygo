@@ -437,7 +437,7 @@ func (baseDao *BaseDao) SaveStruct(session *Session, entity IEntityStruct) error
 		return errors.New("没有tag信息,请检查struct中 column 的tag")
 	}
 	//SQL语句
-	sqlstr, autoIncrement, err := wrapSaveStructSQL(baseDao.config.DBType, entity, columns, values)
+	sqlstr, autoIncrement, err := wrapSaveStructSQL(baseDao.config.DBType, entity, &columns, &values)
 	if err != nil {
 		return err
 	}
@@ -602,6 +602,11 @@ func columnAndValue(entity interface{}) ([]reflect.StructField, []interface{}, e
 		columns = append(columns, field)
 		//FieldByName方法返回的是reflect.Value类型,调用Interface()方法,返回原始类型的数据值
 		value := valueOf.FieldByName(field.Name).Interface()
+
+		if field.Type.String() == "time.Time" { //如果是日期类型,需要设置一个初始值,兼容mac系统
+			//fmt.Println(value)
+		}
+
 		//添加到记录值的数组
 		values = append(values, value)
 

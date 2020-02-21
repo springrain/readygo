@@ -58,7 +58,7 @@ func wrapPageSQL(dbType DBTYPE, sqlstr string, page *Page) (string, error) {
 }
 
 //包装保存Struct语句.返回语句,是否自增,错误信息
-func wrapSaveStructSQL(dbType DBTYPE, entity IEntityStruct, columns []reflect.StructField, values []interface{}) (string, bool, error) {
+func wrapSaveStructSQL(dbType DBTYPE, entity IEntityStruct, columns *[]reflect.StructField, values *[]interface{}) (string, bool, error) {
 
 	//是否自增,默认false
 	autoIncrement := false
@@ -72,8 +72,8 @@ func wrapSaveStructSQL(dbType DBTYPE, entity IEntityStruct, columns []reflect.St
 	var valueSQLBuilder strings.Builder
 	valueSQLBuilder.WriteString(" VALUES (")
 
-	for i := 0; i < len(columns); i++ {
-		field := columns[i]
+	for i := 0; i < len(*columns); i++ {
+		field := (*columns)[i]
 		fieldName, e := entityPKFieldName(entity)
 		if e != nil {
 			return "", autoIncrement, e
@@ -85,7 +85,7 @@ func wrapSaveStructSQL(dbType DBTYPE, entity IEntityStruct, columns []reflect.St
 				return "", autoIncrement, errors.New("不支持的主键类型")
 			}
 			//主键的值
-			pkValue := values[i]
+			pkValue := (*values)[i]
 			if len(entity.GetPkSequence()) > 0 { //如果是主键序列
 				//拼接字符串
 				sqlBuilder.WriteString(field.Tag.Get(tagColumnName))
@@ -93,14 +93,14 @@ func wrapSaveStructSQL(dbType DBTYPE, entity IEntityStruct, columns []reflect.St
 				valueSQLBuilder.WriteString(entity.GetPkSequence())
 				valueSQLBuilder.WriteString(",")
 				//去掉这一列,后续不再处理
-				columns = append(columns[:i], columns[i+1:]...)
-				values = append(values[:i], values[i+1:]...)
+				*columns = append((*columns)[:i], (*columns)[i+1:]...)
+				*values = append((*values)[:i], (*values)[i+1:]...)
 				i = i - 1
 				continue
 
 			} else if (pkKind == reflect.String) && (pkValue.(string) == "") { //主键是字符串类型,并且值为"",赋值id
 				id := generateStringID()
-				values[i] = id
+				(*values)[i] = id
 				//给对象主键赋值
 				v := reflect.ValueOf(entity).Elem()
 				v.FieldByName(field.Name).Set(reflect.ValueOf(id))
@@ -108,8 +108,8 @@ func wrapSaveStructSQL(dbType DBTYPE, entity IEntityStruct, columns []reflect.St
 			} else if (pkKind == reflect.Int) && (pkValue.(int) == 0) {
 				autoIncrement = true
 				//去掉这一列,后续不再处理
-				columns = append(columns[:i], columns[i+1:]...)
-				values = append(values[:i], values[i+1:]...)
+				*columns = append((*columns)[:i], (*columns)[i+1:]...)
+				*values = append((*values)[:i], (*values)[i+1:]...)
 				i = i - 1
 				continue
 			}
