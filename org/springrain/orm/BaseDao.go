@@ -3,7 +3,6 @@ package orm
 import (
 	"database/sql"
 	"errors"
-	"fmt"
 	"reflect"
 	"strings"
 	"time"
@@ -46,6 +45,7 @@ type BaseDao struct {
 //创建baseDao
 func NewBaseDao(config *DataSourceConfig) (*BaseDao, error) {
 	//初始化日期,放到外部为什么不行啊???
+	//默认的零时时间1970-01-01 00:00:00 +0000 UTC,兼容数据库,避免0001-01-01 00:00:00 +0000 UTC的零值
 	defaultZeroTime, _ = time.Parse("2006-01-02 15:04:05", "1970-01-01 00:00:00")
 
 	dataSource, err := newDataSource(config)
@@ -614,7 +614,6 @@ func columnAndValue(entity interface{}) ([]reflect.StructField, []interface{}, e
 			timeValue, ok := value.(time.Time)
 			if ok && timeValue.IsZero() { //如果是日期零时,需要设置一个初始值1970-01-01 00:00:00,兼容数据库
 				value = defaultZeroTime
-				fmt.Println(value)
 			}
 		}
 
