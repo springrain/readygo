@@ -15,6 +15,22 @@ type Model struct {
 
 
 
+type Toy struct {
+	orm.EntityStruct
+	Id        int `column:"id"`
+	Name      string `column:"name"`
+	OwnerID   int `column:"owner_id"`
+	OwnerType string `column:"owner_type"`
+}
+
+
+func ( t Toy) GetTableName() string {
+	return "toys"
+}
+
+func (t Toy) GetPKColumnName() string  {
+	return "id"
+}
 
 type User struct {
 	orm.EntityStruct

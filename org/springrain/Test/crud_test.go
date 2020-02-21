@@ -8,7 +8,7 @@ import (
 
 var  baseDao *orm.BaseDao
 
-func initDatabase()  {
+func init()  {
 
 
 	dataSourceConfig := orm.DataSourceConfig{
@@ -38,21 +38,10 @@ func initDate()  {
 
 func TestAdd(t *testing.T) {
 
-	initDatabase()
 
 	//initDate()
+	toy := Toy{Name: "toy"}
 
-	table := orm.NewEntityMap("user")
-
-	table.Set("id",4)
-
-	baseDao.SaveMap(&table)
-
-
-	var l Language
-	l.Id = 9
-
-	l.Name = "englist"
-	baseDao.SaveStruct(&l)
+	baseDao.SaveStruct(&toy)
 
 }
