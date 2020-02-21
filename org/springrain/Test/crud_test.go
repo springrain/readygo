@@ -6,9 +6,10 @@ import (
 	"time"
 )
 
-var baseDao *orm.BaseDao
+var  baseDao *orm.BaseDao
 
-func initDatabase() {
+func init()  {
+
 
 	dataSourceConfig := orm.DataSourceConfig{
 		Host:     "127.0.0.1",
@@ -33,12 +34,7 @@ func initDate() {
 
 }
 
-func TestAdd(t *testing.T) {
-
-	initDatabase()
-
-	//initDate()
-
+func TestTranc(t *testing.T){
 	table := orm.NewEntityMap("user")
 
 	table.Set("id", 11)
@@ -60,5 +56,17 @@ func TestAdd(t *testing.T) {
 		}
 		return nil, nil
 	})
+
+}
+
+func TestAdd(t *testing.T) {
+
+
+	//initDate()
+	toy := Toy{Name: "toy"}
+
+	baseDao.SaveStruct(&toy)
+
+
 
 }
