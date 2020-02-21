@@ -105,8 +105,8 @@ func DPanic(msg string, fields ...logField) {
 	logger.DPanic(msg, fields...)
 }
 
-func Panic(msg string, fields ...logField) {
-	logger.Panic(msg, fields...)
+func Panic(msg error, fields ...logField) {
+	logger.Panic(msg.Error(), fields...)
 }
 
 func Fatal(msg string, fields ...logField) {
