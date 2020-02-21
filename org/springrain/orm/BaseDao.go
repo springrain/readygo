@@ -87,7 +87,11 @@ func (baseDao *BaseDao) Transaction(doTransaction func(sesion *Session) (interfa
 		if r := recover(); r != nil {
 			//err = fmt.Errorf("事务开启失败:%w ", err)
 
-			session.rollback()
+			rberr := session.rollback()
+			if rberr != nil {
+				rberr = fmt.Errorf("recover内事务回滚失败:%w", rberr)
+				logger.Error(rberr)
+			}
 		}
 	}()
 
@@ -95,7 +99,11 @@ func (baseDao *BaseDao) Transaction(doTransaction func(sesion *Session) (interfa
 	if err != nil {
 		err = fmt.Errorf("事务执行失败:%w", err)
 		logger.Error(err)
-		session.rollback()
+		rberr := session.rollback()
+		if rberr != nil {
+			rberr = fmt.Errorf("事务回滚失败:%w", rberr)
+			logger.Error(rberr)
+		}
 		return info, err
 	}
 	commitError := session.commit()
@@ -117,11 +125,15 @@ func (baseDao *BaseDao) QueryStruct(session *Session, finder *Finder, entity int
 
 	checkerr := checkEntityKind(entity)
 	if checkerr != nil {
+		checkerr = fmt.Errorf("类型检查错误:%w", checkerr)
+		logger.Error(checkerr)
 		return checkerr
 	}
 	//获取到sql语句
 	sqlstr, err := wrapQuerySQL(baseDao.config.DBType, finder, nil)
 	if err != nil {
+		err = fmt.Errorf("获取查询语句错误:%w", err)
+		logger.Error(err)
 		return err
 	}
 
@@ -135,6 +147,8 @@ func (baseDao *BaseDao) QueryStruct(session *Session, finder *Finder, entity int
 	}
 
 	if e != nil {
+		e = fmt.Errorf("查询数据库错误:%w", e)
+		logger.Error(e)
 		return e
 	}
 
@@ -143,6 +157,8 @@ func (baseDao *BaseDao) QueryStruct(session *Session, finder *Finder, entity int
 	//数据库返回的列名
 	columns, cne := rows.Columns()
 	if cne != nil {
+		cne = fmt.Errorf("数据库返回列名错误:%w", cne)
+		logger.Error(cne)
 		return cne
 	}
 
@@ -166,9 +182,11 @@ func (baseDao *BaseDao) QueryStruct(session *Session, finder *Finder, entity int
 
 	valueOf := reflect.ValueOf(entity).Elem()
 	//获取到类型的字段缓存
-	dbColumnFieldMap, e := getDBColumnFieldMap(typeOf)
-	if e != nil {
-		return err
+	dbColumnFieldMap, dbe := getDBColumnFieldMap(typeOf)
+	if dbe != nil {
+		dbe = fmt.Errorf("获取字段缓存错误:%w", dbe)
+		logger.Error(dbe)
+		return e
 	}
 	//声明载体数组,用于存放struct的属性指针
 	values := make([]interface{}, len(columns))
@@ -196,9 +214,11 @@ func (baseDao *BaseDao) QueryStruct(session *Session, finder *Finder, entity int
 		//scan赋值.是一个指针数组,已经根据struct的属性类型初始化了,sql驱动能感知到参数类型,所以可以直接赋值给struct的指针.这样struct的属性就有值了
 		//困扰了我2天,sql驱动真恶心......
 		//再说一遍,sql驱动垃圾......
-		err = rows.Scan(values...)
-		if err != nil {
-			return err
+		scanerr := rows.Scan(values...)
+		if scanerr != nil {
+			scanerr = fmt.Errorf("rows.Scan错误:%w", scanerr)
+			logger.Error(scanerr)
+			return scanerr
 		}
 
 	}
@@ -238,6 +258,8 @@ func (baseDao *BaseDao) QueryStructList(session *Session, finder *Finder, rowsSl
 
 	sqlstr, err := wrapQuerySQL(baseDao.config.DBType, finder, nil)
 	if err != nil {
+		err = fmt.Errorf("获取查询语句异常:%w", err)
+		logger.Error(err)
 		return err
 	}
 	//根据语句和参数查询
@@ -249,11 +271,15 @@ func (baseDao *BaseDao) QueryStructList(session *Session, finder *Finder, rowsSl
 		rows, e = baseDao.dataSource.Query(sqlstr, finder.Values...)
 	}
 	if e != nil {
+		e = fmt.Errorf("查询rows异常:%w", e)
+		logger.Error(e)
 		return e
 	}
 	//数据库返回的列名
 	columns, cne := rows.Columns()
 	if cne != nil {
+		cne = fmt.Errorf("数据库返回列名错误:%w", cne)
+		logger.Error(cne)
 		return cne
 	}
 
@@ -265,9 +291,11 @@ func (baseDao *BaseDao) QueryStructList(session *Session, finder *Finder, rowsSl
 			//初始化一个基本类型,new出来的是指针.
 			pv := reflect.New(sliceElementType)
 			//把数据库值赋给指针
-			err = rows.Scan(pv.Interface())
-			if err != nil {
-				return err
+			scanerr := rows.Scan(pv.Interface())
+			if scanerr != nil {
+				scanerr = fmt.Errorf("rows.Scan异常:%w", scanerr)
+				logger.Error(scanerr)
+				return scanerr
 			}
 			//通过反射给slice添加元素.添加指针下的真实元素
 			sliceValue.Set(reflect.Append(sliceValue, pv.Elem()))
@@ -275,9 +303,11 @@ func (baseDao *BaseDao) QueryStructList(session *Session, finder *Finder, rowsSl
 
 		//查询总条数
 		if page != nil && finder.SelectPageCount {
-			count, err := baseDao.selectCount(session, finder)
-			if err != nil {
-				return err
+			count, counterr := baseDao.selectCount(session, finder)
+			if counterr != nil {
+				counterr = fmt.Errorf("查询总条数错误:%w", counterr)
+				logger.Error(counterr)
+				return counterr
 			}
 			page.SetTotalCount(count)
 		}
@@ -285,9 +315,11 @@ func (baseDao *BaseDao) QueryStructList(session *Session, finder *Finder, rowsSl
 	}
 
 	//获取到类型的字段缓存
-	dbColumnFieldMap, e := getDBColumnFieldMap(sliceElementType)
-	if e != nil {
-		return err
+	dbColumnFieldMap, dbe := getDBColumnFieldMap(sliceElementType)
+	if dbe != nil {
+		dbe = fmt.Errorf("获取字段缓存错误:%w", dbe)
+		logger.Error(dbe)
+		return e
 	}
 	//声明载体数组,用于存放struct的属性指针
 	values := make([]interface{}, len(columns))
@@ -313,9 +345,11 @@ func (baseDao *BaseDao) QueryStructList(session *Session, finder *Finder, rowsSl
 		//scan赋值.是一个指针数组,已经根据struct的属性类型初始化了,sql驱动能感知到参数类型,所以可以直接赋值给struct的指针.这样struct的属性就有值了
 		//困扰了我2天,sql驱动真恶心......
 		//再说一遍,sql驱动垃圾......
-		err = rows.Scan(values...)
-		if err != nil {
-			return err
+		scanerr := rows.Scan(values...)
+		if scanerr != nil {
+			scanerr = fmt.Errorf("rows.Scan异常:%w", scanerr)
+			logger.Error(scanerr)
+			return scanerr
 		}
 
 		//values[i] = f.Addr().Interface()
@@ -325,9 +359,11 @@ func (baseDao *BaseDao) QueryStructList(session *Session, finder *Finder, rowsSl
 
 	//查询总条数
 	if page != nil && finder.SelectPageCount {
-		count, err := baseDao.selectCount(session, finder)
-		if err != nil {
-			return err
+		count, counterr := baseDao.selectCount(session, finder)
+		if counterr != nil {
+			counterr = fmt.Errorf("查询总条数错误:%w", counterr)
+			logger.Error(counterr)
+			return counterr
 		}
 		page.SetTotalCount(count)
 	}
