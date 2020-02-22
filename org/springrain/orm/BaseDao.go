@@ -12,8 +12,11 @@ import (
 	"time"
 )
 
-//默认的零时时间1970-01-01 00:00:00 +0000 UTC,兼容数据库,避免0001-01-01 00:00:00 +0000 UTC的零值
-var defaultZeroTime time.Time
+//默认的零时时间1970-01-01 00:00:00 +0000 UTC,兼容数据库,避免0001-01-01 00:00:00 +0000 UTC的零值.数据库不让存值,加上1秒,跪了
+//因为mysql 5.7后,The TIMESTAMP data type is used for values that contain both date and time parts. TIMESTAMP has a range of '1970-01-01 00:00:01' UTC to '2038-01-19 03:14:07' UTC.
+var defaultZeroTime = time.Date(1970, time.January, 1, 0, 0, 1, 0, time.UTC)
+
+//var defaultZeroTime = time.Now()
 
 //注释如果是 . 句号结尾,IDE的提示就截止了,注释结尾不要用 . 结束
 //允许的Type
@@ -48,10 +51,6 @@ type BaseDao struct {
 //var once sync.Once
 //创建baseDao
 func NewBaseDao(config *DataSourceConfig) (*BaseDao, error) {
-	//初始化日期,放到外部为什么不行啊???
-	//默认的零时时间1970-01-01 00:00:00 +0000 UTC,兼容数据库,避免0001-01-01 00:00:00 +0000 UTC的零值
-	defaultZeroTime, _ = time.Parse("2006-01-02 15:04:05", "1970-01-01 00:00:00")
-
 	dataSource, err := newDataSource(config)
 
 	if err != nil {
@@ -744,7 +743,7 @@ func columnAndValue(entity interface{}) ([]reflect.StructField, []interface{}, e
 		value := valueOf.FieldByName(field.Name).Interface()
 		if value != nil { //如果不是nil
 			timeValue, ok := value.(time.Time)
-			if ok && timeValue.IsZero() { //如果是日期零时,需要设置一个初始值1970-01-01 00:00:00,兼容数据库
+			if ok && timeValue.IsZero() { //如果是日期零时,需要设置一个初始值1970-01-01 00:00:01,兼容数据库
 				value = defaultZeroTime
 			}
 		}
