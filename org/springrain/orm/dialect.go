@@ -16,7 +16,7 @@ func wrapDBDSN(config *DataSourceConfig) (string, error) {
 	}
 	if config.DBType == DBType_MYSQL {
 		//username:password@tcp(127.0.0.1:3306)/dbName
-		dsn := config.UserName + ":" + config.PassWord + "@tcp(" + config.Host + ":" + strconv.Itoa(config.Port) + ")/" + config.DBName
+		dsn := config.UserName + ":" + config.PassWord + "@tcp(" + config.Host + ":" + strconv.Itoa(config.Port) + ")/" + config.DBName + "?charset=utf8&loc=Asia%2FShanghai&parseTime=true"
 		return dsn, nil
 	}
 
