@@ -409,7 +409,7 @@ func (baseDao *BaseDao) QueryMap(session *Session, finder *Finder) (map[string]i
 }
 
 //根据Finder查询,封装Map数组
-//根据数据库字段的类型,完成从[]byte到golang类型的映射,理论上其他方法都可以调用这一个方法(需要处理sql.Nullxxx等驱动支持的类型)
+//根据数据库字段的类型,完成从[]byte到golang类型的映射,理论上其他查询方法都可以调用此方法,但是需要处理sql.Nullxxx等驱动支持的类型
 //如果没有事务,session传入nil.如果有事务,参照使用BaseDao.Transaction方法传入session.请不要自己构建Session
 func (baseDao *BaseDao) QueryMapList(session *Session, finder *Finder, page *Page) ([]map[string]interface{}, error) {
 
