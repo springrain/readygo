@@ -47,7 +47,7 @@ func init() {
 		TimeKey:        "time",
 		LevelKey:       "level",
 		NameKey:        "logger",
-		CallerKey:      "linenum",
+		CallerKey:      "line",
 		MessageKey:     "msg",
 		StacktraceKey:  "stacktrace",
 		LineEnding:     zapcore.DefaultLineEnding,
@@ -82,64 +82,64 @@ func init() {
 }
 
 //隔离引用
-type logField = zap.Field
+type LogField = zap.Field
 
-func Debug(msg string, fields ...logField) {
+func Debug(msg string, fields ...LogField) {
 	logger.Debug(msg, fields...)
 }
 
-func Info(msg string, fields ...logField) {
+func Info(msg string, fields ...LogField) {
 	logger.Info(msg, fields...)
 }
 
-func Warn(msg string, fields ...logField) {
+func Warn(msg string, fields ...LogField) {
 	logger.Warn(msg, fields...)
 }
 
-func Error(err error, fields ...logField) {
+func Error(err error, fields ...LogField) {
 
 	logger.Error(err.Error(), fields...)
 }
 
-func DPanic(msg string, fields ...logField) {
+func DPanic(msg string, fields ...LogField) {
 	logger.DPanic(msg, fields...)
 }
 
-func Panic(msg error, fields ...logField) {
+func Panic(msg error, fields ...LogField) {
 	logger.Panic(msg.Error(), fields...)
 }
 
-func Fatal(msg string, fields ...logField) {
+func Fatal(msg string, fields ...LogField) {
 	logger.Fatal(msg, fields...)
 }
 
-func String(key string, val string) logField {
+func String(key string, val string) LogField {
 	return zap.String(key, val)
 }
 
-func Int(key string, val int) logField {
+func Int(key string, val int) LogField {
 	return zap.Int(key, val)
 }
-func Int32(key string, val int32) logField {
+func Int32(key string, val int32) LogField {
 	return zap.Int32(key, val)
 }
-func Int64(key string, val int64) logField {
+func Int64(key string, val int64) LogField {
 	return zap.Int64(key, val)
 }
-func Bool(key string, val bool) logField {
+func Bool(key string, val bool) LogField {
 	return zap.Bool(key, val)
 }
 
-func Duration(key string, val time.Duration) logField {
+func Duration(key string, val time.Duration) LogField {
 	return zap.Duration(key, val)
 }
-func Time(key string, val time.Time) logField {
+func Time(key string, val time.Time) LogField {
 	return zap.Time(key, val)
 }
-func Float32(key string, val float32) logField {
+func Float32(key string, val float32) LogField {
 	return zap.Float32(key, val)
 }
-func Float64(key string, val float64) logField {
+func Float64(key string, val float64) LogField {
 
 	return zap.Float64(key, val)
 }
