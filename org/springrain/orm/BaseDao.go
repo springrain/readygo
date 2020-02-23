@@ -427,10 +427,9 @@ func (baseDao *BaseDao) QueryMapList(session *Session, finder *Finder, page *Pag
 		return nil, e
 	}
 
-	//数据库返回的列名
+	//数据库返回的列类型
 	//columns, cne := rows.Columns()
-	//妈蛋,columnType.scanType返回的类型都是[]byte......
-	//如果使用columnType.databaseType挨个判断也是去了意义,只要字段允许null,都是[]byte
+	//columnType.scanType返回的类型都是[]byte,使用columnType.databaseType挨个判断
 	columnTypes, cne := rows.ColumnTypes()
 	if cne != nil {
 		cne = fmt.Errorf("数据库返回列名错误:%w", cne)
