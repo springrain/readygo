@@ -1,4 +1,4 @@
-package main
+package ginconfig
 
 import (
 	"bytes"
@@ -35,7 +35,7 @@ var (
 	slash     = []byte("/")
 )
 
-func ginLogger() gin.HandlerFunc {
+func GinLogger() gin.HandlerFunc {
 
 	return func(c *gin.Context) {
 
@@ -73,7 +73,7 @@ func ginLogger() gin.HandlerFunc {
 	}
 }
 
-func ginRecovery() gin.HandlerFunc {
+func GinRecovery() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		defer func() {
 			if err := recover(); err != nil {
