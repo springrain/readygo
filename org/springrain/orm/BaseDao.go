@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"goshop/org/springrain/logger"
 	"reflect"
-	"runtime"
 	"strconv"
 	"strings"
 	"time"
@@ -94,12 +93,14 @@ func (baseDao *BaseDao) Transaction(doTransaction func(sesion *Session) (interfa
 			}
 
 			//记录异常日志
-			if _, ok := r.(runtime.Error); ok {
-				panic(r)
+			//if _, ok := r.(runtime.Error); ok {
+			//	panic(r)
+			//}
+			err, errOk := r.(error)
+			if errOk {
+				err = fmt.Errorf("recover异常:%w", err)
+				logger.Panic(err)
 			}
-			err := r.(error)
-			err = fmt.Errorf("recover异常:%w", err)
-			logger.Panic(err)
 
 		}
 	}()
