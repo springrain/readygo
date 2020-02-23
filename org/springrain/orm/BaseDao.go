@@ -409,6 +409,7 @@ func (baseDao *BaseDao) QueryMap(session *Session, finder *Finder) (map[string]i
 }
 
 //根据Finder查询,封装Map数组
+//根据数据库字段的类型,完成从[]byte到golang类型的映射,理论上其他方法都可以调用这一个方法,不需要单独在反射类型了,也已经写好了,懒得改了
 //如果没有事务,session传入nil.如果有事务,参照使用BaseDao.Transaction方法传入session.请不要自己构建Session
 func (baseDao *BaseDao) QueryMapList(session *Session, finder *Finder, page *Page) ([]map[string]interface{}, error) {
 
@@ -431,10 +432,10 @@ func (baseDao *BaseDao) QueryMapList(session *Session, finder *Finder, page *Pag
 	}
 
 	//数据库返回的列名
-	columns, cne := rows.Columns()
+	//columns, cne := rows.Columns()
 	//妈蛋,columnType.scanType返回的类型都是[]byte......
 	//如果使用columnType.databaseType挨个判断也是去了意义,只要字段允许null,都是[]byte
-	//columnTypes, _ := rows.ColumnTypes()
+	columnTypes, cne := rows.ColumnTypes()
 	if cne != nil {
 		cne = fmt.Errorf("数据库返回列名错误:%w", cne)
 		logger.Error(cne)
@@ -444,7 +445,7 @@ func (baseDao *BaseDao) QueryMapList(session *Session, finder *Finder, page *Pag
 	//循环遍历结果集
 	for rows.Next() {
 		//接收数据库返回的数据,需要使用指针接收,以前使用[]byte接收,无法接收NULL值.无法获取sql的metadata,比较恶心......
-		values := make([]interface{}, len(columns))
+		values := make([]interface{}, len(columnTypes))
 		//使用指针类型接收字段值,需要使用interface{}包装一下
 		result := make(map[string]interface{})
 		//给数据赋值初始化变量
@@ -459,9 +460,15 @@ func (baseDao *BaseDao) QueryMapList(session *Session, finder *Finder, page *Pag
 			return nil, scanerr
 		}
 		//获取每一列的值
-		for i, column := range columns {
-			//获取指针下的真实值,赋值到map
-			result[column] = *(values[i].(*interface{}))
+		for i, columnType := range columnTypes {
+
+			//取到指针下的值,[]byte格式
+			v := *(values[i].(*interface{}))
+			//从[]byte转化成实际的类型值,例如string,int
+			v = converValueColumnType(v, columnType)
+			//赋值到Map
+			result[columnType.Name()] = v
+
 		}
 
 		//添加Map到数组

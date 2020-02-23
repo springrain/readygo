@@ -1,6 +1,7 @@
 package orm
 
 import (
+	"database/sql"
 	"errors"
 	"reflect"
 	"regexp"
@@ -376,4 +377,40 @@ func findFromIndex(strsql string) []int {
 func generateStringID() string {
 	pk := strconv.FormatInt(time.Now().UnixNano(), 10)
 	return pk
+}
+
+func converValueColumnType(v interface{}, columnType *sql.ColumnType) interface{} {
+
+	if v == nil {
+		return nil
+	}
+
+	//如果是字节数组
+	value, ok := v.([]byte)
+	if !ok { //转化失败
+		return v
+	}
+	if len(value) < 1 { //值为空,为nil
+		return nil
+	}
+
+	//获取数据库类型,自己对应golang的基础类型
+	databaseTypeName := columnType.DatabaseTypeName()
+	//如果是字符串
+	if databaseTypeName == "VARCHAR" || databaseTypeName == "NVARCHAR" || databaseTypeName == "TEXT" {
+		return String(v)
+	} else if databaseTypeName == "INT" { //如果是INT
+		return Int(v)
+	} else if databaseTypeName == "BIGINT" { //如果是BIGINT
+		return Int64(v)
+	} else if databaseTypeName == "FLOAT" { //如果是FLOAT
+		return Float32(v)
+	} else if databaseTypeName == "DOUBLE" { //如果是DOUBLE
+		return Float64(v)
+	} else if databaseTypeName == "DATETIME" || databaseTypeName == "TIMESTAMP" { //如果是DATETIME
+		return Time(v, "2006-01-02 15:04:05", time.Local)
+	}
+	//其他类型以后再写.....
+
+	return nil
 }
