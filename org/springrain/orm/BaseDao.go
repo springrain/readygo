@@ -225,8 +225,6 @@ func (baseDao *BaseDao) QueryStruct(session *Session, finder *Finder, entity int
 			values[i] = value
 		}
 		//scan赋值.是一个指针数组,已经根据struct的属性类型初始化了,sql驱动能感知到参数类型,所以可以直接赋值给struct的指针.这样struct的属性就有值了
-		//困扰了我2天,sql驱动真恶心......
-		//再说一遍,sql驱动垃圾......
 		scanerr := rows.Scan(values...)
 		if scanerr != nil {
 			scanerr = fmt.Errorf("rows.Scan错误:%w", scanerr)
@@ -356,8 +354,6 @@ func (baseDao *BaseDao) QueryStructList(session *Session, finder *Finder, rowsSl
 			values[i] = value
 		}
 		//scan赋值.是一个指针数组,已经根据struct的属性类型初始化了,sql驱动能感知到参数类型,所以可以直接赋值给struct的指针.这样struct的属性就有值了
-		//困扰了我2天,sql驱动真恶心......
-		//再说一遍,sql驱动垃圾......
 		scanerr := rows.Scan(values...)
 		if scanerr != nil {
 			scanerr = fmt.Errorf("rows.Scan异常:%w", scanerr)
@@ -444,7 +440,7 @@ func (baseDao *BaseDao) QueryMapList(session *Session, finder *Finder, page *Pag
 	resultMapList := make([]map[string]interface{}, 0)
 	//循环遍历结果集
 	for rows.Next() {
-		//接收数据库返回的数据,需要使用指针接收,以前使用[]byte接收,无法接收NULL值.无法获取sql的metadata,比较恶心......
+		//接收数据库返回的数据,需要使用指针接收
 		values := make([]interface{}, len(columnTypes))
 		//使用指针类型接收字段值,需要使用interface{}包装一下
 		result := make(map[string]interface{})
