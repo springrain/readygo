@@ -101,9 +101,9 @@ func Error(err error, fields ...LogField) {
 	logger.Error(err.Error(), fields...)
 }
 
-func DPanic(msg string, fields ...LogField) {
-	logger.DPanic(msg, fields...)
-}
+//func DPanic(msg string, fields ...LogField) {
+//	logger.DPanic(msg, fields...)
+//}
 
 func Panic(msg error, fields ...LogField) {
 	logger.Panic(msg.Error(), fields...)
@@ -142,4 +142,9 @@ func Float32(key string, val float32) LogField {
 func Float64(key string, val float64) LogField {
 
 	return zap.Float64(key, val)
+}
+
+func ByteString(key string, val []byte) LogField {
+
+	return zap.ByteString(key, val)
 }
