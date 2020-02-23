@@ -1,77 +1,25 @@
 package main
 
 import (
-	"fmt"
-	"goshop/org/springrain/orm"
+	"github.com/gin-gonic/gin"
 )
 
 func main() {
+	// Creates a router without any middleware by default
+	r := gin.New()
 
-	dataSourceConfig := orm.DataSourceConfig{
-		Host:     "127.0.0.1",
-		Port:     3306,
-		DBName:   "shop",
-		UserName: "root",
-		PassWord: "root",
-		DBType:   orm.DBType_MYSQL,
-	}
-	baseDao, _ := orm.NewBaseDao(&dataSourceConfig)
-	baseDao.Transaction(func(session *orm.Session) (interface{}, error) {
-		/*
-			finder4 := orm.NewSelectFinder("t_user", "*")
-			maps, err := baseDao.QueryMapList(session,finder4, nil)
-			fmt.Println(maps, err)
-			users := []shop.User2{}
-			finder3 := orm.NewSelectFinder("t_user", "*")
-			baseDao.QueryStructList(session,finder3, &users, nil)
-			fmt.Println(users)
-		*/
-		ids := []string{}
-		finder5 := orm.NewSelectFinder("t_user", "id")
-		page := orm.NewPage()
-		err := baseDao.QueryStructList(session, finder5, &ids, &page)
+	// Global middleware
+	// Logger middleware will write the logs to gin.DefaultWriter even if you set with GIN_MODE=release.
+	// By default gin.DefaultWriter = os.Stdout
+	r.Use(ginLogger())
+	//r.Use(gin.Logger())
 
-		fmt.Println(ids, page.TotalCount, err)
+	// Recovery middleware recovers from any panics and writes a 500 if there was one.
+	r.Use(ginRecovery())
+	//r.Use(gin.Recovery())
 
-		/*
-
-
-			user := shop.User2{
-				Id:      "id",
-				Account: "test",
-			}
-				finder := orm.NewSelectFinder(user.GetTableName(), "id,account")
-				finder.Append(" WHERE id=?", "id")
-
-				baseDao.DeleteStruct(&user)
-				baseDao.SaveStruct(&user)
-
-				user = shop.User2{}
-
-				baseDao.QueryStruct(finder, &user)
-				fmt.Println(user.Account)
-
-				user.Account = "update"
-				baseDao.UpdateStruct(&user)
-				baseDao.QueryStruct(finder, &user)
-
-				userMap := orm.NewEntityMap("t_user")
-
-				userMap.Set("id", "mapId")
-				userMap.Set("account", "mapAccount")
-				baseDao.SaveMap(&userMap)
-				userMap.Set("account", "213")
-				baseDao.UpdateMap(&userMap)
-				baseDao.QueryStruct(finder, &user)
-
-				finder2 := orm.NewUpdateFinder(user.GetTableName())
-				finder2.Append("acc")
-				finder2.Append("ount=?", "adad")
-				baseDao.UpdateFinder(finder2)
-
-				baseDao.QueryStruct(finder, &user)
-				fmt.Println(user.Account)
-		*/
-		return nil, nil
+	r.GET("/ping", func(c *gin.Context) {
+		c.JSON(200, gin.H{"hello": "world"})
 	})
+	r.Run(":8080") // listen and serve on 0.0.0.0:8080 (for windows "localhost:8080")
 }
