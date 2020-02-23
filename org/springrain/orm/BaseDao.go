@@ -432,6 +432,8 @@ func (baseDao *BaseDao) QueryMapList(session *Session, finder *Finder, page *Pag
 
 	//数据库返回的列名
 	columns, cne := rows.Columns()
+	//妈蛋,返回的类型都是[]byte......
+	//columnTypes, _ := rows.ColumnTypes()
 	if cne != nil {
 		cne = fmt.Errorf("数据库返回列名错误:%w", cne)
 		logger.Error(cne)
