@@ -35,7 +35,8 @@ func selectAllTable() []string {
 	return tableNames
 }
 
-func selectTableColumn(tableName string) []map[string]interface{} {
+//根据表名查询字段信息和主键名称
+func selectTableColumn(tableName string) ([]map[string]interface{}, string) {
 	finder := orm.NewFinder()
 
 	// select * from information_schema.COLUMNS where table_schema ='readygo' and table_name='t_user';
@@ -48,5 +49,5 @@ func selectTableColumn(tableName string) []map[string]interface{} {
 	pkName := ""
 	baseDao.QueryStruct(nil, finderPK, &pkName)
 
-	return maps
+	return maps, pkName
 }
