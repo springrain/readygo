@@ -1,7 +1,7 @@
 # readygo
 
 #### Description
-golang开发的多店商城。
+golang开发脚手架
 
 #### Software Architecture
 Software architecture description
