@@ -65,12 +65,16 @@ func selectAllTable() []string {
 
 //根据表名查询字段信息和主键名称
 func selectTableColumn(tableName string) map[string]interface{} {
+	tableComment := ""
 	finder := orm.NewFinder()
+	finder.Append("select table_comment from information_schema.TABLES where  TABLE_SCHEMA =? and TABLE_Name=? ", dbName, tableName)
+	baseDao.QueryStruct(nil, finder, &tableComment)
 
+	finder2 := orm.NewFinder()
 	// select * from information_schema.COLUMNS where table_schema ='readygo' and table_name='t_user';
-	finder.Append("select COLUMN_NAME,DATA_TYPE,IS_NULLABLE,COLUMN_COMMENT from information_schema.COLUMNS where  TABLE_SCHEMA =? and TABLE_NAME=? order by ORDINAL_POSITION asc", dbName, tableName)
+	finder2.Append("select COLUMN_NAME,DATA_TYPE,IS_NULLABLE,COLUMN_COMMENT from information_schema.COLUMNS where  TABLE_SCHEMA =? and TABLE_NAME=? order by ORDINAL_POSITION asc", dbName, tableName)
 
-	maps, _ := baseDao.QueryMapList(nil, finder, nil)
+	maps, _ := baseDao.QueryMapList(nil, finder2, nil)
 
 	for _, m := range maps {
 		dataType := m["DATA_TYPE"].(string)
@@ -95,6 +99,7 @@ func selectTableColumn(tableName string) map[string]interface{} {
 	info["tableName"] = tableName
 	info["structName"] = Capitalize(strings.ReplaceAll(tableName, "t_", ""))
 	info["packageName"] = "code"
+	info["tableComment"] = tableComment
 	return info
 }
 

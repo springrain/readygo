@@ -3,6 +3,8 @@ import (
 	"readygo/orm"
 	"time"
 )
+
+// {{.tableComment}}
 type {{.structName}}Struct struct {
     orm.EntityStruct
 	{{range $i, $v := .columns}}
