@@ -381,6 +381,7 @@ func generateStringID() string {
 	return pk
 }
 
+//根据数据库的字段类型,转化成golang的类型
 func converValueColumnType(v interface{}, columnType *sql.ColumnType) interface{} {
 
 	if v == nil {
@@ -396,7 +397,7 @@ func converValueColumnType(v interface{}, columnType *sql.ColumnType) interface{
 		return nil
 	}
 
-	//获取数据库类型,自己对应golang的基础类型
+	//获取数据库类型,自己对应golang的基础类型值,不处理sql.Nullxxx类型
 	databaseTypeName := columnType.DatabaseTypeName()
 	//如果是字符串
 	if databaseTypeName == "VARCHAR" || databaseTypeName == "NVARCHAR" || databaseTypeName == "TEXT" {
