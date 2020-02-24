@@ -86,7 +86,7 @@ func selectTableColumn(tableName string) map[string]interface{} {
 			dataType = "int64"
 		}
 		m["DATA_TYPE"] = dataType
-		m["field"] = Capitalize(m["COLUMN_NAME"].(string))
+		m["field"] = capitalize(m["COLUMN_NAME"].(string))
 	}
 
 	finderPK := orm.NewFinder()
@@ -97,13 +97,14 @@ func selectTableColumn(tableName string) map[string]interface{} {
 	info["columns"] = maps
 	info["pkName"] = pkName
 	info["tableName"] = tableName
-	info["structName"] = Capitalize(strings.ReplaceAll(tableName, "t_", ""))
+	info["structName"] = capitalize(strings.ReplaceAll(tableName, "t_", ""))
 	info["packageName"] = "code"
 	info["tableComment"] = tableComment
 	return info
 }
 
-func Capitalize(str string) string {
+//首字母大写
+func capitalize(str string) string {
 	str = strings.ToUpper(string(str[0:1])) + string(str[1:])
 	return str
 }
