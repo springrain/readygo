@@ -10,7 +10,10 @@ import (
 
 var baseDao *orm.BaseDao
 
-const dbName = "readygo"
+const (
+	dbName      = "readygo"
+	packageName = "code"
+)
 
 func init() {
 	baseDaoConfig := orm.DataSourceConfig{
@@ -98,7 +101,7 @@ func selectTableColumn(tableName string) map[string]interface{} {
 	info["pkName"] = pkName
 	info["tableName"] = tableName
 	info["structName"] = capitalize(strings.ReplaceAll(tableName, "t_", ""))
-	info["packageName"] = "code"
+	info["packageName"] = packageName
 	info["tableComment"] = tableComment
 	return info
 }
