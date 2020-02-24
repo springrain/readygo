@@ -1,5 +1,10 @@
 package {{.packageName}}
+import (
+	"readygo/orm"
+	"time"
+)
 type {{.structName}}Struct struct {
+    orm.EntityStruct
 	{{range $i, $v := .columns}}
     // {{$v.COLUMN_COMMENT}}
     {{$v.field}} {{$v.DATA_TYPE}} `column:"{{$v.COLUMN_NAME}}"`
