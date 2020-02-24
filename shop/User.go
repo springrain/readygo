@@ -2,7 +2,7 @@ package shop
 
 import (
 	"database/sql"
-	"readygo/readygo/orm"
+	"readygo/orm"
 )
 
 type User struct {

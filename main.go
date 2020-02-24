@@ -1,7 +1,7 @@
 package main
 
 import (
-	"readygo/readygo/ginext"
+	"readygo/ginext"
 
 	"github.com/gin-gonic/gin"
 )

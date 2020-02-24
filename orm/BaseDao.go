@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"readygo/readygo/logger"
+	"readygo/logger"
 	"reflect"
 	"strconv"
 	"strings"

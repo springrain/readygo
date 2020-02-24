@@ -1,7 +1,7 @@
 package main
 
 import (
-	"readygo/readygo/orm"
+	"readygo/orm"
 	"testing"
 	"time"
 )

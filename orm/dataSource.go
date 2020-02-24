@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"readygo/readygo/logger"
+	"readygo/logger"
 
 	_ "github.com/go-sql-driver/mysql"
 )
