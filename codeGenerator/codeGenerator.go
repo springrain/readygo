@@ -1,7 +1,11 @@
 package main
 
 import (
+	"fmt"
+	"os"
 	"readygo/orm"
+	"strings"
+	"text/template"
 )
 
 var baseDao *orm.BaseDao
@@ -23,7 +27,31 @@ func init() {
 
 func main() {
 	//selectAllTable()
-	selectTableColumn("t_user")
+	//selectTableColumn("t_user")
+	code("t_user")
+
+}
+
+//生成代码
+func code(tableName string) {
+
+	info := selectTableColumn(tableName)
+
+	structFileName := "./code/" + info["structName"].(string) + "Struct.go"
+	f, err := os.Create(structFileName)
+
+	//w := bufio.NewWriter(f) // 创建新的 Writer 对象
+	defer func() {
+		f.Close()
+
+	}()
+
+	t, err := template.ParseFiles("./templates/struct.txt")
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	t.Execute(f, info)
 }
 
 //获取所有的表名
@@ -36,18 +64,41 @@ func selectAllTable() []string {
 }
 
 //根据表名查询字段信息和主键名称
-func selectTableColumn(tableName string) ([]map[string]interface{}, string) {
+func selectTableColumn(tableName string) map[string]interface{} {
 	finder := orm.NewFinder()
 
 	// select * from information_schema.COLUMNS where table_schema ='readygo' and table_name='t_user';
-	finder.Append("select TABLE_NAME,COLUMN_NAME,DATA_TYPE,IS_NULLABLE from information_schema.COLUMNS where  TABLE_SCHEMA =? and TABLE_NAME=? order by ORDINAL_POSITION asc", dbName, tableName)
+	finder.Append("select COLUMN_NAME,DATA_TYPE,IS_NULLABLE,COLUMN_COMMENT from information_schema.COLUMNS where  TABLE_SCHEMA =? and TABLE_NAME=? order by ORDINAL_POSITION asc", dbName, tableName)
 
 	maps, _ := baseDao.QueryMapList(nil, finder, nil)
+
+	for _, m := range maps {
+		dataType := m["DATA_TYPE"].(string)
+		if dataType == "varchar" {
+			dataType = "string"
+		} else if dataType == "datetime" {
+			dataType = "time.Time"
+		} else if dataType == "bigint" {
+			dataType = "int64"
+		}
+		m["DATA_TYPE"] = dataType
+		m["field"] = Capitalize(m["COLUMN_NAME"].(string))
+	}
 
 	finderPK := orm.NewFinder()
 	finderPK.Append("SELECT column_name FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE WHERE TABLE_SCHEMA=? and  table_name=? AND constraint_name=?", dbName, tableName, "PRIMARY")
 	pkName := ""
 	baseDao.QueryStruct(nil, finderPK, &pkName)
+	info := make(map[string]interface{})
+	info["columns"] = maps
+	info["pkName"] = pkName
+	info["tableName"] = tableName
+	info["structName"] = Capitalize(strings.ReplaceAll(tableName, "t_", ""))
+	info["packageName"] = "code"
+	return info
+}
 
-	return maps, pkName
+func Capitalize(str string) string {
+	str = strings.ToUpper(string(str[0:1])) + string(str[1:])
+	return str
 }
