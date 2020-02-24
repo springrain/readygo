@@ -140,11 +140,13 @@ func Float32(key string, val float32) LogField {
 	return zap.Float32(key, val)
 }
 func Float64(key string, val float64) LogField {
-
 	return zap.Float64(key, val)
 }
 
 func ByteString(key string, val []byte) LogField {
-
 	return zap.ByteString(key, val)
+}
+
+func Uintptr(key string, val uintptr) LogField {
+	return zap.Uintptr(key, val)
 }

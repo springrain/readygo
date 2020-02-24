@@ -2,7 +2,7 @@ package ginext
 
 import (
 	"bytes"
-	"fmt"
+	"errors"
 	"io/ioutil"
 	"net"
 	"net/http"
@@ -93,7 +93,8 @@ func stack(skip int) []byte {
 			break
 		}
 		// Print this much at least.  If we can't find the source, it won't show.
-		fmt.Fprintf(buf, "%s:%d (0x%x)\n", file, line, pc)
+		//fmt.Fprintf(buf, "%s:%d (0x%x)\n", file, line, pc)
+		logger.Panic(errors.New("[GIN]GinRecovery-->stack"), logger.String("file", file), logger.Int("line", line), logger.Uintptr("pc", pc))
 		if file != lastFile {
 			data, err := ioutil.ReadFile(file)
 			if err != nil {
@@ -102,7 +103,8 @@ func stack(skip int) []byte {
 			lines = bytes.Split(data, []byte{'\n'})
 			lastFile = file
 		}
-		fmt.Fprintf(buf, "\t%s: %s\n", function(pc), source(lines, line))
+		//fmt.Fprintf(buf, "\t%s: %s\n", function(pc), source(lines, line))
+		logger.Panic(errors.New("[GIN]GinRecovery-->stack"), logger.ByteString("pc", function(pc)), logger.ByteString("lines", source(lines, line)))
 	}
 	return buf.Bytes()
 }
