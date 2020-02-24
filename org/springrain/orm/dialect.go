@@ -52,7 +52,7 @@ func wrapPageSQL(dbType DBTYPE, sqlstr string, page *Page) (string, error) {
 		sqlbuilder.WriteString(strconv.Itoa(page.PageSize * (page.PageNo - 1)))
 	} else if dbType == DBType_MSSQL { //mssql
 		//先不写啦
-		//bug(chunanyong) 还需要其他的数据库分页语句
+		//bug(springrain) 还需要其他的数据库分页语句
 	}
 	sqlstr = sqlbuilder.String()
 	return wrapSQL(dbType, sqlstr)
@@ -101,6 +101,7 @@ func wrapSaveStructSQL(dbType DBTYPE, entity IEntityStruct, columns *[]reflect.S
 				continue
 
 			} else if (pkKind == reflect.String) && (pkValue.(string) == "") { //主键是字符串类型,并且值为"",赋值id
+				//生成主键字符串
 				id := generateStringID()
 				(*values)[i] = id
 				//给对象主键赋值
@@ -108,6 +109,7 @@ func wrapSaveStructSQL(dbType DBTYPE, entity IEntityStruct, columns *[]reflect.S
 				v.FieldByName(field.Name).Set(reflect.ValueOf(id))
 				//如果是数字类型,并且值为0,认为是数据库自增,从数组中删除掉主键的信息,让数据库自己生成
 			} else if (pkKind == reflect.Int) && (pkValue.(int) == 0) {
+				//标记是自增主键
 				autoIncrement = true
 				//去掉这一列,后续不再处理
 				*columns = append((*columns)[:i], (*columns)[i+1:]...)
