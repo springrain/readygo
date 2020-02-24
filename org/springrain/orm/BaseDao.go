@@ -126,6 +126,7 @@ func (baseDao *BaseDao) Transaction(doTransaction func(sesion *Session) (interfa
 }
 
 //bug(springrain)日期类型需要测试一下
+//不要偷懒调用QueryStructList返回第一条,1.需要构建一个selice,2.调用方传递的对象其他值会被抛弃或者覆盖.
 //根据Finder和封装为指定的entity类型,entity必须是*struct类型或者基础类型的指针.把查询的数据赋值给entity,所以要求指针类型
 //如果没有事务,session传入nil.如果有事务,参照使用BaseDao.Transaction方法传入session.请不要自己构建Session
 func (baseDao *BaseDao) QueryStruct(session *Session, finder *Finder, entity interface{}) error {
@@ -237,6 +238,7 @@ func (baseDao *BaseDao) QueryStruct(session *Session, finder *Finder, entity int
 	return nil
 }
 
+//不要偷懒调用QueryMapList,需要处理sql驱动支持的sql.Nullxxx的数据类型,也挺麻烦的.....
 //根据Finder和封装为指定的entity类型,entity必须是*[]struct类型,已经初始化好的数组,此方法只Append元素,这样调用方就不需要强制类型转换了
 //如果没有事务,session传入nil.如果有事务,参照使用BaseDao.Transaction方法传入session.请不要自己构建Session
 func (baseDao *BaseDao) QueryStructList(session *Session, finder *Finder, rowsSlicePtr interface{}, page *Page) error {
