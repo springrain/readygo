@@ -41,7 +41,7 @@ func GinLogger() gin.HandlerFunc {
 		logFields = append(logFields, logger.String("path", path))
 
 		//记录日志
-		logger.Info("ginlog", logFields...)
+		logger.Info("[GIN]", logFields...)
 
 	}
 }
