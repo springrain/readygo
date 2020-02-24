@@ -1,7 +1,7 @@
 package main
 
 import (
-	"readygo/org/springrain/orm"
+	"readygo/orm"
 	"time"
 )
 
