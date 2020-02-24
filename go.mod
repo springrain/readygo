@@ -1,4 +1,4 @@
-module goshop
+module readygo
 
 go 1.13
 

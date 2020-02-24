@@ -1,4 +1,4 @@
-# goshop
+# readygo
 
 #### 介绍
 golang开发的多店商城。

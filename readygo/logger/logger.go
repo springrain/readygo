@@ -12,7 +12,7 @@ import (
 //  logger
 var logger *zap.Logger
 
-const appName = "goshop"
+const appName = "readygo"
 
 var levelMap = map[string]zapcore.Level{
 	"debug":  zapcore.DebugLevel,

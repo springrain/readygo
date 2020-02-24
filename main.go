@@ -1,7 +1,7 @@
 package main
 
 import (
-	"goshop/org/springrain/ginext"
+	"readygo/readygo/ginext"
 
 	"github.com/gin-gonic/gin"
 )

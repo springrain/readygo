@@ -2,7 +2,7 @@ package shop
 
 import (
 	"database/sql"
-	"goshop/org/springrain/orm"
+	"readygo/readygo/orm"
 )
 
 type User struct {

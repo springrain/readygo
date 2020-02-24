@@ -5,7 +5,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"goshop/org/springrain/logger"
+	"readygo/readygo/logger"
 )
 
 func GinLogger() gin.HandlerFunc {

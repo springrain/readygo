@@ -31,11 +31,11 @@ iprepo.txt
 
 
 
-goshop/*/*/cmd/cmd
-goshop/*/*/*/cmd/cmd
-goshop/*/*/cmd/debug
-goshop/*/*/*/cmd/debug
-goshop/tool/kratos/kratos
+readygo/*/*/cmd/cmd
+readygo/*/*/*/cmd/cmd
+readygo/*/*/cmd/debug
+readygo/*/*/*/cmd/debug
+readygo/tool/kratos/kratos
 
 
 _output

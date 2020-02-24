@@ -1,7 +1,7 @@
 package main
 
 import (
-	"goshop/org/springrain/orm"
+	"readygo/org/springrain/orm"
 	"time"
 )
 
@@ -12,22 +12,19 @@ type Model struct {
 	DeletedAt *time.Time `column:"deleted_at"`
 }
 
-
-
 type Toy struct {
 	orm.EntityStruct
-	Id        int `column:"id"`
+	Id        int    `column:"id"`
 	Name      string `column:"name"`
-	OwnerID   int `column:"owner_id"`
+	OwnerID   int    `column:"owner_id"`
 	OwnerType string `column:"owner_type"`
 }
 
-
-func ( t Toy) GetTableName() string {
+func (t Toy) GetTableName() string {
 	return "toys"
 }
 
-func (t Toy) GetPKColumnName() string  {
+func (t Toy) GetPKColumnName() string {
 	return "id"
 }
 

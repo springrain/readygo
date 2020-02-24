@@ -1,7 +1,7 @@
 package main
 
 import (
-	"goshop/org/springrain/orm"
+	"readygo/readygo/orm"
 	"testing"
 	"time"
 )
@@ -13,7 +13,7 @@ func init() {
 	dataSourceConfig := orm.DataSourceConfig{
 		Host:     "127.0.0.1",
 		Port:     3306,
-		DBName:   "goshop",
+		DBName:   "readygo",
 		UserName: "root",
 		PassWord: "root",
 		DBType:   orm.DBType_MYSQL,
