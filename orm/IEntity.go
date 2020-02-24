@@ -39,7 +39,7 @@ func (entity *EntityStruct) GetPKColumnName() string {
 	return defaultPkName
 }
 
-//Oracle和pgsql没有自增,主键使用序列.返回使用序列的主键字段名称
+//Oracle和pgsql没有自增,主键使用序列.优先级高于GetPKColumnName方法
 func (entity *EntityStruct) GetPkSequence() string {
 	return ""
 }
