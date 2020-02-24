@@ -381,7 +381,7 @@ func generateStringID() string {
 	return pk
 }
 
-//根据数据库的字段类型,转化成golang的类型
+//根据数据库的字段类型,转化成golang的类型,不处理sql.Nullxxx类型
 func converValueColumnType(v interface{}, columnType *sql.ColumnType) interface{} {
 
 	if v == nil {
