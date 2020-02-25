@@ -157,7 +157,7 @@ func TransactionByBaseDao(baseDao *BaseDao, doTransaction func(session *Session)
 //如果没有事务,session传入nil,使用默认的BaseDao.如果有事务,参照使用BaseDao.Transaction方法传入session.可以使用BaseDao.GetSession()方法,为多数据库预留的方法,正常不建议使用
 func QueryStruct(session *Session, finder *Finder, entity interface{}) error {
 	var sessionerr error
-	session, sessionerr = checkSession(session)
+	session, sessionerr = checkSession(session, false)
 	if sessionerr != nil {
 		return sessionerr
 	}
@@ -264,7 +264,7 @@ func QueryStruct(session *Session, finder *Finder, entity interface{}) error {
 //如果没有事务,session传入nil,使用默认的BaseDao.如果有事务,参照使用BaseDao.Transaction方法传入session.可以使用BaseDao.GetSession()方法,为多数据库预留的方法,正常不建议使用
 func QueryStructList(session *Session, finder *Finder, rowsSlicePtr interface{}, page *Page) error {
 	var sessionerr error
-	session, sessionerr = checkSession(session)
+	session, sessionerr = checkSession(session, false)
 	if sessionerr != nil {
 		return sessionerr
 	}
@@ -406,7 +406,7 @@ func QueryStructList(session *Session, finder *Finder, rowsSlicePtr interface{},
 //如果没有事务,session传入nil,使用默认的BaseDao.如果有事务,参照使用BaseDao.Transaction方法传入session.可以使用BaseDao.GetSession()方法,为多数据库预留的方法,正常不建议使用
 func QueryMap(session *Session, finder *Finder) (map[string]interface{}, error) {
 	var sessionerr error
-	session, sessionerr = checkSession(session)
+	session, sessionerr = checkSession(session, false)
 	if sessionerr != nil {
 		return nil, sessionerr
 	}
@@ -431,7 +431,7 @@ func QueryMap(session *Session, finder *Finder) (map[string]interface{}, error) 
 func QueryMapList(session *Session, finder *Finder, page *Page) ([]map[string]interface{}, error) {
 
 	var sessionerr error
-	session, sessionerr = checkSession(session)
+	session, sessionerr = checkSession(session, false)
 	if sessionerr != nil {
 		return nil, sessionerr
 	}
@@ -515,7 +515,7 @@ func UpdateFinder(session *Session, finder *Finder) error {
 
 	//必须要有session和事务
 	var sessionerr error
-	session, sessionerr = checkSession(session)
+	session, sessionerr = checkSession(session, true)
 	if sessionerr != nil {
 		return sessionerr
 	}
@@ -552,7 +552,7 @@ func UpdateFinder(session *Session, finder *Finder) error {
 func SaveStruct(session *Session, entity IEntityStruct) error {
 	//必须要有session和事务
 	var sessionerr error
-	session, sessionerr = checkSession(session)
+	session, sessionerr = checkSession(session, true)
 	if sessionerr != nil {
 		return sessionerr
 	}
@@ -637,7 +637,7 @@ func (baseDao *BaseDao) UpdateStructNotNil(session *Session, entity IEntityStruc
 func DeleteStruct(session *Session, entity IEntityStruct) error {
 	//必须要有session和事务
 	var sessionerr error
-	session, sessionerr = checkSession(session)
+	session, sessionerr = checkSession(session, true)
 	if sessionerr != nil {
 		return sessionerr
 	}
@@ -682,7 +682,7 @@ func DeleteStruct(session *Session, entity IEntityStruct) error {
 func SaveMap(session *Session, entity IEntityMap) error {
 	//必须要有session和事务
 	var sessionerr error
-	session, sessionerr = checkSession(session)
+	session, sessionerr = checkSession(session, true)
 	if sessionerr != nil {
 		return sessionerr
 	}
@@ -716,7 +716,7 @@ func SaveMap(session *Session, entity IEntityMap) error {
 func UpdateMap(session *Session, entity IEntityMap) error {
 	//必须要有session和事务
 	var sessionerr error
-	session, sessionerr = checkSession(session)
+	session, sessionerr = checkSession(session, true)
 	if sessionerr != nil {
 		return sessionerr
 	}
@@ -890,7 +890,7 @@ func wrapMap(columns []string, values []columnValue) (map[string]columnValue, er
 func updateStructFunc(session *Session, entity IEntityStruct, onlyupdatenotnull bool) error {
 	//必须要有session和事务
 	var sessionerr error
-	session, sessionerr = checkSession(session)
+	session, sessionerr = checkSession(session, true)
 	if sessionerr != nil {
 		return sessionerr
 	}
@@ -924,7 +924,7 @@ func updateStructFunc(session *Session, entity IEntityStruct, onlyupdatenotnull 
 //如果没有事务,session传入nil,使用默认的BaseDao.如果有事务,参照使用BaseDao.Transaction方法传入session.可以使用BaseDao.GetSession()方法,为多数据库预留的方法,正常不建议使用
 func selectCount(session *Session, finder *Finder) (int, error) {
 	var sessionerr error
-	session, sessionerr = checkSession(session)
+	session, sessionerr = checkSession(session, false)
 	if sessionerr != nil {
 		return -1, sessionerr
 	}
@@ -983,17 +983,29 @@ func selectCount(session *Session, finder *Finder) (int, error) {
 
 }
 
+var sessionErr = errors.New("如果没有事务,session传入nil,使用默认的BaseDao.如果有事务,参照使用BaseDao.Transaction方法传入session.可以使用BaseDao.GetSession()方法,为多数据库预留的方法,正常不建议使用")
+
 //检查session
 //如果没有事务,session传入nil,使用默认的BaseDao.如果有事务,参照使用BaseDao.Transaction方法传入session.可以使用BaseDao.GetSession()方法,为多数据库预留的方法,正常不建议使用
-func checkSession(session *Session) (*Session, error) {
-	//禁止外部构建
-	if session != nil && session.db == nil {
-		return session, errors.New("如果没有事务,session传入nil,使用默认的BaseDao.如果有事务,参照使用BaseDao.Transaction方法传入session.可以使用BaseDao.GetSession()方法,为多数据库预留的方法,正常不建议使用")
+func checkSession(session *Session, hastx bool) (*Session, error) {
+
+	if session == nil { //session为空
+		if !hastx { //如果要求没有事务,实例化一个默认的session
+			session = getDefaultDao().GetSession()
+		} else { //如果要求有事务,错误
+			return nil, sessionErr
+		}
+
+	} else { //如果session存在
+		if session.db == nil { //禁止外部构建
+			return session, sessionErr
+		}
+		tx := session.tx
+		if tx == nil && hastx { //如果要求有事务
+			return session, sessionErr
+		}
 	}
-	if session == nil {
-		session = getDefaultDao().GetSession()
-		return session, nil
-	}
+
 	return session, nil
 
 }
