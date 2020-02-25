@@ -1,7 +1,6 @@
 package orm
 
 import (
-	"database/sql"
 	"errors"
 	"fmt"
 	"readygo/logger"
@@ -178,9 +177,7 @@ func QueryStruct(session *Session, finder *Finder, entity interface{}) error {
 	}
 
 	//根据语句和参数查询
-	var rows *sql.Rows
-	var e error
-	rows, e = session.query(sqlstr, finder.Values...)
+	rows, e := session.query(sqlstr, finder.Values...)
 
 	if e != nil {
 		e = fmt.Errorf("查询数据库错误:%w", e)
@@ -302,9 +299,7 @@ func QueryStructList(session *Session, finder *Finder, rowsSlicePtr interface{},
 		return err
 	}
 	//根据语句和参数查询
-	var rows *sql.Rows
-	var e error
-	rows, e = session.query(sqlstr, finder.Values...)
+	rows, e := session.query(sqlstr, finder.Values...)
 
 	if e != nil {
 		e = fmt.Errorf("查询rows异常:%w", e)
