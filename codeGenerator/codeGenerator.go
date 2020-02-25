@@ -49,7 +49,6 @@ func code(tableName string) {
 	structFile, _ := os.Create(structFileName)
 	serviceFile, _ := os.Create(serviceFileName)
 
-
 	//w := bufio.NewWriter(f) // 创建新的 Writer 对象
 	defer func() {
 		structFile.Close()
@@ -118,7 +117,7 @@ func selectTableColumn(tableName string) map[string]interface{} {
 	info["columns"] = maps
 	info["pkName"] = pkName
 	info["tableName"] = tableName
-	structName = tableName
+	structName := tableName
 	structName = strings.Replace(structName, "t_", "", 1)
 	structName = camelCaseName(structName) + "Struct"
 	info["structName"] = structName
