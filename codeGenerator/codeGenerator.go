@@ -12,7 +12,7 @@ var baseDao *orm.BaseDao
 
 const (
 	dbName      = "readygo"
-	packageName = "code"
+	packageName = "peristruct"
 )
 
 func init() {
