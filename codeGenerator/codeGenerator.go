@@ -29,9 +29,12 @@ func init() {
 }
 
 func main() {
-	//selectAllTable()
-	//selectTableColumn("t_user")
 	code("t_user")
+
+	tableNames := selectAllTable()
+	for _, tableName := range tableNames {
+		code(tableName)
+	}
 
 }
 
@@ -89,7 +92,7 @@ func selectTableColumn(tableName string) map[string]interface{} {
 			dataType = "int64"
 		}
 		m["DATA_TYPE"] = dataType
-		m["field"] = capitalize(m["COLUMN_NAME"].(string))
+		m["field"] = camelCaseName(m["COLUMN_NAME"].(string))
 	}
 
 	finderPK := orm.NewFinder()
@@ -100,7 +103,7 @@ func selectTableColumn(tableName string) map[string]interface{} {
 	info["columns"] = maps
 	info["pkName"] = pkName
 	info["tableName"] = tableName
-	info["structName"] = capitalize(strings.ReplaceAll(tableName, "t_", ""))
+	info["structName"] = camelCaseName(tableName)
 	info["packageName"] = packageName
 	info["tableComment"] = tableComment
 	return info
@@ -110,4 +113,17 @@ func selectTableColumn(tableName string) map[string]interface{} {
 func capitalize(str string) string {
 	str = strings.ToUpper(string(str[0:1])) + string(str[1:])
 	return str
+}
+
+//表名驼峰
+func camelCaseName(tableName string) string {
+	tableName = strings.Replace(tableName, "t_", "", 1)
+	names := strings.Split(tableName, "_")
+	structName := ""
+	for _, name := range names {
+		structName = structName + capitalize(name)
+	}
+
+	return structName
+
 }
