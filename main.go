@@ -1,8 +1,10 @@
 package main
 
 import (
+	"net/http"
 	"readygo/ginext"
 	"readygo/orm"
+	"readygo/permission/permhandler"
 
 	"github.com/gin-gonic/gin"
 )
@@ -32,6 +34,14 @@ func main() {
 	// Recovery middleware recovers from any panics and writes a 500 if there was one.
 	r.Use(ginext.GinRecovery())
 	//r.Use(gin.Recovery())
+
+	//加载自定义的权限过滤器
+	r.Use(permhandler.PermHandler())
+
+	//css js等静态文件
+	r.Static("/assets", "./assets")
+	r.StaticFS("/more_static", http.Dir("my_file_system"))
+	r.StaticFile("/favicon.ico", "./resources/favicon.ico")
 
 	r.GET("/ping", func(c *gin.Context) {
 		c.JSON(200, gin.H{"hello": "world"})
