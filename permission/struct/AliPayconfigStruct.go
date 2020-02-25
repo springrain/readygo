@@ -51,7 +51,7 @@ func (entity *AliPayconfigStruct) GetTableName() string {
 	return "ali_payconfig"
 }
 
-//获取数据库表的主键字段名称.因为要兼容Map,只能是数据库的字段名称.对应的struct 属性field,使用cacheStructPKFieldNameMap缓存
+//获取数据库表的主键字段名称.因为要兼容Map,只能是数据库的字段名称.对应的struct 属性field
 func (entity *AliPayconfigStruct) GetPKColumnName() string {
 	return "id"
 }

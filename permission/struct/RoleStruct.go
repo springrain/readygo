@@ -76,7 +76,7 @@ func (entity *RoleStruct) GetTableName() string {
 	return "t_role"
 }
 
-//获取数据库表的主键字段名称.因为要兼容Map,只能是数据库的字段名称.对应的struct 属性field,使用cacheStructPKFieldNameMap缓存
+//获取数据库表的主键字段名称.因为要兼容Map,只能是数据库的字段名称.对应的struct 属性field
 func (entity *RoleStruct) GetPKColumnName() string {
 	return "id"
 }

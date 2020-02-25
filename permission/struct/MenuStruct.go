@@ -76,7 +76,7 @@ func (entity *MenuStruct) GetTableName() string {
 	return "t_menu"
 }
 
-//获取数据库表的主键字段名称.因为要兼容Map,只能是数据库的字段名称.对应的struct 属性field,使用cacheStructPKFieldNameMap缓存
+//获取数据库表的主键字段名称.因为要兼容Map,只能是数据库的字段名称.对应的struct 属性field
 func (entity *MenuStruct) GetPKColumnName() string {
 	return "id"
 }
