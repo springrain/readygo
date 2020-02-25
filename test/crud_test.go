@@ -15,7 +15,7 @@ func init() {
 		Port:     3306,
 		DBName:   "readygo",
 		UserName: "root",
-		PassWord: "root",
+		PassWord: "123456789",
 		DBType:   orm.DBType_MYSQL,
 	}
 	baseDao, _ = orm.NewBaseDao(&dataSourceConfig)
@@ -30,6 +30,12 @@ func initDate() {
 		baseDao.SaveStruct(session, &user)
 		return nil, nil
 	})
+
+}
+
+func TestQuey(t *testing.T)  {
+
+
 
 }
 

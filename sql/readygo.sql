@@ -594,4 +594,24 @@ CREATE TABLE `ali_payconfig`  (
 
 
 
+
+-- ----------------------------
+--
+-- 测试专用  t_mm
+-- ----------------------------
+DROP TABLE IF EXISTS `t_mm`;
+CREATE TABLE `t_mm`  (
+  `id` varchar(50)  NOT NULL COMMENT ' ',
+  `userName` varchar(30)  NULL DEFAULT NULL COMMENT '姓名',
+  `account` varchar(50)  NOT NULL COMMENT '账号',
+  `userType` int(11)   NULL COMMENT '0会员,1员工,2店长收银,9系统管理员',
+  `createTime` datetime(0)   NULL DEFAULT CURRENT_TIMESTAMP,
+  `updateTime` datetime(0) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `active`  NOT NULL DEFAULT 1 COMMENT '是否有效(0否,1是)',
+  `amount` DECIMAL COMMENT '账户余额'
+  PRIMARY KEY (`id`)
+) ENGINE = InnoDB CHARACTER SET = utf8mb4  COMMENT = '用户' ;
+
+
+
 SET FOREIGN_KEY_CHECKS = 1;

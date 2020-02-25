@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"readygo/orm"
 )
 
@@ -14,7 +15,7 @@ func init() {
 		Port:     3306,
 		DBName:   dbName,
 		UserName: "root",
-		PassWord: "root",
+		PassWord: "123456789",
 		DBType:   orm.DBType_MYSQL,
 	}
 
@@ -23,7 +24,10 @@ func init() {
 
 func main() {
 	//selectAllTable()
-	selectTableColumn("t_user")
+	columns := selectTableColumn("t_user")
+	fmt.Println(columns)
+
+
 }
 
 //获取所有的表名
