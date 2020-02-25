@@ -30,12 +30,12 @@ func init() {
 }
 
 func main() {
-	//code("t_user")
+	code("t_user")
 
-	tableNames := selectAllTable()
-	for _, tableName := range tableNames {
-		code(tableName)
-	}
+	//tableNames := selectAllTable()
+	//for _, tableName := range tableNames {
+	//	code(tableName)
+	//}
 
 }
 
@@ -44,10 +44,11 @@ func code(tableName string) {
 
 	info := selectTableColumn(tableName)
 
-	structFileName := "./code/struct/" + info["structName"].(string) + ".go"
-	serviceFileName := "./code/service/" + info["structName"].(string) + "Service.go"
+	structFileName := "codeGenerator/code/struct/" + info["structName"].(string) + ".go"
+	serviceFileName := "codeGenerator/code/service/" + info["structName"].(string) + "Service.go"
 	structFile, _ := os.Create(structFileName)
 	serviceFile, _ := os.Create(serviceFileName)
+
 
 	//w := bufio.NewWriter(f) // 创建新的 Writer 对象
 	defer func() {
@@ -55,13 +56,13 @@ func code(tableName string) {
 		serviceFile.Close()
 	}()
 
-	structTemplate, err1 := template.ParseFiles("./templates/struct.txt")
+	structTemplate, err1 := template.ParseFiles("codeGenerator/templates/struct.txt")
 	if err1 != nil {
 		fmt.Println(err1)
 	}
 	structTemplate.Execute(structFile, info)
 
-	serviceTemplate, err2 := template.ParseFiles("./templates/service.txt")
+	serviceTemplate, err2 := template.ParseFiles("codeGenerator/templates/service.txt")
 	if err2 != nil {
 		fmt.Println(err2)
 	}

@@ -33,6 +33,12 @@ func initDate() {
 
 }
 
+func TestQuey(t *testing.T)  {
+
+
+
+}
+
 func TestTranc(t *testing.T) {
 
 	/*
