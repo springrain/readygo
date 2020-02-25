@@ -21,7 +21,7 @@ func init() {
 		Port:     3306,
 		DBName:   dbName,
 		UserName: "root",
-		PassWord: "root",
+		PassWord: "123456789",
 		DBType:   orm.DBType_MYSQL,
 	}
 
@@ -31,10 +31,10 @@ func init() {
 func main() {
 	code("t_user")
 
-	tableNames := selectAllTable()
-	for _, tableName := range tableNames {
-		code(tableName)
-	}
+	//tableNames := selectAllTable()
+	//for _, tableName := range tableNames {
+	//	code(tableName)
+	//}
 
 }
 
@@ -43,8 +43,12 @@ func code(tableName string) {
 
 	info := selectTableColumn(tableName)
 
-	structFileName := "./code/" + info["structName"].(string) + "Struct.go"
+	structFileName := "codeGenerator/code/" + info["structName"].(string) + "Struct.go"
 	f, err := os.Create(structFileName)
+
+	if err != nil {
+		fmt.Println(err)
+	}
 
 	//w := bufio.NewWriter(f) // 创建新的 Writer 对象
 	defer func() {
@@ -52,12 +56,15 @@ func code(tableName string) {
 
 	}()
 
-	t, err := template.ParseFiles("./templates/struct.txt")
+	t, err := template.ParseFiles("codeGenerator/templates/struct.txt")
 	if err != nil {
 		fmt.Println(err)
 	}
 
-	t.Execute(f, info)
+	err = t.Execute(f, info)
+	if err != nil {
+		fmt.Println(err)
+	}
 }
 
 //获取所有的表名
