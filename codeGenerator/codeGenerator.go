@@ -117,7 +117,9 @@ func selectTableColumn(tableName string) map[string]interface{} {
 	info["columns"] = maps
 	info["pkName"] = pkName
 	info["tableName"] = tableName
-	structName := camelCaseName(tableName) + "Struct"
+	structName = tableName
+	structName = strings.Replace(structName, "t_", "", 1)
+	structName = camelCaseName(structName) + "Struct"
 	info["structName"] = structName
 	info["pname"] = firstToLower(structName)
 	info["packageName"] = packageName
@@ -139,9 +141,8 @@ func firstToLower(str string) string {
 }
 
 //驼峰
-func camelCaseName(tableName string) string {
-	tableName = strings.Replace(tableName, "t_", "", 1)
-	names := strings.Split(tableName, "_")
+func camelCaseName(name string) string {
+	names := strings.Split(name, "_")
 	structName := ""
 	for _, name := range names {
 		structName = structName + firstToUpper(name)
