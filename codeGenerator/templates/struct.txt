@@ -1,10 +1,14 @@
 package {{.packageName}}
 import (
 	"time"
+
+	"readygo/orm"
 )
 
 // {{.tableComment}}
 type {{.structName}}Struct struct {
+	//引入默认的struct,隔离IEntityStruct的方法改动
+	orm.EntityStruct
 	{{range $i, $v := .columns}}
     // {{$v.COLUMN_COMMENT}}
     {{$v.field}} {{$v.DATA_TYPE}} `column:"{{$v.COLUMN_NAME}}"`
@@ -25,8 +29,3 @@ func (entity *{{.structName}}Struct) GetPKColumnName() string {
 	return "{{.pkName}}"
 }
 
-
-//Oracle和pgsql没有自增,主键使用序列.优先级高于GetPKColumnName方法
-func (entity *{{.structName}}Struct) GetPkSequence() string {
-	return ""
-}

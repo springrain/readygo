@@ -3,6 +3,7 @@ package orm
 import (
 	"database/sql"
 	"errors"
+	"readygo/convert"
 	"reflect"
 	"regexp"
 	"strconv"
@@ -10,12 +11,28 @@ import (
 	"time"
 )
 
+/**
+
+const (
+	DBType_MYSQL      DBTYPE = "mysql"
+	DBType_DB2        DBTYPE = "db2"
+	DBType_INFORMIX   DBTYPE = "informix"
+	DBType_MSSQL      DBTYPE = "adodb"
+	DBType_ORACLE     DBTYPE = "oci8"
+	DBType_POSTGRESQL DBTYPE = "postgres"
+	DBType_SQLITE     DBTYPE = "sqlite3"
+	DBType_UNKNOWN    DBTYPE = "mysql"
+)
+
+
+**/
+
 //数据库连接字符串
 func wrapDBDSN(config *DataSourceConfig) (string, error) {
 	if config == nil {
 		return "", nil
 	}
-	if config.DBType == DBType_MYSQL {
+	if config.DBType == "mysql" {
 		//username:password@tcp(127.0.0.1:3306)/dbName
 		dsn := config.UserName + ":" + config.PassWord + "@tcp(" + config.Host + ":" + strconv.Itoa(config.Port) + ")/" + config.DBName + "?charset=utf8&loc=Asia%2FShanghai&parseTime=true"
 		return dsn, nil
@@ -25,8 +42,8 @@ func wrapDBDSN(config *DataSourceConfig) (string, error) {
 }
 
 //包装基础的SQL语句
-func wrapSQL(dbType DBTYPE, sqlstr string) (string, error) {
-	if dbType == DBType_MYSQL || dbType == DBType_UNKNOWN {
+func wrapSQL(dbType string, sqlstr string) (string, error) {
+	if dbType == "mysql" {
 		return sqlstr, nil
 	}
 	//根据数据库类型,调整SQL变量符号,例如?,? $1,$2这样的
@@ -35,22 +52,22 @@ func wrapSQL(dbType DBTYPE, sqlstr string) (string, error) {
 }
 
 //包装分页的SQL语句
-func wrapPageSQL(dbType DBTYPE, sqlstr string, page *Page) (string, error) {
+func wrapPageSQL(dbType string, sqlstr string, page *Page) (string, error) {
 
 	var sqlbuilder strings.Builder
 	sqlbuilder.WriteString(sqlstr)
-	if dbType == DBType_MYSQL || dbType == DBType_UNKNOWN { //MySQL数据库
+	if dbType == "mysql" { //MySQL数据库
 		sqlbuilder.WriteString(" limit ")
 		sqlbuilder.WriteString(strconv.Itoa(page.PageSize * (page.PageNo - 1)))
 		sqlbuilder.WriteString(",")
 		sqlbuilder.WriteString(strconv.Itoa(page.PageSize))
 
-	} else if dbType == DBType_POSTGRESQL { //postgresql
+	} else if dbType == "postgres" { //postgresql
 		sqlbuilder.WriteString(" limit ")
 		sqlbuilder.WriteString(strconv.Itoa(page.PageSize))
 		sqlbuilder.WriteString(" offset ")
 		sqlbuilder.WriteString(strconv.Itoa(page.PageSize * (page.PageNo - 1)))
-	} else if dbType == DBType_MSSQL { //mssql
+	} else if dbType == "adodb" { //mssql
 		//先不写啦
 		//bug(springrain) 还需要其他的数据库分页语句
 	}
@@ -60,7 +77,7 @@ func wrapPageSQL(dbType DBTYPE, sqlstr string, page *Page) (string, error) {
 
 //包装保存Struct语句.返回语句,是否自增,错误信息
 //数组传递,如果外部方法有调用append的逻辑,传递指针,因为append会破坏指针引用
-func wrapSaveStructSQL(dbType DBTYPE, entity IEntityStruct, columns *[]reflect.StructField, values *[]interface{}) (string, bool, error) {
+func wrapSaveStructSQL(dbType string, entity IEntityStruct, columns *[]reflect.StructField, values *[]interface{}) (string, bool, error) {
 
 	//是否自增,默认false
 	autoIncrement := false
@@ -140,7 +157,7 @@ func wrapSaveStructSQL(dbType DBTYPE, entity IEntityStruct, columns *[]reflect.S
 }
 
 //包装更新Struct语句
-func wrapUpdateStructSQL(dbType DBTYPE, entity IEntityStruct, columns []reflect.StructField, values []interface{}, onlyupdatenotnull bool) (string, error) {
+func wrapUpdateStructSQL(dbType string, entity IEntityStruct, columns []reflect.StructField, values []interface{}, onlyupdatenotnull bool) (string, error) {
 
 	//SQL语句的构造器
 	var sqlBuilder strings.Builder
@@ -194,7 +211,7 @@ func wrapUpdateStructSQL(dbType DBTYPE, entity IEntityStruct, columns []reflect.
 }
 
 //包装删除Struct语句
-func wrapDeleteStructSQL(dbType DBTYPE, entity IEntityStruct) (string, error) {
+func wrapDeleteStructSQL(dbType string, entity IEntityStruct) (string, error) {
 
 	//SQL语句的构造器
 	var sqlBuilder strings.Builder
@@ -210,7 +227,7 @@ func wrapDeleteStructSQL(dbType DBTYPE, entity IEntityStruct) (string, error) {
 }
 
 //包装保存Map语句,Map因为没有字段属性,无法完成Id的类型判断和赋值,需要确保Map的值是完整的.
-func wrapSaveMapSQL(dbType DBTYPE, entity IEntityMap) (string, []interface{}, error) {
+func wrapSaveMapSQL(dbType string, entity IEntityMap) (string, []interface{}, error) {
 
 	dbFieldMap := entity.GetDBFieldMap()
 	if len(dbFieldMap) < 1 {
@@ -256,7 +273,7 @@ func wrapSaveMapSQL(dbType DBTYPE, entity IEntityMap) (string, []interface{}, er
 }
 
 //包装Map更新语句,Map因为没有字段属性,无法完成Id的类型判断和赋值,需要确保Map的值是完整的.
-func wrapUpdateMapSQL(dbType DBTYPE, entity IEntityMap) (string, []interface{}, error) {
+func wrapUpdateMapSQL(dbType string, entity IEntityMap) (string, []interface{}, error) {
 	dbFieldMap := entity.GetDBFieldMap()
 	if len(dbFieldMap) < 1 {
 		return "", nil, errors.New("GetDBFieldMap()返回值不能为空")
@@ -301,7 +318,7 @@ func wrapUpdateMapSQL(dbType DBTYPE, entity IEntityMap) (string, []interface{}, 
 }
 
 //封装查询语句
-func wrapQuerySQL(dbType DBTYPE, finder *Finder, page *Page) (string, error) {
+func wrapQuerySQL(dbType string, finder *Finder, page *Page) (string, error) {
 
 	//获取到没有page的sql的语句
 	sqlstr, err := finder.GetSQL()
@@ -321,7 +338,7 @@ func wrapQuerySQL(dbType DBTYPE, finder *Finder, page *Page) (string, error) {
 }
 
 //根据数据库类型,调整SQL变量符号,例如?,? $1,$2这样的
-func rebind(dbType DBTYPE, query string) string {
+func rebind(dbType string, query string) string {
 
 	// Add space enough for 10 params before we have to allocate
 	rqb := make([]byte, 0, len(query)+10)
@@ -331,9 +348,9 @@ func rebind(dbType DBTYPE, query string) string {
 	for i = strings.Index(query, "?"); i != -1; i = strings.Index(query, "?") {
 		rqb = append(rqb, query[:i]...)
 
-		if dbType == DBType_POSTGRESQL {
+		if dbType == "postgres" { //postgresql
 			rqb = append(rqb, '$')
-		} else if dbType == DBType_MSSQL {
+		} else if dbType == "adodb" { //mssql
 			rqb = append(rqb, '@', 'p')
 		}
 		j++
@@ -401,17 +418,17 @@ func converValueColumnType(v interface{}, columnType *sql.ColumnType) interface{
 	databaseTypeName := columnType.DatabaseTypeName()
 	//如果是字符串
 	if databaseTypeName == "VARCHAR" || databaseTypeName == "NVARCHAR" || databaseTypeName == "TEXT" {
-		return String(v)
+		return convert.String(v)
 	} else if databaseTypeName == "INT" { //如果是INT
-		return Int(v)
+		return convert.Int(v)
 	} else if databaseTypeName == "BIGINT" { //如果是BIGINT
-		return Int64(v)
+		return convert.Int64(v)
 	} else if databaseTypeName == "FLOAT" { //如果是FLOAT
-		return Float32(v)
+		return convert.Float32(v)
 	} else if databaseTypeName == "DOUBLE" { //如果是DOUBLE
-		return Float64(v)
+		return convert.Float64(v)
 	} else if databaseTypeName == "DATETIME" || databaseTypeName == "TIMESTAMP" { //如果是DATETIME
-		return Time(v, "2006-01-02 15:04:05", time.Local)
+		return convert.Time(v, "2006-01-02 15:04:05", time.Local)
 	}
 	//其他类型以后再写.....
 

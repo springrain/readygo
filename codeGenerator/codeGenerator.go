@@ -23,21 +23,19 @@ func init() {
 		DBName:   dbName,
 		UserName: "root",
 		PassWord: "root",
-		DBType:   orm.DBType_MYSQL,
+		DBType:   "mysql",
 	}
 
 	baseDao, _ = orm.NewBaseDao(&baseDaoConfig)
 }
 
 func main() {
-	code("t_user")
+	//code("t_user")
 
-	/*
-		tableNames := selectAllTable()
-		for _, tableName := range tableNames {
-			code(tableName)
-		}
-	*/
+	tableNames := selectAllTable()
+	for _, tableName := range tableNames {
+		code(tableName)
+	}
 
 }
 

@@ -2,10 +2,14 @@ package permstruct
 
 import (
 	"time"
+
+	"readygo/orm"
 )
 
 // 部门
-type OrgStruct struct {
+type OrgStructStruct struct {
+	//引入默认的struct,隔离IEntityStruct的方法改动
+	orm.EntityStruct
 
 	// 编号
 	Id string `column:"id"`
@@ -63,16 +67,11 @@ type OrgStruct struct {
 }
 
 //获取表名称
-func (entity *OrgStruct) GetTableName() string {
+func (entity *OrgStructStruct) GetTableName() string {
 	return "t_org"
 }
 
 //获取数据库表的主键字段名称.因为要兼容Map,只能是数据库的字段名称.对应的struct 属性field
-func (entity *OrgStruct) GetPKColumnName() string {
+func (entity *OrgStructStruct) GetPKColumnName() string {
 	return "id"
-}
-
-//Oracle和pgsql没有自增,主键使用序列.优先级高于GetPKColumnName方法
-func (entity *OrgStruct) GetPkSequence() string {
-	return ""
 }

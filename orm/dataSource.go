@@ -9,21 +9,6 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
-//枚举数据库类型
-type DBTYPE string
-
-// 枚举数据库类型
-const (
-	DBType_MYSQL      DBTYPE = "mysql"
-	DBType_DB2        DBTYPE = "db2"
-	DBType_INFORMIX   DBTYPE = "informix"
-	DBType_MSSQL      DBTYPE = "adodb"
-	DBType_ORACLE     DBTYPE = "oci8"
-	DBType_POSTGRESQL DBTYPE = "postgres"
-	DBType_SQLITE     DBTYPE = "sqlite3"
-	DBType_UNKNOWN    DBTYPE = "mysql"
-)
-
 // dataSorce对象,隔离mysql原生对象
 type dataSource struct {
 	*sql.DB
@@ -37,7 +22,7 @@ type DataSourceConfig struct {
 	UserName string
 	PassWord string
 	//mysql,使用枚举
-	DBType DBTYPE
+	DBType string
 }
 
 func newDataSource(config *DataSourceConfig) (*dataSource, error) {
@@ -79,7 +64,7 @@ type Session struct {
 	db *sql.DB // 原生db
 	tx *sql.Tx // 原生事务
 	//mysql,使用枚举,数据库类型
-	dbType DBTYPE
+	dbType string
 
 	//commitSign   int8    // 提交标记，控制是否提交事务
 	//rollbackSign bool    // 回滚标记，控制是否回滚事务

@@ -1,4 +1,4 @@
-package orm
+package convert
 
 import (
 	"database/sql"

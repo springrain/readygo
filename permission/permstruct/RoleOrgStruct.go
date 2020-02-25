@@ -2,10 +2,14 @@ package permstruct
 
 import (
 	"time"
+
+	"readygo/orm"
 )
 
 // 角色部门中间表
-type RoleOrgStruct struct {
+type RoleOrgStructStruct struct {
+	//引入默认的struct,隔离IEntityStruct的方法改动
+	orm.EntityStruct
 
 	// 编号
 	Id string `column:"id"`
@@ -51,16 +55,11 @@ type RoleOrgStruct struct {
 }
 
 //获取表名称
-func (entity *RoleOrgStruct) GetTableName() string {
+func (entity *RoleOrgStructStruct) GetTableName() string {
 	return "t_role_org"
 }
 
 //获取数据库表的主键字段名称.因为要兼容Map,只能是数据库的字段名称.对应的struct 属性field
-func (entity *RoleOrgStruct) GetPKColumnName() string {
+func (entity *RoleOrgStructStruct) GetPKColumnName() string {
 	return "id"
-}
-
-//Oracle和pgsql没有自增,主键使用序列.优先级高于GetPKColumnName方法
-func (entity *RoleOrgStruct) GetPkSequence() string {
-	return ""
 }

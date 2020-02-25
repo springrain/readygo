@@ -1,7 +1,13 @@
 package permstruct
 
+import (
+	"readygo/orm"
+)
+
 // 公共字典
-type DicDataStruct struct {
+type DicDataStructStruct struct {
+	//引入默认的struct,隔离IEntityStruct的方法改动
+	orm.EntityStruct
 
 	// <no value>
 	Id string `column:"id"`
@@ -50,16 +56,11 @@ type DicDataStruct struct {
 }
 
 //获取表名称
-func (entity *DicDataStruct) GetTableName() string {
+func (entity *DicDataStructStruct) GetTableName() string {
 	return "t_dic_data"
 }
 
 //获取数据库表的主键字段名称.因为要兼容Map,只能是数据库的字段名称.对应的struct 属性field
-func (entity *DicDataStruct) GetPKColumnName() string {
+func (entity *DicDataStructStruct) GetPKColumnName() string {
 	return "id"
-}
-
-//Oracle和pgsql没有自增,主键使用序列.优先级高于GetPKColumnName方法
-func (entity *DicDataStruct) GetPkSequence() string {
-	return ""
 }
