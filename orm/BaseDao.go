@@ -1,7 +1,6 @@
 package orm
 
 import (
-	"database/sql"
 	"errors"
 	"fmt"
 	"readygo/logger"
@@ -46,6 +45,8 @@ type BaseDao struct {
 	dataSource *dataSource
 }
 
+var defaultDao *BaseDao
+
 //代码只执行一次
 //var once sync.Once
 //创建baseDao
@@ -58,12 +59,29 @@ func NewBaseDao(config *DataSourceConfig) (*BaseDao, error) {
 		return nil, err
 	}
 
-	return &BaseDao{config, dataSource}, nil
+	if defaultDao == nil {
+		defaultDao = &BaseDao{config, dataSource}
+		return defaultDao, nil
+	}
+	return defaultDao, nil
+}
+
+//获取默认的Dao,用于隔离读写的Dao
+func getDefaultDao() *BaseDao {
+	return defaultDao
+}
+
+// getSession 获取一个Session
+func (baseDao *BaseDao) GetSession() *Session {
+	session := new(Session)
+	session.db = baseDao.dataSource.DB
+	session.dbType = baseDao.config.DBType
+	return session
 }
 
 /*
 //代码示例
-baseDao.Transaction(func(session *orm.Session) (interface{}, error) {
+orm.Transaction(func(session *orm.Session) (interface{}, error) {
 
 	//在此编写业务代码
 
@@ -72,10 +90,19 @@ baseDao.Transaction(func(session *orm.Session) (interface{}, error) {
     return nil, nil
 })
 */
+
 //事务方法,隔离session相关的API.必须通过这个方法进行事务处理,统一事务方式
 //return的error如果不为nil,事务就会回滚
-func (baseDao *BaseDao) Transaction(doTransaction func(sesion *Session) (interface{}, error)) (interface{}, error) {
-	session := baseDao.dataSource.getSession()
+//默认使用getDefaultDao()返回的BaseDao
+func Transaction(doTransaction func(session *Session) (interface{}, error)) (interface{}, error) {
+	return TransactionByBaseDao(getDefaultDao(), doTransaction)
+}
+
+//事务方法,隔离session相关的API.必须通过这个方法进行事务处理,统一事务方式
+//通过入参BaseDao,可以支持多个数据源
+//return的error如果不为nil,事务就会回滚
+func TransactionByBaseDao(baseDao *BaseDao, doTransaction func(session *Session) (interface{}, error)) (interface{}, error) {
+	session := baseDao.GetSession()
 	beginerr := session.begin()
 	if beginerr != nil {
 		beginerr = fmt.Errorf("事务开启失败:%w ", beginerr)
@@ -125,14 +152,14 @@ func (baseDao *BaseDao) Transaction(doTransaction func(sesion *Session) (interfa
 	return nil, nil
 }
 
-//bug(springrain)日期类型需要测试一下
 //不要偷懒调用QueryStructList返回第一条,1.需要构建一个selice,2.调用方传递的对象其他值会被抛弃或者覆盖.
 //根据Finder和封装为指定的entity类型,entity必须是*struct类型或者基础类型的指针.把查询的数据赋值给entity,所以要求指针类型
-//如果没有事务,session传入nil.如果有事务,参照使用BaseDao.Transaction方法传入session.请不要自己构建Session
-func (baseDao *BaseDao) QueryStruct(session *Session, finder *Finder, entity interface{}) error {
-	//禁止外部构建
-	if session != nil && session.db == nil {
-		return errors.New("如果没有事务,session传入nil.如果有事务,参照使用BaseDao.Transaction方法传入session.请不要自己构建Session")
+//如果没有事务,session传入nil,使用默认的BaseDao.如果有事务,参照使用BaseDao.Transaction方法传入session.可以使用BaseDao.GetSession()方法,为多数据库预留的方法,正常不建议使用
+func QueryStruct(session *Session, finder *Finder, entity interface{}) error {
+	var sessionerr error
+	session, sessionerr = checkSession(session, false)
+	if sessionerr != nil {
+		return sessionerr
 	}
 
 	checkerr := checkEntityKind(entity)
@@ -142,7 +169,7 @@ func (baseDao *BaseDao) QueryStruct(session *Session, finder *Finder, entity int
 		return checkerr
 	}
 	//获取到sql语句
-	sqlstr, err := wrapQuerySQL(baseDao.config.DBType, finder, nil)
+	sqlstr, err := wrapQuerySQL(session.dbType, finder, nil)
 	if err != nil {
 		err = fmt.Errorf("获取查询语句错误:%w", err)
 		logger.Error(err)
@@ -150,13 +177,7 @@ func (baseDao *BaseDao) QueryStruct(session *Session, finder *Finder, entity int
 	}
 
 	//根据语句和参数查询
-	var rows *sql.Rows
-	var e error
-	if session != nil {
-		rows, e = session.query(sqlstr, finder.Values...)
-	} else {
-		rows, e = baseDao.dataSource.Query(sqlstr, finder.Values...)
-	}
+	rows, e := session.query(sqlstr, finder.Values...)
 
 	if e != nil {
 		e = fmt.Errorf("查询数据库错误:%w", e)
@@ -240,10 +261,12 @@ func (baseDao *BaseDao) QueryStruct(session *Session, finder *Finder, entity int
 
 //不要偷懒调用QueryMapList,需要处理sql驱动支持的sql.Nullxxx的数据类型,也挺麻烦的
 //根据Finder和封装为指定的entity类型,entity必须是*[]struct类型,已经初始化好的数组,此方法只Append元素,这样调用方就不需要强制类型转换了
-//如果没有事务,session传入nil.如果有事务,参照使用BaseDao.Transaction方法传入session.请不要自己构建Session
-func (baseDao *BaseDao) QueryStructList(session *Session, finder *Finder, rowsSlicePtr interface{}, page *Page) error {
-	if session != nil && session.db == nil { //禁止外部构建
-		return errors.New("如果没有事务,session传入nil.如果有事务,参照使用BaseDao.Transaction方法传入session.请不要自己构建Session")
+//如果没有事务,session传入nil,使用默认的BaseDao.如果有事务,参照使用BaseDao.Transaction方法传入session.可以使用BaseDao.GetSession()方法,为多数据库预留的方法,正常不建议使用
+func QueryStructList(session *Session, finder *Finder, rowsSlicePtr interface{}, page *Page) error {
+	var sessionerr error
+	session, sessionerr = checkSession(session, false)
+	if sessionerr != nil {
+		return sessionerr
 	}
 	if rowsSlicePtr == nil { //如果为nil
 		return errors.New("数组必须是&[]stuct类型或者基础类型数组的指针")
@@ -269,20 +292,15 @@ func (baseDao *BaseDao) QueryStructList(session *Session, finder *Finder, rowsSl
 		return errors.New("数组必须是&[]stuct类型或者基础类型数组的指针")
 	}
 
-	sqlstr, err := wrapQuerySQL(baseDao.config.DBType, finder, nil)
+	sqlstr, err := wrapQuerySQL(session.dbType, finder, nil)
 	if err != nil {
 		err = fmt.Errorf("获取查询语句异常:%w", err)
 		logger.Error(err)
 		return err
 	}
 	//根据语句和参数查询
-	var rows *sql.Rows
-	var e error
-	if session != nil {
-		rows, e = session.query(sqlstr, finder.Values...)
-	} else {
-		rows, e = baseDao.dataSource.Query(sqlstr, finder.Values...)
-	}
+	rows, e := session.query(sqlstr, finder.Values...)
+
 	if e != nil {
 		e = fmt.Errorf("查询rows异常:%w", e)
 		logger.Error(e)
@@ -316,7 +334,7 @@ func (baseDao *BaseDao) QueryStructList(session *Session, finder *Finder, rowsSl
 
 		//查询总条数
 		if page != nil && finder.SelectPageCount {
-			count, counterr := baseDao.selectCount(session, finder)
+			count, counterr := selectCount(session, finder)
 			if counterr != nil {
 				counterr = fmt.Errorf("查询总条数错误:%w", counterr)
 				logger.Error(counterr)
@@ -370,7 +388,7 @@ func (baseDao *BaseDao) QueryStructList(session *Session, finder *Finder, rowsSl
 
 	//查询总条数
 	if page != nil && finder.SelectPageCount {
-		count, counterr := baseDao.selectCount(session, finder)
+		count, counterr := selectCount(session, finder)
 		if counterr != nil {
 			counterr = fmt.Errorf("查询总条数错误:%w", counterr)
 			logger.Error(counterr)
@@ -385,13 +403,14 @@ func (baseDao *BaseDao) QueryStructList(session *Session, finder *Finder, rowsSl
 
 //根据Finder查询,封装Map
 //bug(springrain)需要测试一下 in 数组, like ,还有查询一个基础类型(例如 string)的功能
-//如果没有事务,session传入nil.如果有事务,参照使用BaseDao.Transaction方法传入session.请不要自己构建Session
-func (baseDao *BaseDao) QueryMap(session *Session, finder *Finder) (map[string]interface{}, error) {
-
-	if session != nil && session.db == nil { //禁止外部构建
-		return nil, errors.New("如果没有事务,session传入nil.如果有事务,参照使用BaseDao.Transaction方法传入session.请不要自己构建Session")
+//如果没有事务,session传入nil,使用默认的BaseDao.如果有事务,参照使用BaseDao.Transaction方法传入session.可以使用BaseDao.GetSession()方法,为多数据库预留的方法,正常不建议使用
+func QueryMap(session *Session, finder *Finder) (map[string]interface{}, error) {
+	var sessionerr error
+	session, sessionerr = checkSession(session, false)
+	if sessionerr != nil {
+		return nil, sessionerr
 	}
-	resultMapList, listerr := baseDao.QueryMapList(session, finder, nil)
+	resultMapList, listerr := QueryMapList(session, finder, nil)
 	if listerr != nil {
 		listerr = fmt.Errorf("QueryMapList查询错误:%w", listerr)
 		logger.Error(listerr)
@@ -408,13 +427,15 @@ func (baseDao *BaseDao) QueryMap(session *Session, finder *Finder) (map[string]i
 
 //根据Finder查询,封装Map数组
 //根据数据库字段的类型,完成从[]byte到golang类型的映射,理论上其他查询方法都可以调用此方法,但是需要处理sql.Nullxxx等驱动支持的类型
-//如果没有事务,session传入nil.如果有事务,参照使用BaseDao.Transaction方法传入session.请不要自己构建Session
-func (baseDao *BaseDao) QueryMapList(session *Session, finder *Finder, page *Page) ([]map[string]interface{}, error) {
+//如果没有事务,session传入nil,使用默认的BaseDao.如果有事务,参照使用BaseDao.Transaction方法传入session.可以使用BaseDao.GetSession()方法,为多数据库预留的方法,正常不建议使用
+func QueryMapList(session *Session, finder *Finder, page *Page) ([]map[string]interface{}, error) {
 
-	if session != nil && session.db == nil { //禁止外部构建
-		return nil, errors.New("如果没有事务,session传入nil.如果有事务,参照使用BaseDao.Transaction方法传入session.请不要自己构建Session")
+	var sessionerr error
+	session, sessionerr = checkSession(session, false)
+	if sessionerr != nil {
+		return nil, sessionerr
 	}
-	sqlstr, err := wrapQuerySQL(baseDao.config.DBType, finder, nil)
+	sqlstr, err := wrapQuerySQL(session.dbType, finder, nil)
 	if err != nil {
 		err = fmt.Errorf("QueryMapList查询错误:%w", err)
 		logger.Error(err)
@@ -422,7 +443,7 @@ func (baseDao *BaseDao) QueryMapList(session *Session, finder *Finder, page *Pag
 	}
 
 	//根据语句和参数查询
-	rows, e := baseDao.dataSource.Query(sqlstr, finder.Values...)
+	rows, e := session.query(sqlstr, finder.Values...)
 	if e != nil {
 		e = fmt.Errorf("查询rows错误:%w", e)
 		logger.Error(e)
@@ -476,7 +497,7 @@ func (baseDao *BaseDao) QueryMapList(session *Session, finder *Finder, page *Pag
 	//bug(springrain) 还缺少查询总条数的逻辑
 	//查询总条数
 	if page != nil && finder.SelectPageCount {
-		count, counterr := baseDao.selectCount(session, finder)
+		count, counterr := selectCount(session, finder)
 		if counterr != nil {
 			counterr = fmt.Errorf("查询总条数错误:%w", counterr)
 			logger.Error(counterr)
@@ -490,11 +511,13 @@ func (baseDao *BaseDao) QueryMapList(session *Session, finder *Finder, page *Pag
 
 //更新Finder
 //session不能为nil,参照使用BaseDao.Transaction方法传入session.请不要自己构建Session
-func (baseDao *BaseDao) UpdateFinder(session *Session, finder *Finder) error {
+func UpdateFinder(session *Session, finder *Finder) error {
 
 	//必须要有session和事务
-	if session == nil || session.tx == nil {
-		return errors.New("session不能为nil,参照使用BaseDao.Transaction方法传入session.请不要自己构建Session")
+	var sessionerr error
+	session, sessionerr = checkSession(session, true)
+	if sessionerr != nil {
+		return sessionerr
 	}
 
 	if finder == nil {
@@ -506,7 +529,7 @@ func (baseDao *BaseDao) UpdateFinder(session *Session, finder *Finder) error {
 		logger.Error(err)
 		return err
 	}
-	sqlstr, err = wrapSQL(baseDao.config.DBType, sqlstr)
+	sqlstr, err = wrapSQL(session.dbType, sqlstr)
 	if err != nil {
 		err = fmt.Errorf("UpdateFinder-->wrapSQL错误:%w", err)
 		logger.Error(err)
@@ -526,10 +549,12 @@ func (baseDao *BaseDao) UpdateFinder(session *Session, finder *Finder) error {
 //保存Struct对象,必须是IEntityStruct类型
 //bug(chunanuyong) 如果是自增主键,需要返回.需要sql驱动支持
 //session不能为nil,参照使用BaseDao.Transaction方法传入session.请不要自己构建Session
-func (baseDao *BaseDao) SaveStruct(session *Session, entity IEntityStruct) error {
+func SaveStruct(session *Session, entity IEntityStruct) error {
 	//必须要有session和事务
-	if session == nil || session.tx == nil {
-		return errors.New("session不能为nil,参照使用BaseDao.Transaction方法传入session.请不要自己构建Session")
+	var sessionerr error
+	session, sessionerr = checkSession(session, true)
+	if sessionerr != nil {
+		return sessionerr
 	}
 	if entity == nil {
 		return errors.New("对象不能为空")
@@ -544,7 +569,7 @@ func (baseDao *BaseDao) SaveStruct(session *Session, entity IEntityStruct) error
 		return errors.New("没有tag信息,请检查struct中 column 的tag")
 	}
 	//SQL语句
-	sqlstr, autoIncrement, err := wrapSaveStructSQL(baseDao.config.DBType, entity, &columns, &values)
+	sqlstr, autoIncrement, err := wrapSaveStructSQL(session.dbType, entity, &columns, &values)
 	if err != nil {
 		err = fmt.Errorf("SaveStruct-->wrapSaveStructSQL获取保存语句错误:%w", err)
 		logger.Error(err)
@@ -587,8 +612,8 @@ func (baseDao *BaseDao) SaveStruct(session *Session, entity IEntityStruct) error
 
 //更新struct所有属性,必须是IEntityStruct类型
 //session不能为nil,参照使用BaseDao.Transaction方法传入session.请不要自己构建Session
-func (baseDao *BaseDao) UpdateStruct(session *Session, entity IEntityStruct) error {
-	err := baseDao.updateStructFunc(session, entity, false)
+func UpdateStruct(session *Session, entity IEntityStruct) error {
+	err := updateStructFunc(session, entity, false)
 	if err != nil {
 		err = fmt.Errorf("UpdateStruct-->updateStructFunc更新错误:%w", err)
 		return err
@@ -599,7 +624,7 @@ func (baseDao *BaseDao) UpdateStruct(session *Session, entity IEntityStruct) err
 //更新struct不为nil的属性,必须是IEntityStruct类型
 //session不能为nil,参照使用BaseDao.Transaction方法传入session.请不要自己构建Session
 func (baseDao *BaseDao) UpdateStructNotNil(session *Session, entity IEntityStruct) error {
-	err := baseDao.updateStructFunc(session, entity, true)
+	err := updateStructFunc(session, entity, true)
 	if err != nil {
 		err = fmt.Errorf("UpdateStructNotNil-->updateStructFunc更新错误:%w", err)
 		return err
@@ -609,10 +634,12 @@ func (baseDao *BaseDao) UpdateStructNotNil(session *Session, entity IEntityStruc
 
 // 根据主键删除一个对象.必须是IEntityStruct类型
 //session不能为nil,参照使用BaseDao.Transaction方法传入session.请不要自己构建Session
-func (baseDao *BaseDao) DeleteStruct(session *Session, entity IEntityStruct) error {
+func DeleteStruct(session *Session, entity IEntityStruct) error {
 	//必须要有session和事务
-	if session == nil || session.tx == nil {
-		return errors.New("session不能为nil,参照使用BaseDao.Transaction方法传入session.请不要自己构建Session")
+	var sessionerr error
+	session, sessionerr = checkSession(session, true)
+	if sessionerr != nil {
+		return sessionerr
 	}
 	if entity == nil {
 		return errors.New("对象不能为空")
@@ -631,7 +658,7 @@ func (baseDao *BaseDao) DeleteStruct(session *Session, entity IEntityStruct) err
 		return e
 	}
 	//SQL语句
-	sqlstr, err := wrapDeleteStructSQL(baseDao.config.DBType, entity)
+	sqlstr, err := wrapDeleteStructSQL(session.dbType, entity)
 	if err != nil {
 		err = fmt.Errorf("DeleteStruct-->wrapDeleteStructSQL获取SQL语句错误:%w", err)
 		logger.Error(err)
@@ -652,16 +679,18 @@ func (baseDao *BaseDao) DeleteStruct(session *Session, entity IEntityStruct) err
 
 //保存IEntityMap对象.使用Map保存数据,需要在数据中封装好包括Id在内的所有数据.不适用于复杂情况
 //session不能为nil,参照使用BaseDao.Transaction方法传入session.请不要自己构建Session
-func (baseDao *BaseDao) SaveMap(session *Session, entity IEntityMap) error {
+func SaveMap(session *Session, entity IEntityMap) error {
 	//必须要有session和事务
-	if session == nil || session.tx == nil {
-		return errors.New("session不能为nil,参照使用BaseDao.Transaction方法传入session.请不要自己构建Session")
+	var sessionerr error
+	session, sessionerr = checkSession(session, true)
+	if sessionerr != nil {
+		return sessionerr
 	}
 	if entity == nil {
 		return errors.New("对象不能为空")
 	}
 	//SQL语句
-	sqlstr, values, err := wrapSaveMapSQL(baseDao.config.DBType, entity)
+	sqlstr, values, err := wrapSaveMapSQL(session.dbType, entity)
 	if err != nil {
 		err = fmt.Errorf("SaveMap-->wrapSaveMapSQL获取SQL语句错误:%w", err)
 		logger.Error(err)
@@ -684,16 +713,18 @@ func (baseDao *BaseDao) SaveMap(session *Session, entity IEntityMap) error {
 
 //更新IEntityMap对象.使用Map修改数据,需要在数据中封装好包括Id在内的所有数据.不适用于复杂情况
 //session不能为nil,参照使用BaseDao.Transaction方法传入session.请不要自己构建Session
-func (baseDao *BaseDao) UpdateMap(session *Session, entity IEntityMap) error {
+func UpdateMap(session *Session, entity IEntityMap) error {
 	//必须要有session和事务
-	if session == nil || session.tx == nil {
-		return errors.New("session不能为nil,参照使用BaseDao.Transaction方法传入session.请不要自己构建Session")
+	var sessionerr error
+	session, sessionerr = checkSession(session, true)
+	if sessionerr != nil {
+		return sessionerr
 	}
 	if entity == nil {
 		return errors.New("对象不能为空")
 	}
 	//SQL语句
-	sqlstr, values, err := wrapUpdateMapSQL(baseDao.config.DBType, entity)
+	sqlstr, values, err := wrapUpdateMapSQL(session.dbType, entity)
 	if err != nil {
 		err = fmt.Errorf("UpdateMap-->wrapUpdateMapSQL获取SQL语句错误:%w", err)
 		logger.Error(err)
@@ -856,11 +887,14 @@ func wrapMap(columns []string, values []columnValue) (map[string]columnValue, er
 
 //更新对象
 //session不能为nil,参照使用BaseDao.Transaction方法传入session.请不要自己构建Session
-func (baseDao *BaseDao) updateStructFunc(session *Session, entity IEntityStruct, onlyupdatenotnull bool) error {
+func updateStructFunc(session *Session, entity IEntityStruct, onlyupdatenotnull bool) error {
 	//必须要有session和事务
-	if session == nil || session.tx == nil {
-		return errors.New("session不能为nil,参照使用BaseDao.Transaction方法传入session.请不要自己构建Session")
+	var sessionerr error
+	session, sessionerr = checkSession(session, true)
+	if sessionerr != nil {
+		return sessionerr
 	}
+
 	if entity == nil {
 		return errors.New("对象不能为空")
 	}
@@ -869,7 +903,7 @@ func (baseDao *BaseDao) updateStructFunc(session *Session, entity IEntityStruct,
 		return columnAndValueErr
 	}
 	//SQL语句
-	sqlstr, err := wrapUpdateStructSQL(baseDao.config.DBType, entity, columns, values, onlyupdatenotnull)
+	sqlstr, err := wrapUpdateStructSQL(session.dbType, entity, columns, values, onlyupdatenotnull)
 	if err != nil {
 		return err
 	}
@@ -887,19 +921,21 @@ func (baseDao *BaseDao) updateStructFunc(session *Session, entity IEntityStruct,
 }
 
 //根据finder查询总条数
-//如果没有事务,session传入nil.如果有事务,参照使用BaseDao.Transaction方法传入session.请不要自己构建Session
-func (baseDao *BaseDao) selectCount(session *Session, finder *Finder) (int, error) {
-	//禁止外部构建
-	if session != nil && session.db == nil {
-		return -1, errors.New("如果没有事务,session传入nil.如果有事务,参照使用BaseDao.Transaction方法传入session.请不要自己构建Session")
+//如果没有事务,session传入nil,使用默认的BaseDao.如果有事务,参照使用BaseDao.Transaction方法传入session.可以使用BaseDao.GetSession()方法,为多数据库预留的方法,正常不建议使用
+func selectCount(session *Session, finder *Finder) (int, error) {
+	var sessionerr error
+	session, sessionerr = checkSession(session, false)
+	if sessionerr != nil {
+		return -1, sessionerr
 	}
+
 	if finder == nil {
 		return -1, errors.New("参数为nil")
 	}
 	//自定义的查询总条数Finder,主要是为了在group by等复杂情况下,为了性能,手动编写总条数语句
 	if finder.CountFinder != nil {
 		count := -1
-		err := baseDao.QueryStruct(session, finder.CountFinder, &count)
+		err := QueryStruct(session, finder.CountFinder, &count)
 		if err != nil {
 			return -1, err
 		}
@@ -939,10 +975,37 @@ func (baseDao *BaseDao) selectCount(session *Session, finder *Finder) (int, erro
 	countFinder.Values = finder.Values
 
 	count := -1
-	cerr := baseDao.QueryStruct(session, countFinder, &count)
+	cerr := QueryStruct(session, countFinder, &count)
 	if cerr != nil {
 		return -1, cerr
 	}
 	return count, nil
+
+}
+
+var sessionErr = errors.New("如果没有事务,session传入nil,使用默认的BaseDao.如果有事务,参照使用BaseDao.Transaction方法传入session.可以使用BaseDao.GetSession()方法,为多数据库预留的方法,正常不建议使用")
+
+//检查session
+//如果没有事务,session传入nil,使用默认的BaseDao.如果有事务,参照使用BaseDao.Transaction方法传入session.可以使用BaseDao.GetSession()方法,为多数据库预留的方法,正常不建议使用
+func checkSession(session *Session, hastx bool) (*Session, error) {
+
+	if session == nil { //session为空
+		if !hastx { //如果要求没有事务,实例化一个默认的session
+			session = getDefaultDao().GetSession()
+		} else { //如果要求有事务,错误
+			return nil, sessionErr
+		}
+
+	} else { //如果session存在
+		if session.db == nil { //禁止外部构建
+			return session, sessionErr
+		}
+		tx := session.tx
+		if tx == nil && hastx { //如果要求有事务
+			return session, sessionErr
+		}
+	}
+
+	return session, nil
 
 }

@@ -1,7 +1,13 @@
-package peristruct
+package permstruct
+
+import (
+	"readygo/orm"
+)
 
 // 小程序配置表
 type WxMiniappconfigStruct struct {
+	//引入默认的struct,隔离IEntityStruct的方法改动
+	orm.EntityStruct
 
 	// 主键id
 	Id string `column:"id"`
@@ -48,12 +54,7 @@ func (entity *WxMiniappconfigStruct) GetTableName() string {
 	return "wx_miniappconfig"
 }
 
-//获取数据库表的主键字段名称.因为要兼容Map,只能是数据库的字段名称.对应的struct 属性field,使用cacheStructPKFieldNameMap缓存
+//获取数据库表的主键字段名称.因为要兼容Map,只能是数据库的字段名称.对应的struct 属性field
 func (entity *WxMiniappconfigStruct) GetPKColumnName() string {
 	return "id"
-}
-
-//Oracle和pgsql没有自增,主键使用序列.优先级高于GetPKColumnName方法
-func (entity *WxMiniappconfigStruct) GetPkSequence() string {
-	return ""
 }

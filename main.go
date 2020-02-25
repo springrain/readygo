@@ -2,10 +2,23 @@ package main
 
 import (
 	"readygo/ginext"
+	"readygo/orm"
 
 	"github.com/gin-gonic/gin"
 )
 
+//初始化BaseDao
+func init() {
+	baseDaoConfig := orm.DataSourceConfig{
+		Host:     "127.0.0.1",
+		Port:     3306,
+		DBName:   "readygo",
+		UserName: "root",
+		PassWord: "root",
+		DBType:   "mysql",
+	}
+	_, _ = orm.NewBaseDao(&baseDaoConfig)
+}
 func main() {
 	// Creates a router without any middleware by default
 	r := gin.New()
