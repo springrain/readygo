@@ -1,0 +1,32 @@
+package {{.packageName}}
+import (
+	"time"
+)
+
+// {{.tableComment}}
+type {{.structName}}Struct struct {
+	{{range $i, $v := .columns}}
+    // {{$v.COLUMN_COMMENT}}
+    {{$v.field}} {{$v.DATA_TYPE}} `column:"{{$v.COLUMN_NAME}}"`
+    {{end}}
+	//------------------数据库字段结束,自定义字段写在下面---------------//
+
+
+}
+
+
+//获取表名称
+func (entity *{{.structName}}Struct) GetTableName() string {
+	return "{{.tableName}}"
+}
+
+//获取数据库表的主键字段名称.因为要兼容Map,只能是数据库的字段名称.对应的struct 属性field,使用cacheStructPKFieldNameMap缓存
+func (entity *{{.structName}}Struct) GetPKColumnName() string {
+	return "{{.pkName}}"
+}
+
+
+//Oracle和pgsql没有自增,主键使用序列.优先级高于GetPKColumnName方法
+func (entity *{{.structName}}Struct) GetPkSequence() string {
+	return ""
+}
