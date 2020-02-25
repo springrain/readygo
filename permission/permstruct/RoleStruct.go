@@ -7,7 +7,7 @@ import (
 )
 
 // 角色
-type RoleStructStruct struct {
+type RoleStruct struct {
 	//引入默认的struct,隔离IEntityStruct的方法改动
 	orm.EntityStruct
 
@@ -76,11 +76,11 @@ type RoleStructStruct struct {
 }
 
 //获取表名称
-func (entity *RoleStructStruct) GetTableName() string {
+func (entity *RoleStruct) GetTableName() string {
 	return "t_role"
 }
 
 //获取数据库表的主键字段名称.因为要兼容Map,只能是数据库的字段名称.对应的struct 属性field
-func (entity *RoleStructStruct) GetPKColumnName() string {
+func (entity *RoleStruct) GetPKColumnName() string {
 	return "id"
 }

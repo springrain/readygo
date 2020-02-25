@@ -6,7 +6,7 @@ import (
 )
 
 // {{.tableComment}}
-type {{.structName}}Struct struct {
+type {{.structName}} struct {
 	//引入默认的struct,隔离IEntityStruct的方法改动
 	orm.EntityStruct
 	{{range $i, $v := .columns}}
@@ -20,12 +20,12 @@ type {{.structName}}Struct struct {
 
 
 //获取表名称
-func (entity *{{.structName}}Struct) GetTableName() string {
+func (entity *{{.structName}}) GetTableName() string {
 	return "{{.tableName}}"
 }
 
 //获取数据库表的主键字段名称.因为要兼容Map,只能是数据库的字段名称.对应的struct 属性field
-func (entity *{{.structName}}Struct) GetPKColumnName() string {
+func (entity *{{.structName}}) GetPKColumnName() string {
 	return "{{.pkName}}"
 }
 

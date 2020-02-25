@@ -5,7 +5,7 @@ import (
 )
 
 // 微信号需要的配置信息
-type WxCpconfigStructStruct struct {
+type WxCpconfigStruct struct {
 	//引入默认的struct,隔离IEntityStruct的方法改动
 	orm.EntityStruct
 
@@ -44,11 +44,11 @@ type WxCpconfigStructStruct struct {
 }
 
 //获取表名称
-func (entity *WxCpconfigStructStruct) GetTableName() string {
+func (entity *WxCpconfigStruct) GetTableName() string {
 	return "wx_cpconfig"
 }
 
 //获取数据库表的主键字段名称.因为要兼容Map,只能是数据库的字段名称.对应的struct 属性field
-func (entity *WxCpconfigStructStruct) GetPKColumnName() string {
+func (entity *WxCpconfigStruct) GetPKColumnName() string {
 	return "id"
 }

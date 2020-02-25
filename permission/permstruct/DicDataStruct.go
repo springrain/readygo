@@ -5,7 +5,7 @@ import (
 )
 
 // 公共字典
-type DicDataStructStruct struct {
+type DicDataStruct struct {
 	//引入默认的struct,隔离IEntityStruct的方法改动
 	orm.EntityStruct
 
@@ -56,11 +56,11 @@ type DicDataStructStruct struct {
 }
 
 //获取表名称
-func (entity *DicDataStructStruct) GetTableName() string {
+func (entity *DicDataStruct) GetTableName() string {
 	return "t_dic_data"
 }
 
 //获取数据库表的主键字段名称.因为要兼容Map,只能是数据库的字段名称.对应的struct 属性field
-func (entity *DicDataStructStruct) GetPKColumnName() string {
+func (entity *DicDataStruct) GetPKColumnName() string {
 	return "id"
 }

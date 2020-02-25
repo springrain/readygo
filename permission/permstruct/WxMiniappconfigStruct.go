@@ -5,7 +5,7 @@ import (
 )
 
 // 小程序配置表
-type WxMiniappconfigStructStruct struct {
+type WxMiniappconfigStruct struct {
 	//引入默认的struct,隔离IEntityStruct的方法改动
 	orm.EntityStruct
 
@@ -50,11 +50,11 @@ type WxMiniappconfigStructStruct struct {
 }
 
 //获取表名称
-func (entity *WxMiniappconfigStructStruct) GetTableName() string {
+func (entity *WxMiniappconfigStruct) GetTableName() string {
 	return "wx_miniappconfig"
 }
 
 //获取数据库表的主键字段名称.因为要兼容Map,只能是数据库的字段名称.对应的struct 属性field
-func (entity *WxMiniappconfigStructStruct) GetPKColumnName() string {
+func (entity *WxMiniappconfigStruct) GetPKColumnName() string {
 	return "id"
 }
