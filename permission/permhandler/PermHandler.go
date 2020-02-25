@@ -32,6 +32,8 @@ func PermHandler() gin.HandlerFunc {
 		//请求的uri
 		uri := c.Request.RequestURI
 		logger.Info(uri)
+
+		//进入下一个handler
 		c.Next()
 	}
 
