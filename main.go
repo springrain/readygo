@@ -15,7 +15,7 @@ func init() {
 		DBName:   "readygo",
 		UserName: "root",
 		PassWord: "root",
-		DBType:   orm.DBType_MYSQL,
+		DBType:   "mysql",
 	}
 	_, _ = orm.NewBaseDao(&baseDaoConfig)
 }
