@@ -68,7 +68,7 @@ func NewBaseDao(config *DataSourceConfig) (*BaseDao, error) {
 }
 
 //获取默认的Dao,用于隔离读写的Dao
-func GetDefaultDao() *BaseDao {
+func getDefaultDao() *BaseDao {
 	return defaultDao
 }
 
@@ -94,9 +94,9 @@ orm.Transaction(func(session *orm.Session) (interface{}, error) {
 
 //事务方法,隔离session相关的API.必须通过这个方法进行事务处理,统一事务方式
 //return的error如果不为nil,事务就会回滚
-//默认使用GetDefaultDao()返回的BaseDao
+//默认使用getDefaultDao()返回的BaseDao
 func Transaction(doTransaction func(session *Session) (interface{}, error)) (interface{}, error) {
-	return TransactionByBaseDao(GetDefaultDao(), doTransaction)
+	return TransactionByBaseDao(getDefaultDao(), doTransaction)
 }
 
 //事务方法,隔离session相关的API.必须通过这个方法进行事务处理,统一事务方式
@@ -996,7 +996,7 @@ func checkSession(session *Session) (*Session, error) {
 		return session, errors.New("如果没有事务,session传入nil,使用默认的BaseDao.如果有事务,参照使用BaseDao.Transaction方法传入session.可以使用BaseDao.GetSession()方法,为多数据库预留的方法,正常不建议使用")
 	}
 	if session == nil {
-		session = GetDefaultDao().GetSession()
+		session = getDefaultDao().GetSession()
 		return session, nil
 	}
 	return session, nil
