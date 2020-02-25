@@ -115,7 +115,7 @@ func capitalize(str string) string {
 	return str
 }
 
-//表名驼峰
+//驼峰
 func camelCaseName(tableName string) string {
 	tableName = strings.Replace(tableName, "t_", "", 1)
 	names := strings.Split(tableName, "_")
