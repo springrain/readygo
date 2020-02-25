@@ -64,7 +64,7 @@ func NewBaseDao(config *DataSourceConfig) (*BaseDao, error) {
 		defaultDao = &BaseDao{config, dataSource}
 		return defaultDao, nil
 	}
-	return &BaseDao{config, dataSource}, nil
+	return defaultDao, nil
 }
 
 //获取默认的Dao,用于隔离读写的Dao
