@@ -269,12 +269,12 @@ func QueryStructList(session *Session, finder *Finder, rowsSlicePtr interface{},
 		return sessionerr
 	}
 	if rowsSlicePtr == nil { //如果为nil
-		return errors.New("数组必须是&[]stuct类型或者基础类型数组的指针")
+		return errors.New("数组必须是*[]struct类型或者基础类型数组的指针")
 	}
 
 	pv1 := reflect.ValueOf(rowsSlicePtr)
 	if pv1.Kind() != reflect.Ptr { //如果不是指针
-		return errors.New("数组必须是&[]stuct类型或者基础类型数组的指针")
+		return errors.New("数组必须是*[]struct类型或者基础类型数组的指针")
 	}
 
 	//获取数组元素
@@ -282,14 +282,14 @@ func QueryStructList(session *Session, finder *Finder, rowsSlicePtr interface{},
 
 	//如果不是数组
 	if sliceValue.Kind() != reflect.Slice {
-		return errors.New("数组必须是&[]stuct类型或者基础类型数组的指针")
+		return errors.New("数组必须是*[]struct类型或者基础类型数组的指针")
 	}
 	//获取数组内的元素类型
 	sliceElementType := sliceValue.Type().Elem()
 
 	//如果不是struct
 	if !(sliceElementType.Kind() == reflect.Struct || allowBaseTypeMap[sliceElementType.Kind()]) {
-		return errors.New("数组必须是&[]stuct类型或者基础类型数组的指针")
+		return errors.New("数组必须是*[]struct类型或者基础类型数组的指针")
 	}
 
 	sqlstr, err := wrapQuerySQL(session.dbType, finder, nil)
