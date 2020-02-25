@@ -3,7 +3,6 @@ package permservice
 import (
 	"errors"
 	"readygo/orm"
-	permstruct "readygo/permission/struct"
 )
 
 //保存用户,session参数是为了保证在其他事务内,可以为nil
@@ -117,10 +116,10 @@ func FindUserStructById(session *orm.Session, id string) (*permstruct.UserStruct
 
 //根据Finder查询用户列表,session参数是为了保证在其他事务内,可以为nil
 func FindUserStructList(session *orm.Session, finder *orm.Finder, page *orm.Page) ([]permstruct.UserStruct, error) {
-	userList := make([]permstruct.UserStruct, 0)
-	err := orm.GetDefaultDao().QueryStructList(session, finder, &userList, page)
+	userStructList := make([]permstruct.UserStruct, 0)
+	err := orm.GetDefaultDao().QueryStructList(session, finder, &userStructList, page)
 	if err != nil {
 		return nil, err
 	}
-	return userList, nil
+	return userStructList, nil
 }
