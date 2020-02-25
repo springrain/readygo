@@ -1,4 +1,4 @@
-package peristruct
+package permstruct
 
 // 支付宝的配置信息
 type AliPayconfigStruct struct {

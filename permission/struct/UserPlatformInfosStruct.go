@@ -1,4 +1,4 @@
-package peristruct
+package permstruct
 
 // 用户平台信息表
 type UserPlatformInfosStruct struct {

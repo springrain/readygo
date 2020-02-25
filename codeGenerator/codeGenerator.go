@@ -11,8 +11,9 @@ import (
 var baseDao *orm.BaseDao
 
 const (
-	dbName      = "readygo"
-	packageName = "peristruct"
+	dbName             = "readygo"
+	packageName        = "permstruct"
+	servicePackageName = "permservice"
 )
 
 func init() {
@@ -31,10 +32,12 @@ func init() {
 func main() {
 	code("t_user")
 
-	tableNames := selectAllTable()
-	for _, tableName := range tableNames {
-		code(tableName)
-	}
+	/*
+		tableNames := selectAllTable()
+		for _, tableName := range tableNames {
+			code(tableName)
+		}
+	*/
 
 }
 
@@ -43,21 +46,29 @@ func code(tableName string) {
 
 	info := selectTableColumn(tableName)
 
-	structFileName := "./code/" + info["structName"].(string) + "Struct.go"
-	f, err := os.Create(structFileName)
+	structFileName := "./code/struct/" + info["structName"].(string) + ".go"
+	serviceFileName := "./code/service/" + info["structName"].(string) + "Service.go"
+	structFile, _ := os.Create(structFileName)
+	serviceFile, _ := os.Create(serviceFileName)
 
 	//w := bufio.NewWriter(f) // 创建新的 Writer 对象
 	defer func() {
-		f.Close()
-
+		structFile.Close()
+		serviceFile.Close()
 	}()
 
-	t, err := template.ParseFiles("./templates/struct.txt")
-	if err != nil {
-		fmt.Println(err)
+	structTemplate, err1 := template.ParseFiles("./templates/struct.txt")
+	if err1 != nil {
+		fmt.Println(err1)
 	}
+	structTemplate.Execute(structFile, info)
 
-	t.Execute(f, info)
+	serviceTemplate, err2 := template.ParseFiles("./templates/service.txt")
+	if err2 != nil {
+		fmt.Println(err2)
+	}
+	serviceTemplate.Execute(serviceFile, info)
+
 }
 
 //获取所有的表名
@@ -103,15 +114,24 @@ func selectTableColumn(tableName string) map[string]interface{} {
 	info["columns"] = maps
 	info["pkName"] = pkName
 	info["tableName"] = tableName
-	info["structName"] = camelCaseName(tableName)
+	structName := camelCaseName(tableName) + "Struct"
+	info["structName"] = structName
+	info["pname"] = firstToLower(structName)
 	info["packageName"] = packageName
 	info["tableComment"] = tableComment
+	info["servicePackageName"] = servicePackageName
 	return info
 }
 
 //首字母大写
-func capitalize(str string) string {
+func firstToUpper(str string) string {
 	str = strings.ToUpper(string(str[0:1])) + string(str[1:])
+	return str
+}
+
+//首字母小写
+func firstToLower(str string) string {
+	str = strings.ToLower(string(str[0:1])) + string(str[1:])
 	return str
 }
 
@@ -121,7 +141,7 @@ func camelCaseName(tableName string) string {
 	names := strings.Split(tableName, "_")
 	structName := ""
 	for _, name := range names {
-		structName = structName + capitalize(name)
+		structName = structName + firstToUpper(name)
 	}
 
 	return structName

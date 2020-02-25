@@ -1,4 +1,4 @@
-package peristruct
+package permstruct
 
 // 公共字典
 type DicDataStruct struct {

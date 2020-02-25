@@ -1,4 +1,4 @@
-package peristruct
+package permstruct
 
 // 小程序配置表
 type WxMiniappconfigStruct struct {

@@ -1,4 +1,4 @@
-package peristruct
+package permstruct
 
 import (
 	"time"

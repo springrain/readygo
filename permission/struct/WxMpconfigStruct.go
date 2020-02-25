@@ -1,4 +1,4 @@
-package peristruct
+package permstruct
 
 // 微信号需要的配置信息
 type WxMpconfigStruct struct {
