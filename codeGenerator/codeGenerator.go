@@ -94,12 +94,17 @@ func selectTableColumn(tableName string) map[string]interface{} {
 
 	for _, m := range maps {
 		dataType := m["DATA_TYPE"].(string)
-		if dataType == "varchar" {
+		dataType = strings.ToUpper(dataType)
+		if dataType == "VARCHAR" || dataType == "NVARCHAR" || dataType == "TEXT" {
 			dataType = "string"
-		} else if dataType == "datetime" {
+		} else if dataType == "DATETIME" || dataType == "TIMESTAMP" {
 			dataType = "time.Time"
-		} else if dataType == "bigint" {
+		} else if dataType == "BIGINT" {
 			dataType = "int64"
+		} else if dataType == "FLOAT" {
+			dataType = "float32"
+		} else if dataType == "DOUBLE" {
+			dataType = "float64"
 		}
 		m["DATA_TYPE"] = dataType
 		m["field"] = camelCaseName(m["COLUMN_NAME"].(string))
