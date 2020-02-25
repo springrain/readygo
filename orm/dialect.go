@@ -415,7 +415,7 @@ func converValueColumnType(v interface{}, columnType *sql.ColumnType) interface{
 	}
 
 	//获取数据库类型,自己对应golang的基础类型值,不处理sql.Nullxxx类型
-	databaseTypeName := strings.ToUpper(DatabaseTypeName())
+	databaseTypeName := strings.ToUpper(columnType.DatabaseTypeName())
 	//如果是字符串
 	if databaseTypeName == "VARCHAR" || databaseTypeName == "NVARCHAR" || databaseTypeName == "TEXT" {
 		return convert.String(v)
