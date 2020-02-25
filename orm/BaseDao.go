@@ -154,7 +154,7 @@ func TransactionByBaseDao(baseDao *BaseDao, doTransaction func(session *Session)
 
 //不要偷懒调用QueryStructList返回第一条,1.需要构建一个selice,2.调用方传递的对象其他值会被抛弃或者覆盖.
 //根据Finder和封装为指定的entity类型,entity必须是*struct类型或者基础类型的指针.把查询的数据赋值给entity,所以要求指针类型
-//如果没有事务,session传入nil,使用默认的BaseDao.如果有事务,参照使用BaseDao.Transaction方法传入session.可以使用BaseDao.GetSession()方法,为多数据库预留的方法,正常不建议使用
+//如果没有事务,session传入nil,使用默认的BaseDao.如果有事务,参照使用orm.Transaction方法传入session.可以使用BaseDao.GetSession()方法,为多数据库预留的方法,正常不建议使用
 func QueryStruct(session *Session, finder *Finder, entity interface{}) error {
 	var sessionerr error
 	session, sessionerr = checkSession(session, false)
@@ -261,7 +261,7 @@ func QueryStruct(session *Session, finder *Finder, entity interface{}) error {
 
 //不要偷懒调用QueryMapList,需要处理sql驱动支持的sql.Nullxxx的数据类型,也挺麻烦的
 //根据Finder和封装为指定的entity类型,entity必须是*[]struct类型,已经初始化好的数组,此方法只Append元素,这样调用方就不需要强制类型转换了
-//如果没有事务,session传入nil,使用默认的BaseDao.如果有事务,参照使用BaseDao.Transaction方法传入session.可以使用BaseDao.GetSession()方法,为多数据库预留的方法,正常不建议使用
+//如果没有事务,session传入nil,使用默认的BaseDao.如果有事务,参照使用orm.Transaction方法传入session.可以使用BaseDao.GetSession()方法,为多数据库预留的方法,正常不建议使用
 func QueryStructList(session *Session, finder *Finder, rowsSlicePtr interface{}, page *Page) error {
 	var sessionerr error
 	session, sessionerr = checkSession(session, false)
@@ -403,7 +403,7 @@ func QueryStructList(session *Session, finder *Finder, rowsSlicePtr interface{},
 
 //根据Finder查询,封装Map
 //bug(springrain)需要测试一下 in 数组, like ,还有查询一个基础类型(例如 string)的功能
-//如果没有事务,session传入nil,使用默认的BaseDao.如果有事务,参照使用BaseDao.Transaction方法传入session.可以使用BaseDao.GetSession()方法,为多数据库预留的方法,正常不建议使用
+//如果没有事务,session传入nil,使用默认的BaseDao.如果有事务,参照使用orm.Transaction方法传入session.可以使用BaseDao.GetSession()方法,为多数据库预留的方法,正常不建议使用
 func QueryMap(session *Session, finder *Finder) (map[string]interface{}, error) {
 	var sessionerr error
 	session, sessionerr = checkSession(session, false)
@@ -427,7 +427,7 @@ func QueryMap(session *Session, finder *Finder) (map[string]interface{}, error) 
 
 //根据Finder查询,封装Map数组
 //根据数据库字段的类型,完成从[]byte到golang类型的映射,理论上其他查询方法都可以调用此方法,但是需要处理sql.Nullxxx等驱动支持的类型
-//如果没有事务,session传入nil,使用默认的BaseDao.如果有事务,参照使用BaseDao.Transaction方法传入session.可以使用BaseDao.GetSession()方法,为多数据库预留的方法,正常不建议使用
+//如果没有事务,session传入nil,使用默认的BaseDao.如果有事务,参照使用orm.Transaction方法传入session.可以使用BaseDao.GetSession()方法,为多数据库预留的方法,正常不建议使用
 func QueryMapList(session *Session, finder *Finder, page *Page) ([]map[string]interface{}, error) {
 
 	var sessionerr error
@@ -510,7 +510,7 @@ func QueryMapList(session *Session, finder *Finder, page *Page) ([]map[string]in
 }
 
 //更新Finder
-//session不能为nil,参照使用BaseDao.Transaction方法传入session.请不要自己构建Session
+//session不能为nil,参照使用orm.Transaction方法传入session.请不要自己构建Session
 func UpdateFinder(session *Session, finder *Finder) error {
 
 	//必须要有session和事务
@@ -548,7 +548,7 @@ func UpdateFinder(session *Session, finder *Finder) error {
 
 //保存Struct对象,必须是IEntityStruct类型
 //bug(chunanuyong) 如果是自增主键,需要返回.需要sql驱动支持
-//session不能为nil,参照使用BaseDao.Transaction方法传入session.请不要自己构建Session
+//session不能为nil,参照使用orm.Transaction方法传入session.请不要自己构建Session
 func SaveStruct(session *Session, entity IEntityStruct) error {
 	//必须要有session和事务
 	var sessionerr error
@@ -611,7 +611,7 @@ func SaveStruct(session *Session, entity IEntityStruct) error {
 }
 
 //更新struct所有属性,必须是IEntityStruct类型
-//session不能为nil,参照使用BaseDao.Transaction方法传入session.请不要自己构建Session
+//session不能为nil,参照使用orm.Transaction方法传入session.请不要自己构建Session
 func UpdateStruct(session *Session, entity IEntityStruct) error {
 	err := updateStructFunc(session, entity, false)
 	if err != nil {
@@ -622,7 +622,7 @@ func UpdateStruct(session *Session, entity IEntityStruct) error {
 }
 
 //更新struct不为nil的属性,必须是IEntityStruct类型
-//session不能为nil,参照使用BaseDao.Transaction方法传入session.请不要自己构建Session
+//session不能为nil,参照使用orm.Transaction方法传入session.请不要自己构建Session
 func (baseDao *BaseDao) UpdateStructNotNil(session *Session, entity IEntityStruct) error {
 	err := updateStructFunc(session, entity, true)
 	if err != nil {
@@ -633,7 +633,7 @@ func (baseDao *BaseDao) UpdateStructNotNil(session *Session, entity IEntityStruc
 }
 
 // 根据主键删除一个对象.必须是IEntityStruct类型
-//session不能为nil,参照使用BaseDao.Transaction方法传入session.请不要自己构建Session
+//session不能为nil,参照使用orm.Transaction方法传入session.请不要自己构建Session
 func DeleteStruct(session *Session, entity IEntityStruct) error {
 	//必须要有session和事务
 	var sessionerr error
@@ -678,7 +678,7 @@ func DeleteStruct(session *Session, entity IEntityStruct) error {
 }
 
 //保存IEntityMap对象.使用Map保存数据,需要在数据中封装好包括Id在内的所有数据.不适用于复杂情况
-//session不能为nil,参照使用BaseDao.Transaction方法传入session.请不要自己构建Session
+//session不能为nil,参照使用orm.Transaction方法传入session.请不要自己构建Session
 func SaveMap(session *Session, entity IEntityMap) error {
 	//必须要有session和事务
 	var sessionerr error
@@ -712,7 +712,7 @@ func SaveMap(session *Session, entity IEntityMap) error {
 }
 
 //更新IEntityMap对象.使用Map修改数据,需要在数据中封装好包括Id在内的所有数据.不适用于复杂情况
-//session不能为nil,参照使用BaseDao.Transaction方法传入session.请不要自己构建Session
+//session不能为nil,参照使用orm.Transaction方法传入session.请不要自己构建Session
 func UpdateMap(session *Session, entity IEntityMap) error {
 	//必须要有session和事务
 	var sessionerr error
@@ -886,7 +886,7 @@ func wrapMap(columns []string, values []columnValue) (map[string]columnValue, er
 */
 
 //更新对象
-//session不能为nil,参照使用BaseDao.Transaction方法传入session.请不要自己构建Session
+//session不能为nil,参照使用orm.Transaction方法传入session.请不要自己构建Session
 func updateStructFunc(session *Session, entity IEntityStruct, onlyupdatenotnull bool) error {
 	//必须要有session和事务
 	var sessionerr error
@@ -921,7 +921,7 @@ func updateStructFunc(session *Session, entity IEntityStruct, onlyupdatenotnull 
 }
 
 //根据finder查询总条数
-//如果没有事务,session传入nil,使用默认的BaseDao.如果有事务,参照使用BaseDao.Transaction方法传入session.可以使用BaseDao.GetSession()方法,为多数据库预留的方法,正常不建议使用
+//如果没有事务,session传入nil,使用默认的BaseDao.如果有事务,参照使用orm.Transaction方法传入session.可以使用BaseDao.GetSession()方法,为多数据库预留的方法,正常不建议使用
 func selectCount(session *Session, finder *Finder) (int, error) {
 	var sessionerr error
 	session, sessionerr = checkSession(session, false)
@@ -983,10 +983,10 @@ func selectCount(session *Session, finder *Finder) (int, error) {
 
 }
 
-var sessionErr = errors.New("如果没有事务,session传入nil,使用默认的BaseDao.如果有事务,参照使用BaseDao.Transaction方法传入session.可以使用BaseDao.GetSession()方法,为多数据库预留的方法,正常不建议使用")
+var sessionErr = errors.New("如果没有事务,session传入nil,使用默认的BaseDao.如果有事务,参照使用orm.Transaction方法传入session.可以使用BaseDao.GetSession()方法,为多数据库预留的方法,正常不建议使用")
 
 //检查session
-//如果没有事务,session传入nil,使用默认的BaseDao.如果有事务,参照使用BaseDao.Transaction方法传入session.可以使用BaseDao.GetSession()方法,为多数据库预留的方法,正常不建议使用
+//如果没有事务,session传入nil,使用默认的BaseDao.如果有事务,参照使用orm.Transaction方法传入session.可以使用BaseDao.GetSession()方法,为多数据库预留的方法,正常不建议使用
 func checkSession(session *Session, hastx bool) (*Session, error) {
 
 	if session == nil { //session为空
