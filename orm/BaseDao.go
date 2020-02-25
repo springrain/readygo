@@ -46,7 +46,7 @@ type BaseDao struct {
 	dataSource *dataSource
 }
 
-var DefaultDao *BaseDao
+var defaultDao *BaseDao
 
 //代码只执行一次
 //var once sync.Once
@@ -60,16 +60,16 @@ func NewBaseDao(config *DataSourceConfig) (*BaseDao, error) {
 		return nil, err
 	}
 
-	if DefaultDao == nil {
-		DefaultDao = &BaseDao{config, dataSource}
-		return DefaultDao, nil
+	if defaultDao == nil {
+		defaultDao = &BaseDao{config, dataSource}
+		return defaultDao, nil
 	}
 	return &BaseDao{config, dataSource}, nil
 }
 
 //获取默认的Dao,用于隔离读写的Dao
 func GetDefaultDao() *BaseDao {
-	return DefaultDao
+	return defaultDao
 }
 
 /*
