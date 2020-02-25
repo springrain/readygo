@@ -17,9 +17,16 @@ func PermHandler() gin.HandlerFunc {
 		c.Header("Access-Control-Allow-Methods", "POST, GET, OPTIONS")
 		c.Header("Access-Control-Expose-Headers", "Content-Length, Access-Control-Allow-Origin, Access-Control-Allow-Headers, Content-Type")
 		c.Header("Access-Control-Allow-Credentials", "true")
+
+		method := c.Request.Method
 		//放行所有OPTIONS方法
-		if c.Request.Method == "OPTIONS" {
+		if method == "OPTIONS" {
 			c.AbortWithStatus(http.StatusNoContent)
+		}
+
+		//装逼一点,禁止所有的GET方法
+		if method != "GET" {
+			c.AbortWithStatus(http.StatusMethodNotAllowed)
 		}
 
 		//请求的uri
