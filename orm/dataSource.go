@@ -78,15 +78,11 @@ func newDataSource(config *DataSourceConfig) (*dataSource, error) {
 type Session struct {
 	db *sql.DB // 原生db
 	tx *sql.Tx // 原生事务
+	//mysql,使用枚举,数据库类型
+	dbType DBTYPE
+
 	//commitSign   int8    // 提交标记，控制是否提交事务
 	//rollbackSign bool    // 回滚标记，控制是否回滚事务
-}
-
-// getSession 获取一个Session
-func (dataSource *dataSource) getSession() *Session {
-	session := new(Session)
-	session.db = dataSource.DB
-	return session
 }
 
 // Begin 开启事务

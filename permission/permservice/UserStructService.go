@@ -3,13 +3,14 @@ package permservice
 import (
 	"errors"
 	"readygo/orm"
+	"readygo/permission/permstruct"
 )
 
 //保存用户,session参数是为了保证在其他事务内,可以为nil
 func SaveUserStruct(session *orm.Session, userStruct *permstruct.UserStruct) error {
 
 	if session != nil { //如果在其他的事务内
-		err := orm.GetDefaultDao().SaveStruct(session, userStruct)
+		err := orm.SaveStruct(session, userStruct)
 		if err != nil {
 			return err
 		}
@@ -17,10 +18,10 @@ func SaveUserStruct(session *orm.Session, userStruct *permstruct.UserStruct) err
 	}
 
 	//不再其他事务内,新开事务
-	_, err := orm.GetDefaultDao().Transaction(func(session *orm.Session) (interface{}, error) {
+	_, err := orm.Transaction(func(session *orm.Session) (interface{}, error) {
 		//事务下的业务代码
 
-		err := orm.GetDefaultDao().SaveStruct(session, userStruct)
+		err := orm.SaveStruct(session, userStruct)
 		if err != nil {
 			return nil, err
 		}
@@ -37,7 +38,7 @@ func SaveUserStruct(session *orm.Session, userStruct *permstruct.UserStruct) err
 func UpdateUserStruct(session *orm.Session, userStruct *permstruct.UserStruct) error {
 
 	if session != nil { //如果在其他的事务内
-		err := orm.GetDefaultDao().UpdateStruct(session, userStruct)
+		err := orm.UpdateStruct(session, userStruct)
 		if err != nil {
 			return err
 		}
@@ -45,10 +46,10 @@ func UpdateUserStruct(session *orm.Session, userStruct *permstruct.UserStruct) e
 	}
 
 	//不再其他事务内,新开事务
-	_, err := orm.GetDefaultDao().Transaction(func(session *orm.Session) (interface{}, error) {
+	_, err := orm.Transaction(func(session *orm.Session) (interface{}, error) {
 		//业务代码开始
 
-		err := orm.GetDefaultDao().UpdateStruct(session, userStruct)
+		err := orm.UpdateStruct(session, userStruct)
 		if err != nil {
 			return nil, err
 		}
@@ -68,7 +69,7 @@ func UpdateUserStruct(session *orm.Session, userStruct *permstruct.UserStruct) e
 func DeleteUserStruct(session *orm.Session, userStruct *permstruct.UserStruct) error {
 
 	if session != nil { //如果在其他的事务内
-		err := orm.GetDefaultDao().UpdateStruct(session, userStruct)
+		err := orm.UpdateStruct(session, userStruct)
 		if err != nil {
 			return err
 		}
@@ -76,10 +77,10 @@ func DeleteUserStruct(session *orm.Session, userStruct *permstruct.UserStruct) e
 	}
 
 	//不再其他事务内,新开事务
-	_, err := orm.GetDefaultDao().Transaction(func(session *orm.Session) (interface{}, error) {
+	_, err := orm.Transaction(func(session *orm.Session) (interface{}, error) {
 		//业务代码开始
 
-		err := orm.GetDefaultDao().DeleteStruct(session, userStruct)
+		err := orm.DeleteStruct(session, userStruct)
 		if err != nil {
 			return nil, err
 		}
@@ -106,7 +107,7 @@ func FindUserStructById(session *orm.Session, id string) (*permstruct.UserStruct
 	//根据Id查询
 	finder := orm.NewSelectFinder(" WHERE id=?", id)
 	userStruct := permstruct.UserStruct{}
-	err := orm.GetDefaultDao().QueryStruct(session, finder, &userStruct)
+	err := orm.QueryStruct(session, finder, &userStruct)
 	if err != nil {
 		return nil, err
 	}
@@ -117,7 +118,7 @@ func FindUserStructById(session *orm.Session, id string) (*permstruct.UserStruct
 //根据Finder查询用户列表,session参数是为了保证在其他事务内,可以为nil
 func FindUserStructList(session *orm.Session, finder *orm.Finder, page *orm.Page) ([]permstruct.UserStruct, error) {
 	userStructList := make([]permstruct.UserStruct, 0)
-	err := orm.GetDefaultDao().QueryStructList(session, finder, &userStructList, page)
+	err := orm.QueryStructList(session, finder, &userStructList, page)
 	if err != nil {
 		return nil, err
 	}

@@ -76,7 +76,7 @@ func selectAllTable() []string {
 	finder := orm.NewFinder()
 	finder.Append("select table_name from information_schema.TABLES where  TABLE_SCHEMA =?", dbName)
 	tableNames := []string{}
-	baseDao.QueryStructList(nil, finder, &tableNames, nil)
+	orm.QueryStructList(nil, finder, &tableNames, nil)
 	return tableNames
 }
 
@@ -85,13 +85,13 @@ func selectTableColumn(tableName string) map[string]interface{} {
 	tableComment := ""
 	finder := orm.NewFinder()
 	finder.Append("select table_comment from information_schema.TABLES where  TABLE_SCHEMA =? and TABLE_Name=? ", dbName, tableName)
-	baseDao.QueryStruct(nil, finder, &tableComment)
+	orm.QueryStruct(nil, finder, &tableComment)
 
 	finder2 := orm.NewFinder()
 	// select * from information_schema.COLUMNS where table_schema ='readygo' and table_name='t_user';
 	finder2.Append("select COLUMN_NAME,DATA_TYPE,IS_NULLABLE,COLUMN_COMMENT from information_schema.COLUMNS where  TABLE_SCHEMA =? and TABLE_NAME=? order by ORDINAL_POSITION asc", dbName, tableName)
 
-	maps, _ := baseDao.QueryMapList(nil, finder2, nil)
+	maps, _ := orm.QueryMapList(nil, finder2, nil)
 
 	for _, m := range maps {
 		dataType := m["DATA_TYPE"].(string)
@@ -109,7 +109,7 @@ func selectTableColumn(tableName string) map[string]interface{} {
 	finderPK := orm.NewFinder()
 	finderPK.Append("SELECT column_name FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE WHERE TABLE_SCHEMA=? and  table_name=? AND constraint_name=?", dbName, tableName, "PRIMARY")
 	pkName := ""
-	baseDao.QueryStruct(nil, finderPK, &pkName)
+	orm.QueryStruct(nil, finderPK, &pkName)
 	info := make(map[string]interface{})
 	info["columns"] = maps
 	info["pkName"] = pkName

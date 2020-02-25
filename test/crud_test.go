@@ -26,8 +26,8 @@ func initDate() {
 	var user User
 	user.CreatedAt = time.Now()
 	user.Id = 3
-	baseDao.Transaction(func(session *orm.Session) (interface{}, error) {
-		baseDao.SaveStruct(session, &user)
+	orm.Transaction(func(session *orm.Session) (interface{}, error) {
+		orm.SaveStruct(session, &user)
 		return nil, nil
 	})
 
@@ -46,13 +46,13 @@ func TestTranc(t *testing.T) {
 		}
 	*/
 
-	baseDao.Transaction(func(session *orm.Session) (interface{}, error) {
+	orm.Transaction(func(session *orm.Session) (interface{}, error) {
 
 		var l Language
 		l.Id = 22
 
 		l.Name = "englist"
-		e2 := baseDao.SaveStruct(session, &l)
+		e2 := orm.SaveStruct(session, &l)
 		if e2 != nil {
 			return nil, e2
 		}

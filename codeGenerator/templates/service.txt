@@ -9,7 +9,7 @@ import (
 func Save{{.structName}}(session *orm.Session, {{.pname}} *{{.packageName}}.{{.structName}}) error {
 
 	if session != nil { //如果在其他的事务内
-		err := orm.GetDefaultDao().SaveStruct(session, {{.pname}})
+		err := orm.SaveStruct(session, {{.pname}})
 		if err != nil {
 			return err
 		}
@@ -17,10 +17,10 @@ func Save{{.structName}}(session *orm.Session, {{.pname}} *{{.packageName}}.{{.s
 	}
 
 	//不再其他事务内,新开事务
-	_, err := orm.GetDefaultDao().Transaction(func(session *orm.Session) (interface{}, error) {
+	_, err := orm.Transaction(func(session *orm.Session) (interface{}, error) {
 		//事务下的业务代码
 
-		err := orm.GetDefaultDao().SaveStruct(session, {{.pname}})
+		err := orm.SaveStruct(session, {{.pname}})
 		if err != nil {
 			return nil, err
 		}
@@ -37,7 +37,7 @@ func Save{{.structName}}(session *orm.Session, {{.pname}} *{{.packageName}}.{{.s
 func Update{{.structName}}(session *orm.Session, {{.pname}} *{{.packageName}}.{{.structName}}) error {
 
 	if session != nil { //如果在其他的事务内
-		err := orm.GetDefaultDao().UpdateStruct(session, {{.pname}})
+		err := orm.UpdateStruct(session, {{.pname}})
 		if err != nil {
 			return err
 		}
@@ -45,10 +45,10 @@ func Update{{.structName}}(session *orm.Session, {{.pname}} *{{.packageName}}.{{
 	}
 
 	//不再其他事务内,新开事务
-	_, err := orm.GetDefaultDao().Transaction(func(session *orm.Session) (interface{}, error) {
+	_, err := orm.Transaction(func(session *orm.Session) (interface{}, error) {
 		//业务代码开始
 
-		err := orm.GetDefaultDao().UpdateStruct(session, {{.pname}})
+		err := orm.UpdateStruct(session, {{.pname}})
 		if err != nil {
 			return nil, err
 		}
@@ -68,7 +68,7 @@ func Update{{.structName}}(session *orm.Session, {{.pname}} *{{.packageName}}.{{
 func Delete{{.structName}}(session *orm.Session, {{.pname}} *{{.packageName}}.{{.structName}}) error {
 
 	if session != nil { //如果在其他的事务内
-		err := orm.GetDefaultDao().UpdateStruct(session, {{.pname}})
+		err := orm.UpdateStruct(session, {{.pname}})
 		if err != nil {
 			return err
 		}
@@ -76,10 +76,10 @@ func Delete{{.structName}}(session *orm.Session, {{.pname}} *{{.packageName}}.{{
 	}
 
 	//不再其他事务内,新开事务
-	_, err := orm.GetDefaultDao().Transaction(func(session *orm.Session) (interface{}, error) {
+	_, err := orm.Transaction(func(session *orm.Session) (interface{}, error) {
 		//业务代码开始
 
-		err := orm.GetDefaultDao().DeleteStruct(session, {{.pname}})
+		err := orm.DeleteStruct(session, {{.pname}})
 		if err != nil {
 			return nil, err
 		}
@@ -106,7 +106,7 @@ func Find{{.structName}}ById(session *orm.Session, id string) (*{{.packageName}}
 	//根据Id查询
 	finder := orm.NewSelectFinder(" WHERE id=?", id)
 	{{.pname}} := {{.packageName}}.{{.structName}}{}
-	err := orm.GetDefaultDao().QueryStruct(session, finder, &{{.pname}})
+	err := orm.QueryStruct(session, finder, &{{.pname}})
 	if err != nil {
 		return nil, err
 	}
@@ -117,7 +117,7 @@ func Find{{.structName}}ById(session *orm.Session, id string) (*{{.packageName}}
 //根据Finder查询{{.tableComment}}列表,session参数是为了保证在其他事务内,可以为nil
 func Find{{.structName}}List(session *orm.Session, finder *orm.Finder, page *orm.Page) ([]{{.packageName}}.{{.structName}}, error) {
 	{{.pname}}List := make([]{{.packageName}}.{{.structName}}, 0)
-	err := orm.GetDefaultDao().QueryStructList(session, finder, &{{.pname}}List, page)
+	err := orm.QueryStructList(session, finder, &{{.pname}}List, page)
 	if err != nil {
 		return nil, err
 	}
