@@ -6,7 +6,7 @@ import (
 )
 
 //表名常量,方便直接调用
-const {{.structName}}TableName = "{{.tableComment}}"
+const {{.structName}}TableName = "{{.tableName}}"
 
 // {{.tableComment}}
 type {{.structName}} struct {
