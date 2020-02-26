@@ -53,7 +53,9 @@ func TestQuey(t *testing.T)  {
 
 		page := orm.NewPage()
 
-		users := []permstruct.UserStruct{}
+		var users = make([]permstruct.UserStruct,1)
+
+
 		err := orm.QueryStructList(session, finder,users, &page)
 
 		if err != nil{
