@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"gopkg.in/square/go-jose.v2"
 
 	"readygo/logger"
 )
@@ -53,7 +54,7 @@ func jwe() {
 	// Instantiate an encrypter using RSA-OAEP with AES128-GCM. An error would
 	// indicate that the selected algorithm(s) are not currently supported.
 	publicKey := &privateKey.PublicKey
-	encrypter, err := NewEncrypter(A128GCM, Recipient{Algorithm: RSA_OAEP, Key: publicKey}, nil)
+	encrypter, err := jose.NewEncrypter(jose.A128GCM, jose.Recipient{Algorithm: jose.RSA_OAEP, Key: publicKey}, nil)
 	if err != nil {
 		panic(err)
 	}
@@ -74,7 +75,7 @@ func jwe() {
 
 	// Parse the serialized, encrypted JWE object. An error would indicate that
 	// the given input did not represent a valid message.
-	object, err = ParseEncrypted(serialized)
+	object, err = jose.ParseEncrypted(serialized)
 	if err != nil {
 		panic(err)
 	}
