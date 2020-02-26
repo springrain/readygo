@@ -93,7 +93,8 @@ orm.Transaction(session *orm.Session,func(session *orm.Session) (interface{}, er
 */
 //事务方法,隔离session相关的API.必须通过这个方法进行事务处理,统一事务方式
 //如果入参session为nil或者没事务,则会使用默认的datasource的开启事务并最后提交.如果session有事务,则只使用不提交,有开启方提交事务.但是如果遇到错误或者异常,虽然不是事务的开启方,也会回滚事务,让事务尽早回滚.
-//session的传入,还可以处理多个数据库的情况
+//session的传入,还可以处理多个数据库的情况.
+//如果去掉匿名函数的session参数,因为如果Transaction的session参数是nil,新建的session对象就会丢失,业务代码用的还是传递的nil,虽然是指针
 //return的error如果不为nil,事务就会回滚
 func Transaction(session *Session, doTransaction func(session *Session) (interface{}, error)) (interface{}, error) {
 	//是否是session的开启方,如果是开启方,才可以提交事务
