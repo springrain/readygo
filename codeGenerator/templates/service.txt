@@ -10,24 +10,27 @@ import (
 func Save{{.structName}}(session *orm.Session, {{.pname}} *{{.packageName}}.{{.structName}}) error {
 
     //匿名函数return的error如果不为nil,事务就会回滚
-	_, err := orm.Transaction(session,func(session *orm.Session) (interface{}, error) {
+	_, save{{.structName}}Err := orm.Transaction(session,func(session *orm.Session) (interface{}, error) {
 
 		//事务下的业务代码开始
 
-		err := orm.SaveStruct(session, {{.pname}})
-		if err != nil {
-			return nil, err
+		save{{.structName}}Err := orm.SaveStruct(session, {{.pname}})
+		if save{{.structName}}Err != nil {
+			return nil, save{{.structName}}Err
 		}
 		return nil, nil
 
 		//事务下的业务代码结束
 
 	})
-	if err != nil {
-		err := fmt.Errorf("{{.servicePackageName}}.Save{{.structName}}错误:%w", err)
-		logger.Error(err)
-		return err
+
+	//记录错误
+	if save{{.structName}}Err != nil {
+		save{{.structName}}Err := fmt.Errorf("{{.servicePackageName}}.Save{{.structName}}错误:%w", save{{.structName}}Err)
+		logger.Error(save{{.structName}}Err)
+		return save{{.structName}}Err
 	}
+
 	return nil
 }
 
@@ -36,13 +39,13 @@ func Save{{.structName}}(session *orm.Session, {{.pname}} *{{.packageName}}.{{.s
 func Update{{.structName}}(session *orm.Session, {{.pname}} *{{.packageName}}.{{.structName}}) error {
 	
     //匿名函数return的error如果不为nil,事务就会回滚
-	_, err := orm.Transaction(session,func(session *orm.Session) (interface{}, error) {
+	_, update{{.structName}}Err := orm.Transaction(session,func(session *orm.Session) (interface{}, error) {
 
 		//事务下的业务代码开始
 
-		err := orm.UpdateStruct(session, {{.pname}})
-		if err != nil {
-			return nil, err
+		update{{.structName}}Err := orm.UpdateStruct(session, {{.pname}})
+		if update{{.structName}}Err != nil {
+			return nil, update{{.structName}}Err
 		}
 
 		return nil, nil
@@ -50,11 +53,14 @@ func Update{{.structName}}(session *orm.Session, {{.pname}} *{{.packageName}}.{{
 		//事务下的业务代码结束
 
 	})
-	if err != nil {
-		err := fmt.Errorf("{{.servicePackageName}}.Update{{.structName}}错误:%w", err)
-		logger.Error(err)
-		return err
+
+	//记录错误
+	if update{{.structName}}Err != nil {
+		update{{.structName}}Err := fmt.Errorf("{{.servicePackageName}}.Update{{.structName}}错误:%w", update{{.structName}}Err)
+		logger.Error(update{{.structName}}Err)
+		return update{{.structName}}Err
 	}
+
 	return nil
 }
 
@@ -63,13 +69,13 @@ func Update{{.structName}}(session *orm.Session, {{.pname}} *{{.packageName}}.{{
 func Delete{{.structName}}(session *orm.Session, {{.pname}} *{{.packageName}}.{{.structName}}) error {
 	
     //匿名函数return的error如果不为nil,事务就会回滚
-	_, err := orm.Transaction(session,func(session *orm.Session) (interface{}, error) {
+	_, delete{{.structName}}Err := orm.Transaction(session,func(session *orm.Session) (interface{}, error) {
 
 		//事务下的业务代码开始
 
-		err := orm.DeleteStruct(session, {{.pname}})
-		if err != nil {
-			return nil, err
+		delete{{.structName}}Err := orm.DeleteStruct(session, {{.pname}})
+		if delete{{.structName}}Err != nil {
+			return nil, delete{{.structName}}Err
 		}
 
 		return nil, nil
@@ -78,11 +84,13 @@ func Delete{{.structName}}(session *orm.Session, {{.pname}} *{{.packageName}}.{{
 
 	})
 
-	if err != nil {
-		err := fmt.Errorf("{{.servicePackageName}}.Delete{{.structName}}错误:%w", err)
-		logger.Error(err)
-		return err
+    //记录错误
+	if delete{{.structName}}Err != nil {
+		delete{{.structName}}Err := fmt.Errorf("{{.servicePackageName}}.Delete{{.structName}}错误:%w", delete{{.structName}}Err)
+		logger.Error(delete{{.structName}}Err)
+		return delete{{.structName}}Err
 	}
+
 	return nil
 }
 
@@ -97,12 +105,15 @@ func Find{{.structName}}ById(session *orm.Session, id string) (*{{.packageName}}
 	//根据Id查询
 	finder := orm.NewSelectFinder(" WHERE id=?", id)
 	{{.pname}} := {{.packageName}}.{{.structName}}{}
-	err := orm.QueryStruct(session, finder, &{{.pname}})
-	if err != nil {
-		err := fmt.Errorf("{{.servicePackageName}}.Find{{.structName}}ById错误:%w", err)
-		logger.Error(err)
-		return nil, err
+	find{{.structName}}ByIdErr := orm.QueryStruct(session, finder, &{{.pname}})
+
+	//记录错误
+	if find{{.structName}}ByIdErr != nil {
+		find{{.structName}}ByIdErr := fmt.Errorf("{{.servicePackageName}}.Find{{.structName}}ById错误:%w", find{{.structName}}ByIdErr)
+		logger.Error(find{{.structName}}ByIdErr)
+		return nil, find{{.structName}}ByIdErr
 	}
+
 	return &{{.pname}}, nil
 
 }
@@ -111,11 +122,14 @@ func Find{{.structName}}ById(session *orm.Session, id string) (*{{.packageName}}
 //session如果为nil,则会使用默认的datasource进行无事务查询
 func Find{{.structName}}List(session *orm.Session, finder *orm.Finder, page *orm.Page) ([]{{.packageName}}.{{.structName}}, error) {
 	{{.pname}}List := make([]{{.packageName}}.{{.structName}}, 0)
-	err := orm.QueryStructList(session, finder, &{{.pname}}List, page)
-	if err != nil {
-		err := fmt.Errorf("{{.servicePackageName}}.Find{{.structName}}List错误:%w", err)
-		logger.Error(err)
-		return nil, err
+	find{{.structName}}ListErr := orm.QueryStructList(session, finder, &{{.pname}}List, page)
+
+	//记录错误
+	if find{{.structName}}ListErr != nil {
+		find{{.structName}}ListErr := fmt.Errorf("{{.servicePackageName}}.Find{{.structName}}List错误:%w", find{{.structName}}ListErr)
+		logger.Error(find{{.structName}}ListErr)
+		return nil, find{{.structName}}ListErr
 	}
+
 	return {{.pname}}List, nil
 }
