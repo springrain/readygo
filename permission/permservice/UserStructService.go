@@ -16,13 +16,13 @@ func SaveUserStruct(session *orm.Session, userStruct *permstruct.UserStruct) err
 	_, saveUserStructErr := orm.Transaction(session, func(session *orm.Session) (interface{}, error) {
 
 		//事务下的业务代码开始
-
 		saveUserStructErr := orm.SaveStruct(session, userStruct)
+
 		if saveUserStructErr != nil {
 			return nil, saveUserStructErr
 		}
-		return nil, nil
 
+		return nil, nil
 		//事务下的业务代码结束
 
 	})
@@ -45,14 +45,13 @@ func UpdateUserStruct(session *orm.Session, userStruct *permstruct.UserStruct) e
 	_, updateUserStructErr := orm.Transaction(session, func(session *orm.Session) (interface{}, error) {
 
 		//事务下的业务代码开始
-
 		updateUserStructErr := orm.UpdateStruct(session, userStruct)
+
 		if updateUserStructErr != nil {
 			return nil, updateUserStructErr
 		}
 
 		return nil, nil
-
 		//事务下的业务代码结束
 
 	})
@@ -75,14 +74,13 @@ func DeleteUserStruct(session *orm.Session, userStruct *permstruct.UserStruct) e
 	_, deleteUserStructErr := orm.Transaction(session, func(session *orm.Session) (interface{}, error) {
 
 		//事务下的业务代码开始
-
 		deleteUserStructErr := orm.DeleteStruct(session, userStruct)
+
 		if deleteUserStructErr != nil {
 			return nil, deleteUserStructErr
 		}
 
 		return nil, nil
-
 		//事务下的业务代码结束
 
 	})
