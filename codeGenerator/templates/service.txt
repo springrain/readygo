@@ -13,13 +13,14 @@ func Save{{.structName}}(session *orm.Session, {{.pname}} *{{.packageName}}.{{.s
 	_, save{{.structName}}Err := orm.Transaction(session,func(session *orm.Session) (interface{}, error) {
 
 		//事务下的业务代码开始
-
 		save{{.structName}}Err := orm.SaveStruct(session, {{.pname}})
+
+
 		if save{{.structName}}Err != nil {
 			return nil, save{{.structName}}Err
 		}
-		return nil, nil
 
+		return nil, nil
 		//事务下的业务代码结束
 
 	})
@@ -42,14 +43,14 @@ func Update{{.structName}}(session *orm.Session, {{.pname}} *{{.packageName}}.{{
 	_, update{{.structName}}Err := orm.Transaction(session,func(session *orm.Session) (interface{}, error) {
 
 		//事务下的业务代码开始
-
 		update{{.structName}}Err := orm.UpdateStruct(session, {{.pname}})
+
+
 		if update{{.structName}}Err != nil {
 			return nil, update{{.structName}}Err
 		}
 
 		return nil, nil
-
 		//事务下的业务代码结束
 
 	})
@@ -72,14 +73,14 @@ func Delete{{.structName}}(session *orm.Session, {{.pname}} *{{.packageName}}.{{
 	_, delete{{.structName}}Err := orm.Transaction(session,func(session *orm.Session) (interface{}, error) {
 
 		//事务下的业务代码开始
-
 		delete{{.structName}}Err := orm.DeleteStruct(session, {{.pname}})
+
+
 		if delete{{.structName}}Err != nil {
 			return nil, delete{{.structName}}Err
 		}
 
 		return nil, nil
-
 		//事务下的业务代码结束
 
 	})
