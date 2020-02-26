@@ -30,12 +30,12 @@ func init() {
 }
 
 func main() {
-	code("t_user")
+	//code("t_user")
 
-	//tableNames := selectAllTable()
-	//for _, tableName := range tableNames {
-	//	code(tableName)
-	//}
+	tableNames := selectAllTable()
+	for _, tableName := range tableNames {
+		code(tableName)
+	}
 
 }
 
@@ -55,13 +55,13 @@ func code(tableName string) {
 		serviceFile.Close()
 	}()
 
-	structTemplate, err1 := template.ParseFiles("codeGenerator/templates/struct.txt")
+	structTemplate, err1 := template.ParseFiles("./templates/struct.txt")
 	if err1 != nil {
 		fmt.Println(err1)
 	}
 	structTemplate.Execute(structFile, info)
 
-	serviceTemplate, err2 := template.ParseFiles("codeGenerator/templates/service.txt")
+	serviceTemplate, err2 := template.ParseFiles("./templates/service.txt")
 	if err2 != nil {
 		fmt.Println(err2)
 	}
@@ -94,16 +94,52 @@ func selectTableColumn(tableName string) map[string]interface{} {
 	for _, m := range maps {
 		dataType := m["DATA_TYPE"].(string)
 		dataType = strings.ToUpper(dataType)
+
+		nullable := m["IS_NULLABLE"].(string)
+		nullable = strings.ToUpper(nullable)
+
 		if dataType == "VARCHAR" || dataType == "NVARCHAR" || dataType == "TEXT" {
-			dataType = "string"
+			if nullable == "YES" {
+				dataType = "sql.NullString"
+			} else {
+				dataType = "string"
+			}
+
 		} else if dataType == "DATETIME" || dataType == "TIMESTAMP" {
-			dataType = "time.Time"
+			if nullable == "YES" {
+				dataType = "sql.NullTime"
+			} else {
+				dataType = "time.Time"
+			}
+
+		} else if dataType == "INT" {
+			if nullable == "YES" {
+				dataType = "sql.NullInt32"
+			} else {
+				dataType = "int"
+			}
+
 		} else if dataType == "BIGINT" {
-			dataType = "int64"
+			if nullable == "YES" {
+				dataType = "sql.NullInt64"
+			} else {
+				dataType = "int64"
+			}
+
 		} else if dataType == "FLOAT" {
-			dataType = "float32"
+			if nullable == "YES" {
+				dataType = "sql.NullFloat64"
+			} else {
+				dataType = "float32"
+			}
+
 		} else if dataType == "DOUBLE" {
-			dataType = "float64"
+			if nullable == "YES" {
+				dataType = "sql.NullFloat64"
+			} else {
+				dataType = "float64"
+			}
+
 		}
 		m["DATA_TYPE"] = dataType
 		m["field"] = camelCaseName(m["COLUMN_NAME"].(string))
