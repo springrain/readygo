@@ -1,6 +1,7 @@
 package test
 
 import (
+	"fmt"
 	"readygo/orm"
 	"readygo/permission/permstruct"
 	"testing"
@@ -41,34 +42,41 @@ func init() {
 
 func initDate() {
 
-	var user User
-	user.CreatedAt = time.Now()
-	user.Id = 3
-	orm.Transaction(func(session *orm.Session) (interface{}, error) {
-		orm.SaveStruct(session, &user)
-		return nil, nil
-	})
 
 }
 
 func TestQuey(t *testing.T)  {
 
+	finder := orm.NewFinder()
+	finder.Append("select * from ").Append(permstruct.UserStruct{}.GetTableName())
+	orm.Transaction(func(session *orm.Session) (interface{}, error) {
+
+		page := orm.NewPage()
+
+		var users = make([]permstruct.UserStruct,1)
+
+
+		err := orm.QueryStructList(session, finder,users, &page)
+
+		if err != nil{
+			fmt.Println(err)
+
+			return nil,err
+		}
+
+		fmt.Println(users)
+
+		return nil, nil
+
+
+	})
 
 
 }
 
 func TestTranc(t *testing.T) {
 
-	/*
-		table := orm.NewEntityMap("user")
 
-		table.Set("id", 11)
-		e1 := baseDao.SaveMap(session, &table)
-
-		if e1 != nil {
-			return nil, e1
-		}
-	*/
 
 	orm.Transaction(func(session *orm.Session) (interface{}, error) {
 
@@ -76,10 +84,7 @@ func TestTranc(t *testing.T) {
 
 		u.UserName = "zyf"
 		u.CreateTime = time.Now()
-
 		u.Sex = "男"
-
-
 
  		e2 := orm.SaveStruct(session, &u)
 		if e2 != nil {
