@@ -2,11 +2,29 @@ package test
 
 import (
 	"readygo/orm"
+	"readygo/permission/permstruct"
 	"testing"
 	"time"
 )
 
 var baseDao *orm.BaseDao
+
+
+
+//性别枚举
+type Gander int
+
+func (g Gander)String() string{
+	return []string{"Male","Female","Bisexual"}[g]
+}
+const (
+	//男的
+	Male = iota
+	//女的
+	Female
+	//跨性别
+	Bisexual
+)
 
 func init() {
 
@@ -54,14 +72,21 @@ func TestTranc(t *testing.T) {
 
 	orm.Transaction(func(session *orm.Session) (interface{}, error) {
 
-		var l Language
-		l.Id = 22
+		var u permstruct.UserStruct
 
-		l.Name = "englist"
-		e2 := orm.SaveStruct(session, &l)
+		u.UserName = "zyf"
+		u.CreateTime = time.Now()
+
+		u.Sex = "男"
+
+
+
+ 		e2 := orm.SaveStruct(session, &u)
 		if e2 != nil {
 			return nil, e2
 		}
+
+
 		return nil, nil
 	})
 
