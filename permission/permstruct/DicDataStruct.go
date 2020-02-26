@@ -1,10 +1,15 @@
 package permstruct
 
 import (
+	"time"
+
 	"readygo/orm"
 )
 
-// 公共字典
+//DicDataStructTableName 表名常量,方便直接调用
+const DicDataStructTableName = "t_dic_data"
+
+// DicDataStruct 公共字典
 type DicDataStruct struct {
 	//引入默认的struct,隔离IEntityStruct的方法改动
 	orm.EntityStruct
@@ -24,32 +29,29 @@ type DicDataStruct struct {
 	// 父ID
 	Pid string `column:"pid"`
 
-	// 排序
-	Sortno int `column:"sortno"`
-
 	// 描述
 	Remark string `column:"remark"`
-
-	// 是否有效(0否,1是)
-	Active int `column:"active"`
 
 	// 类型
 	Typekey string `column:"typekey"`
 
 	// <no value>
-	Bak1 string `column:"bak1"`
+	CreateTime time.Time `column:"createTime"`
 
 	// <no value>
-	Bak2 string `column:"bak2"`
+	CreateUserId string `column:"createUserId"`
 
 	// <no value>
-	Bak3 string `column:"bak3"`
+	UpdateTime time.Time `column:"updateTime"`
 
 	// <no value>
-	Bak4 string `column:"bak4"`
+	UpdateUserId string `column:"updateUserId"`
 
-	// <no value>
-	Bak5 string `column:"bak5"`
+	// 排序
+	Sortno int `column:"sortno"`
+
+	// 是否有效(0否,1是)
+	Active int `column:"active"`
 
 	//------------------数据库字段结束,自定义字段写在下面---------------//
 
@@ -57,7 +59,7 @@ type DicDataStruct struct {
 
 //获取表名称
 func (entity *DicDataStruct) GetTableName() string {
-	return "t_dic_data"
+	return DicDataStructTableName
 }
 
 //获取数据库表的主键字段名称.因为要兼容Map,只能是数据库的字段名称.对应的struct 属性field

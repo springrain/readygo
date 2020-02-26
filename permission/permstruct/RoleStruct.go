@@ -1,12 +1,16 @@
 package permstruct
 
 import (
+	"database/sql"
 	"time"
 
 	"readygo/orm"
 )
 
-// 角色
+//RoleStructTableName 表名常量,方便直接调用
+const RoleStructTableName = "t_role"
+
+// RoleStruct 角色
 type RoleStruct struct {
 	//引入默认的struct,隔离IEntityStruct的方法改动
 	orm.EntityStruct
@@ -18,10 +22,10 @@ type RoleStruct struct {
 	Name string `column:"name"`
 
 	// 权限编码
-	Code string `column:"code"`
+	RoleCode sql.NullString `column:"roleCode"`
 
 	// 上级角色ID,暂时不实现
-	Pid string `column:"pid"`
+	Pid sql.NullString `column:"pid"`
 
 	// 角色的部门是否私有,0否,1是,默认0.当角色私有时,菜单只使用此角色的部门权限,不再扩散到全局角色权限,用于设置特殊的菜单权限.公共权限时部门主管有所管理部门的数据全权限,无论角色是否分配. 私有部门权限时,严格按照配置的数据执行,部门主管可能没有部门权限.
 	PrivateOrg int `column:"privateOrg"`
@@ -39,37 +43,22 @@ type RoleStruct struct {
 	CreateTime time.Time `column:"createTime"`
 
 	// <no value>
-	CreateUserId string `column:"createUserId"`
+	CreateUserId sql.NullString `column:"createUserId"`
 
 	// <no value>
 	UpdateTime time.Time `column:"updateTime"`
 
 	// <no value>
-	UpdateUserId string `column:"updateUserId"`
+	UpdateUserId sql.NullString `column:"updateUserId"`
+
+	// 备注
+	Remark sql.NullString `column:"remark"`
 
 	// 排序,查询时倒叙排列
 	Sortno int `column:"sortno"`
 
-	// 备注
-	Remark string `column:"remark"`
-
 	// 是否有效(0否,1是)
 	Active int `column:"active"`
-
-	// <no value>
-	Bak1 string `column:"bak1"`
-
-	// <no value>
-	Bak2 string `column:"bak2"`
-
-	// <no value>
-	Bak3 string `column:"bak3"`
-
-	// <no value>
-	Bak4 string `column:"bak4"`
-
-	// <no value>
-	Bak5 string `column:"bak5"`
 
 	//------------------数据库字段结束,自定义字段写在下面---------------//
 
@@ -77,7 +66,7 @@ type RoleStruct struct {
 
 //获取表名称
 func (entity *RoleStruct) GetTableName() string {
-	return "t_role"
+	return RoleStructTableName
 }
 
 //获取数据库表的主键字段名称.因为要兼容Map,只能是数据库的字段名称.对应的struct 属性field

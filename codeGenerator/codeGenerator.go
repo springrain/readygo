@@ -44,8 +44,8 @@ func code(tableName string) {
 
 	info := selectTableColumn(tableName)
 
-	structFileName := "codeGenerator/code/struct/" + info["structName"].(string) + ".go"
-	serviceFileName := "codeGenerator/code/service/" + info["structName"].(string) + "Service.go"
+	structFileName := "./code/struct/" + info["structName"].(string) + ".go"
+	serviceFileName := "./code/service/" + info["structName"].(string) + "Service.go"
 	structFile, _ := os.Create(structFileName)
 	serviceFile, _ := os.Create(serviceFileName)
 
@@ -55,13 +55,13 @@ func code(tableName string) {
 		serviceFile.Close()
 	}()
 
-	structTemplate, err1 := template.ParseFiles("codeGenerator/templates/struct.txt")
+	structTemplate, err1 := template.ParseFiles("./templates/struct.txt")
 	if err1 != nil {
 		fmt.Println(err1)
 	}
 	structTemplate.Execute(structFile, info)
 
-	serviceTemplate, err2 := template.ParseFiles("codeGenerator/templates/service.txt")
+	serviceTemplate, err2 := template.ParseFiles("./templates/service.txt")
 	if err2 != nil {
 		fmt.Println(err2)
 	}
@@ -87,7 +87,7 @@ func selectTableColumn(tableName string) map[string]interface{} {
 
 	finder2 := orm.NewFinder()
 	// select * from information_schema.COLUMNS where table_schema ='readygo' and table_name='t_user';
-	finder2.Append("select COLUMN_NAME,DATA_TYPE,IS_NULLABLE,COLUMN_COMMENT from information_schema.COLUMNS where  TABLE_SCHEMA =? and TABLE_NAME=? order by ORDINAL_POSITION asc", dbName, tableName)
+	finder2.Append("select COLUMN_NAME,DATA_TYPE,IS_NULLABLE,COLUMN_COMMENT from information_schema.COLUMNS where  TABLE_SCHEMA =? and TABLE_NAME=? and COLUMN_NAME not like ?  order by ORDINAL_POSITION asc", dbName, tableName, "bak%")
 
 	maps, _ := orm.QueryMapList(nil, finder2, nil)
 

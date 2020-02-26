@@ -5,10 +5,10 @@ import (
 	"readygo/orm"
 )
 
-//表名常量,方便直接调用
+//{{.structName}}TableName 表名常量,方便直接调用
 const {{.structName}}TableName = "{{.tableName}}"
 
-// {{.tableComment}}
+// {{.structName}} {{.tableComment}}
 type {{.structName}} struct {
 	//引入默认的struct,隔离IEntityStruct的方法改动
 	orm.EntityStruct

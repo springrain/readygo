@@ -6,7 +6,10 @@ import (
 	"readygo/orm"
 )
 
-// 用户
+//UserStructTableName 表名常量,方便直接调用
+const UserStructTableName = "t_user"
+
+// UserStruct 用户
 type UserStruct struct {
 	//引入默认的struct,隔离IEntityStruct的方法改动
 	orm.EntityStruct
@@ -59,28 +62,13 @@ type UserStruct struct {
 	// 是否有效(0否,1是)
 	Active int `column:"active"`
 
-	// <no value>
-	Bak1 string `column:"bak1"`
-
-	// <no value>
-	Bak2 string `column:"bak2"`
-
-	// <no value>
-	Bak3 string `column:"bak3"`
-
-	// <no value>
-	Bak4 string `column:"bak4"`
-
-	// <no value>
-	Bak5 string `column:"bak5"`
-
 	//------------------数据库字段结束,自定义字段写在下面---------------//
 
 }
 
 //获取表名称
 func (entity *UserStruct) GetTableName() string {
-	return "t_user"
+	return UserStructTableName
 }
 
 //获取数据库表的主键字段名称.因为要兼容Map,只能是数据库的字段名称.对应的struct 属性field

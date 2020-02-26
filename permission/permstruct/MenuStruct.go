@@ -6,7 +6,10 @@ import (
 	"readygo/orm"
 )
 
-// 菜单
+//MenuStructTableName 表名常量,方便直接调用
+const MenuStructTableName = "t_menu"
+
+// MenuStruct 菜单
 type MenuStruct struct {
 	//引入默认的struct,隔离IEntityStruct的方法改动
 	orm.EntityStruct
@@ -20,9 +23,6 @@ type MenuStruct struct {
 	// 代码
 	Comcode string `column:"comcode"`
 
-	// vue使用 meta.title
-	Title string `column:"title"`
-
 	// <no value>
 	Pid string `column:"pid"`
 
@@ -34,9 +34,6 @@ type MenuStruct struct {
 
 	// 0.功能按钮,1.导航菜单
 	MenuType int `column:"menuType"`
-
-	// vue路由地址
-	Path string `column:"path"`
 
 	// <no value>
 	CreateTime time.Time `column:"createTime"`
@@ -56,28 +53,13 @@ type MenuStruct struct {
 	// 是否有效(0否,1是)
 	Active int `column:"active"`
 
-	// <no value>
-	Bak1 string `column:"bak1"`
-
-	// <no value>
-	Bak2 string `column:"bak2"`
-
-	// <no value>
-	Bak3 string `column:"bak3"`
-
-	// <no value>
-	Bak4 string `column:"bak4"`
-
-	// <no value>
-	Bak5 string `column:"bak5"`
-
 	//------------------数据库字段结束,自定义字段写在下面---------------//
 
 }
 
 //获取表名称
 func (entity *MenuStruct) GetTableName() string {
-	return "t_menu"
+	return MenuStructTableName
 }
 
 //获取数据库表的主键字段名称.因为要兼容Map,只能是数据库的字段名称.对应的struct 属性field
