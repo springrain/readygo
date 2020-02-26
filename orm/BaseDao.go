@@ -167,7 +167,7 @@ func Transaction(session *Session, doTransaction func(session *Session) (interfa
 
 //不要偷懒调用QueryStructList返回第一条,1.需要构建一个selice,2.调用方传递的对象其他值会被抛弃或者覆盖.
 //根据Finder和封装为指定的entity类型,entity必须是*struct类型或者基础类型的指针.把查询的数据赋值给entity,所以要求指针类型
-//如果没有事务,session传入nil,使用默认的BaseDao.如果有事务,参照使用orm.Transaction方法传入session.可以使用BaseDao.GetSession()方法,为多数据库预留的方法,正常不建议使用
+//如果没有事务,session传入nil,使用默认的BaseDao进行查询.如果有事务,参照使用orm.Transaction方法传入session.可以使用BaseDao.GetSession()方法,为多数据库预留的方法,正常不建议使用
 func QueryStruct(session *Session, finder *Finder, entity interface{}) error {
 	var sessionerr error
 	session, sessionerr = checkSession(session, false)
@@ -274,7 +274,7 @@ func QueryStruct(session *Session, finder *Finder, entity interface{}) error {
 
 //不要偷懒调用QueryMapList,需要处理sql驱动支持的sql.Nullxxx的数据类型,也挺麻烦的
 //根据Finder和封装为指定的entity类型,entity必须是*[]struct类型,已经初始化好的数组,此方法只Append元素,这样调用方就不需要强制类型转换了
-//如果没有事务,session传入nil,使用默认的BaseDao.如果有事务,参照使用orm.Transaction方法传入session.可以使用BaseDao.GetSession()方法,为多数据库预留的方法,正常不建议使用
+//如果没有事务,session传入nil,使用默认的BaseDao进行查询.如果有事务,参照使用orm.Transaction方法传入session.可以使用BaseDao.GetSession()方法,为多数据库预留的方法,正常不建议使用
 func QueryStructList(session *Session, finder *Finder, rowsSlicePtr interface{}, page *Page) error {
 	var sessionerr error
 	session, sessionerr = checkSession(session, false)
@@ -416,7 +416,7 @@ func QueryStructList(session *Session, finder *Finder, rowsSlicePtr interface{},
 
 //根据Finder查询,封装Map
 //bug(springrain)需要测试一下 in 数组, like ,还有查询一个基础类型(例如 string)的功能
-//如果没有事务,session传入nil,使用默认的BaseDao.如果有事务,参照使用orm.Transaction方法传入session.可以使用BaseDao.GetSession()方法,为多数据库预留的方法,正常不建议使用
+//如果没有事务,session传入nil,使用默认的BaseDao进行查询.如果有事务,参照使用orm.Transaction方法传入session.可以使用BaseDao.GetSession()方法,为多数据库预留的方法,正常不建议使用
 func QueryMap(session *Session, finder *Finder) (map[string]interface{}, error) {
 	var sessionerr error
 	session, sessionerr = checkSession(session, false)
@@ -440,7 +440,7 @@ func QueryMap(session *Session, finder *Finder) (map[string]interface{}, error) 
 
 //根据Finder查询,封装Map数组
 //根据数据库字段的类型,完成从[]byte到golang类型的映射,理论上其他查询方法都可以调用此方法,但是需要处理sql.Nullxxx等驱动支持的类型
-//如果没有事务,session传入nil,使用默认的BaseDao.如果有事务,参照使用orm.Transaction方法传入session.可以使用BaseDao.GetSession()方法,为多数据库预留的方法,正常不建议使用
+//如果没有事务,session传入nil,使用默认的BaseDao进行查询.如果有事务,参照使用orm.Transaction方法传入session.可以使用BaseDao.GetSession()方法,为多数据库预留的方法,正常不建议使用
 func QueryMapList(session *Session, finder *Finder, page *Page) ([]map[string]interface{}, error) {
 
 	var sessionerr error
@@ -934,7 +934,7 @@ func updateStructFunc(session *Session, entity IEntityStruct, onlyupdatenotnull 
 }
 
 //根据finder查询总条数
-//如果没有事务,session传入nil,使用默认的BaseDao.如果有事务,参照使用orm.Transaction方法传入session.可以使用BaseDao.GetSession()方法,为多数据库预留的方法,正常不建议使用
+//如果没有事务,session传入nil,使用默认的BaseDao进行查询.如果有事务,参照使用orm.Transaction方法传入session.可以使用BaseDao.GetSession()方法,为多数据库预留的方法,正常不建议使用
 func selectCount(session *Session, finder *Finder) (int, error) {
 	var sessionerr error
 	session, sessionerr = checkSession(session, false)
@@ -999,7 +999,7 @@ func selectCount(session *Session, finder *Finder) (int, error) {
 var sessionErr = errors.New("如果没有事务,session传入nil,使用默认的BaseDao.如果有事务,参照使用orm.Transaction方法传入session.手动获取BaseDao.GetSession()是为多数据库预留的方法,正常不建议使用")
 
 //检查session
-//如果没有事务,session传入nil,使用默认的BaseDao.如果有事务,参照使用orm.Transaction方法传入session.手动获取BaseDao.GetSession()是为多数据库预留的方法,正常不建议使用
+//如果没有事务,session传入nil,使用默认的BaseDao进行查询.如果有事务,参照使用orm.Transaction方法传入session.可以使用BaseDao.GetSession()方法,为多数据库预留的方法,正常不建议使用
 func checkSession(session *Session, hastx bool) (*Session, error) {
 
 	if session == nil { //session为空
