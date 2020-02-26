@@ -71,7 +71,7 @@ func getDefaultDao() *BaseDao {
 	return defaultDao
 }
 
-// getSession 获取一个Session
+// GetSession 获取一个Session
 //如果参数session为nil,使用默认的datasource进行获取session.如果是多库,就需要使用Dao手动调用GetSession(),获得session,传给需要的方法
 func (baseDao *BaseDao) GetSession() *Session {
 	session := new(Session)
