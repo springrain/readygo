@@ -55,13 +55,13 @@ func code(tableName string) {
 		serviceFile.Close()
 	}()
 
-	structTemplate, err1 := template.ParseFiles("./templates/struct.txt")
+	structTemplate, err1 := template.ParseFiles("codeGenerator/templates/struct.txt")
 	if err1 != nil {
 		fmt.Println(err1)
 	}
 	structTemplate.Execute(structFile, info)
 
-	serviceTemplate, err2 := template.ParseFiles("./templates/service.txt")
+	serviceTemplate, err2 := template.ParseFiles("codeGenerator/templates/service.txt")
 	if err2 != nil {
 		fmt.Println(err2)
 	}
