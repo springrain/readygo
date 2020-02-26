@@ -80,45 +80,43 @@ func (baseDao *BaseDao) GetSession() *Session {
 }
 
 /*
-//代码示例
-orm.Transaction(func(session *orm.Session) (interface{}, error) {
+Transaction 的示例代码
+orm.Transaction(session *orm.Session,func(session *orm.Session) (interface{}, error) {
 
-	//在此编写业务代码
+	//业务代码
 
 
 	//return的error如果不为nil,事务就会回滚
     return nil, nil
 })
 */
-
 //事务方法,隔离session相关的API.必须通过这个方法进行事务处理,统一事务方式
+//如果入参session为nil或者没事务,则会使用本机的开启,并提交.如果session有事务,则只使用,不提交,有开启方提交事务.但是如果遇到错误或者异常,虽然不是事务的开启方,也会回滚事务,让事务尽早回滚.
+//session的传入,还可以处理多个数据库的情况
 //return的error如果不为nil,事务就会回滚
-//默认使用getDefaultDao()返回的BaseDao
-func Transaction(doTransaction func(session *Session) (interface{}, error)) (interface{}, error) {
-	return TransactionByBaseDao(getDefaultDao(), doTransaction)
-}
-
-//事务方法,隔离session相关的API.必须通过这个方法进行事务处理,统一事务方式
-//通过入参BaseDao,可以支持多个数据源
-//return的error如果不为nil,事务就会回滚
-func TransactionByBaseDao(baseDao *BaseDao, doTransaction func(session *Session) (interface{}, error)) (interface{}, error) {
-	session := baseDao.GetSession()
-	beginerr := session.begin()
-	if beginerr != nil {
-		beginerr = fmt.Errorf("事务开启失败:%w ", beginerr)
-		logger.Error(beginerr)
-		return nil, beginerr
+func Transaction(session *Session, doTransaction func(session *Session) (interface{}, error)) (interface{}, error) {
+	//是否是session的开启方,如果是开启方,才可以提交事务
+	txOpen := false
+	//如果session不存在,则会用默认的datasource开启事务
+	if session == nil || session.tx == nil {
+		var checkerr error
+		session, checkerr = checkSession(session, false)
+		if checkerr != nil {
+			return nil, checkerr
+		}
+		beginerr := session.begin()
+		if beginerr != nil {
+			beginerr = fmt.Errorf("事务开启失败:%w ", beginerr)
+			logger.Error(beginerr)
+			return nil, beginerr
+		}
+		//本方法开启的事务,由本方法提交
+		txOpen = true
 	}
+
 	defer func() {
 		if r := recover(); r != nil {
 			//err = fmt.Errorf("事务开启失败:%w ", err)
-
-			rberr := session.rollback()
-			if rberr != nil {
-				rberr = fmt.Errorf("recover内事务回滚失败:%w", rberr)
-				logger.Error(rberr)
-			}
-
 			//记录异常日志
 			//if _, ok := r.(runtime.Error); ok {
 			//	panic(r)
@@ -128,6 +126,14 @@ func TransactionByBaseDao(baseDao *BaseDao, doTransaction func(session *Session)
 				err = fmt.Errorf("recover异常:%w", err)
 				logger.Panic(err)
 			}
+			//if !txOpen { //如果不是开启方,也应该回滚事务,虽然可能造成日志不准确,但是回滚要尽早
+			//	return
+			//}
+			rberr := session.rollback()
+			if rberr != nil {
+				rberr = fmt.Errorf("recover内事务回滚失败:%w", rberr)
+				logger.Error(rberr)
+			}
 
 		}
 	}()
@@ -136,6 +142,7 @@ func TransactionByBaseDao(baseDao *BaseDao, doTransaction func(session *Session)
 	if err != nil {
 		err = fmt.Errorf("事务执行失败:%w", err)
 		logger.Error(err)
+		//不是开启方回滚事务,有可能造成日志记录不准确,但是回滚最重要了,尽早回滚
 		rberr := session.rollback()
 		if rberr != nil {
 			rberr = fmt.Errorf("事务回滚失败:%w", rberr)
@@ -143,12 +150,15 @@ func TransactionByBaseDao(baseDao *BaseDao, doTransaction func(session *Session)
 		}
 		return info, err
 	}
-	commitError := session.commit()
-	if commitError != nil {
-		commitError = fmt.Errorf("事务提交失败:%w", commitError)
-		logger.Error(commitError)
-		return info, commitError
+	if txOpen { //如果是事务开启方,提交事务
+		commitError := session.commit()
+		if commitError != nil {
+			commitError = fmt.Errorf("事务提交失败:%w", commitError)
+			logger.Error(commitError)
+			return info, commitError
+		}
 	}
+
 	return nil, nil
 }
 
