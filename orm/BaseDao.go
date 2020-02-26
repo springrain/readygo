@@ -94,7 +94,7 @@ orm.Transaction(session *orm.Session,func(session *orm.Session) (interface{}, er
 })
 */
 //事务方法,隔离session相关的API.必须通过这个方法进行事务处理,统一事务方式
-//如果入参session为nil,则会使用defaultDao的开启事务并最后提交.如果没有事务,则会调用session.begin()开启事务.如果session有事务,则只使用不提交,有开启方提交事务.但是如果遇到错误或者异常,虽然不是事务的开启方,也会回滚事务,让事务尽早回滚.
+//如果入参session为nil,使用defaultDao开启事务并最后提交.如果入参session没有事务,调用session.begin()开启事务并最后提交.如果入参session有事务,只使用不提交,有开启方提交事务.但是如果遇到错误或者异常,虽然不是事务的开启方,也会回滚事务,让事务尽早回滚.
 //session的传入,还可以处理多个数据库的情况.
 //不要去掉匿名函数的session参数,因为如果Transaction的session参数是nil,新建的session对象就会丢失,业务代码用的还是传递的nil,虽然是指针
 //bug(springrain)如果有大神修改了匿名函数内的参数名,例如改为session2,这样业务代码实际使用的是Transaction的session参数,如果为nil,会抛异常,如果不为nil,实际就是一个对象.影响有限.也可以把匿名函数抽到外部
