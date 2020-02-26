@@ -2,12 +2,14 @@ package permservice
 
 import (
 	"errors"
+	"fmt"
+	"readygo/logger"
 	"readygo/orm"
 	"readygo/permission/permstruct"
 )
 
 //SaveUserStruct 保存用户
-//如果入参session为nil或者没事务,则会使用本机的开启,并提交.如果session有事务,则只使用,不提交,有开启方提交事务.但是如果遇到错误或者异常,虽然不是事务的开启方,也会回滚事务,让事务尽早回滚
+//如果入参session为nil或者没事务,则会使用默认的datasource的开启事务并最后提交.如果session有事务,则只使用,不提交,有开启方提交事务.但是如果遇到错误或者异常,虽然不是事务的开启方,也会回滚事务,让事务尽早回滚
 func SaveUserStruct(session *orm.Session, userStruct *permstruct.UserStruct) error {
 
 	//匿名函数return的error如果不为nil,事务就会回滚
@@ -25,13 +27,15 @@ func SaveUserStruct(session *orm.Session, userStruct *permstruct.UserStruct) err
 
 	})
 	if err != nil {
+		err := fmt.Errorf("permservice.SaveUserStruct错误:%w", err)
+		logger.Error(err)
 		return err
 	}
 	return nil
 }
 
 //UpdateUserStruct 更新用户
-//如果入参session为nil或者没事务,则会使用本机的开启,并提交.如果session有事务,则只使用,不提交,有开启方提交事务.但是如果遇到错误或者异常,虽然不是事务的开启方,也会回滚事务,让事务尽早回滚
+//如果入参session为nil或者没事务,则会使用默认的datasource的开启事务并最后提交.如果session有事务,则只使用,不提交,有开启方提交事务.但是如果遇到错误或者异常,虽然不是事务的开启方,也会回滚事务,让事务尽早回滚
 func UpdateUserStruct(session *orm.Session, userStruct *permstruct.UserStruct) error {
 
 	//匿名函数return的error如果不为nil,事务就会回滚
@@ -50,13 +54,15 @@ func UpdateUserStruct(session *orm.Session, userStruct *permstruct.UserStruct) e
 
 	})
 	if err != nil {
+		err := fmt.Errorf("permservice.UpdateUserStruct错误:%w", err)
+		logger.Error(err)
 		return err
 	}
 	return nil
 }
 
 //DeleteUserStruct 删除用户
-//如果入参session为nil或者没事务,则会使用本机的开启,并提交.如果session有事务,则只使用,不提交,有开启方提交事务.但是如果遇到错误或者异常,虽然不是事务的开启方,也会回滚事务,让事务尽早回滚
+//如果入参session为nil或者没事务,则会使用默认的datasource的开启事务并最后提交.如果session有事务,则只使用,不提交,有开启方提交事务.但是如果遇到错误或者异常,虽然不是事务的开启方,也会回滚事务,让事务尽早回滚
 func DeleteUserStruct(session *orm.Session, userStruct *permstruct.UserStruct) error {
 
 	//匿名函数return的error如果不为nil,事务就会回滚
@@ -76,6 +82,8 @@ func DeleteUserStruct(session *orm.Session, userStruct *permstruct.UserStruct) e
 	})
 
 	if err != nil {
+		err := fmt.Errorf("permservice.DeleteUserStruct错误:%w", err)
+		logger.Error(err)
 		return err
 	}
 	return nil
@@ -94,6 +102,8 @@ func FindUserStructById(session *orm.Session, id string) (*permstruct.UserStruct
 	userStruct := permstruct.UserStruct{}
 	err := orm.QueryStruct(session, finder, &userStruct)
 	if err != nil {
+		err := fmt.Errorf("permservice.FindUserStructById错误:%w", err)
+		logger.Error(err)
 		return nil, err
 	}
 	return &userStruct, nil
@@ -106,6 +116,8 @@ func FindUserStructList(session *orm.Session, finder *orm.Finder, page *orm.Page
 	userStructList := make([]permstruct.UserStruct, 0)
 	err := orm.QueryStructList(session, finder, &userStructList, page)
 	if err != nil {
+		err := fmt.Errorf("permservice.FindUserStructList错误:%w", err)
+		logger.Error(err)
 		return nil, err
 	}
 	return userStructList, nil

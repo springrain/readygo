@@ -6,7 +6,7 @@ import (
 )
 
 //Save{{.structName}} 保存{{.tableComment}}
-//如果入参session为nil或者没事务,则会使用本机的开启,并提交.如果session有事务,则只使用,不提交,有开启方提交事务.但是如果遇到错误或者异常,虽然不是事务的开启方,也会回滚事务,让事务尽早回滚
+//如果入参session为nil或者没事务,则会使用默认的datasource的开启事务并最后提交.如果session有事务,则只使用,不提交,有开启方提交事务.但是如果遇到错误或者异常,虽然不是事务的开启方,也会回滚事务,让事务尽早回滚
 func Save{{.structName}}(session *orm.Session, {{.pname}} *{{.packageName}}.{{.structName}}) error {
 
     //匿名函数return的error如果不为nil,事务就会回滚
@@ -24,13 +24,15 @@ func Save{{.structName}}(session *orm.Session, {{.pname}} *{{.packageName}}.{{.s
 
 	})
 	if err != nil {
+		err := fmt.Errorf("{{.servicePackageName}}.Save{{.structName}}错误:%w", err)
+		logger.Error(err)
 		return err
 	}
 	return nil
 }
 
 //Update{{.structName}} 更新{{.tableComment}}
-//如果入参session为nil或者没事务,则会使用本机的开启,并提交.如果session有事务,则只使用,不提交,有开启方提交事务.但是如果遇到错误或者异常,虽然不是事务的开启方,也会回滚事务,让事务尽早回滚
+//如果入参session为nil或者没事务,则会使用默认的datasource的开启事务并最后提交.如果session有事务,则只使用,不提交,有开启方提交事务.但是如果遇到错误或者异常,虽然不是事务的开启方,也会回滚事务,让事务尽早回滚
 func Update{{.structName}}(session *orm.Session, {{.pname}} *{{.packageName}}.{{.structName}}) error {
 	
     //匿名函数return的error如果不为nil,事务就会回滚
@@ -49,13 +51,15 @@ func Update{{.structName}}(session *orm.Session, {{.pname}} *{{.packageName}}.{{
 
 	})
 	if err != nil {
+		err := fmt.Errorf("{{.servicePackageName}}.Update{{.structName}}错误:%w", err)
+		logger.Error(err)
 		return err
 	}
 	return nil
 }
 
 //Delete{{.structName}} 删除{{.tableComment}}
-//如果入参session为nil或者没事务,则会使用本机的开启,并提交.如果session有事务,则只使用,不提交,有开启方提交事务.但是如果遇到错误或者异常,虽然不是事务的开启方,也会回滚事务,让事务尽早回滚
+//如果入参session为nil或者没事务,则会使用默认的datasource的开启事务并最后提交.如果session有事务,则只使用,不提交,有开启方提交事务.但是如果遇到错误或者异常,虽然不是事务的开启方,也会回滚事务,让事务尽早回滚
 func Delete{{.structName}}(session *orm.Session, {{.pname}} *{{.packageName}}.{{.structName}}) error {
 	
     //匿名函数return的error如果不为nil,事务就会回滚
@@ -75,6 +79,8 @@ func Delete{{.structName}}(session *orm.Session, {{.pname}} *{{.packageName}}.{{
 	})
 
 	if err != nil {
+		err := fmt.Errorf("{{.servicePackageName}}.Delete{{.structName}}错误:%w", err)
+		logger.Error(err)
 		return err
 	}
 	return nil
@@ -93,6 +99,8 @@ func Find{{.structName}}ById(session *orm.Session, id string) (*{{.packageName}}
 	{{.pname}} := {{.packageName}}.{{.structName}}{}
 	err := orm.QueryStruct(session, finder, &{{.pname}})
 	if err != nil {
+		err := fmt.Errorf("{{.servicePackageName}}.Find{{.structName}}ById错误:%w", err)
+		logger.Error(err)
 		return nil, err
 	}
 	return &{{.pname}}, nil
@@ -105,6 +113,8 @@ func Find{{.structName}}List(session *orm.Session, finder *orm.Finder, page *orm
 	{{.pname}}List := make([]{{.packageName}}.{{.structName}}, 0)
 	err := orm.QueryStructList(session, finder, &{{.pname}}List, page)
 	if err != nil {
+		err := fmt.Errorf("{{.servicePackageName}}.Find{{.structName}}List错误:%w", err)
+		logger.Error(err)
 		return nil, err
 	}
 	return {{.pname}}List, nil
