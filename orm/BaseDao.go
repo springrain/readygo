@@ -81,6 +81,7 @@ func (baseDao *BaseDao) GetSession() *Session {
 
 /*
 Transaction 的示例代码
+//匿名函数return的error如果不为nil,事务就会回滚
 orm.Transaction(session *orm.Session,func(session *orm.Session) (interface{}, error) {
 
 	//业务代码
