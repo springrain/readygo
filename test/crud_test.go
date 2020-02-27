@@ -56,7 +56,8 @@ func TestQuey(t *testing.T) {
 
 	if err != nil {
 		fmt.Println(err)
-
+		//标记测试失败
+		t.Errorf("TestQuey错误:%v", err)
 	}
 
 	fmt.Println(users)
@@ -75,6 +76,8 @@ func TestTranc(t *testing.T) {
 
 		e2 := orm.SaveStruct(session, &u)
 		if e2 != nil {
+			//标记测试失败
+			t.Errorf("TestTranc错误:%v", e2)
 			return nil, e2
 		}
 
