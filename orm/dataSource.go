@@ -63,7 +63,7 @@ func newDataSource(config *DataSourceConfig) (*dataSource, error) {
 type Session struct {
 	db *sql.DB // 原生db
 	tx *sql.Tx // 原生事务
-	//mysql,使用枚举,数据库类型
+	//mysql,postgres,oci8,adodb
 	dbType string
 
 	//commitSign   int8    // 提交标记，控制是否提交事务
