@@ -14,49 +14,49 @@ type WxMiniappconfigStruct struct {
 	//引入默认的struct,隔离IEntityStruct的方法改动
 	orm.EntityStruct
 
-	// 主键id
+	//Id 主键id
 	Id string `column:"id"`
 
-	// 站点Id
+	//OrgId 站点Id
 	OrgId string `column:"orgId"`
 
-	// 开发者Id
+	//AppId 开发者Id
 	AppId string `column:"appId"`
 
-	// 应用密钥
+	//Secret 应用密钥
 	Secret string `column:"secret"`
 
-	// 签约模板Id
+	//PlanId 签约模板Id
 	PlanId string `column:"planId"`
 
-	// 签约请求序列号
+	//RequestSerial 签约请求序列号
 	RequestSerial string `column:"requestSerial"`
 
-	// <no value>
+	//CreateTime <no value>
 	CreateTime time.Time `column:"createTime"`
 
-	// <no value>
+	//CreateUserId <no value>
 	CreateUserId string `column:"createUserId"`
 
-	// <no value>
+	//UpdateTime <no value>
 	UpdateTime time.Time `column:"updateTime"`
 
-	// <no value>
+	//UpdateUserId <no value>
 	UpdateUserId string `column:"updateUserId"`
 
-	// 状态 0不可用,1可用
+	//Active 状态 0不可用,1可用
 	Active int `column:"active"`
 
 	//------------------数据库字段结束,自定义字段写在下面---------------//
 
 }
 
-//获取表名称
+//GetTableName 获取表名称
 func (entity *WxMiniappconfigStruct) GetTableName() string {
 	return WxMiniappconfigStructTableName
 }
 
-//获取数据库表的主键字段名称.因为要兼容Map,只能是数据库的字段名称.对应的struct 属性field
+//GetPKColumnName 获取数据库表的主键字段名称.因为要兼容Map,只能是数据库的字段名称.
 func (entity *WxMiniappconfigStruct) GetPKColumnName() string {
 	return "id"
 }

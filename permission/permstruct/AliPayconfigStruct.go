@@ -14,70 +14,70 @@ type AliPayconfigStruct struct {
 	//引入默认的struct,隔离IEntityStruct的方法改动
 	orm.EntityStruct
 
-	// <no value>
+	//Id <no value>
 	Id string `column:"id"`
 
-	// <no value>
+	//PrivateKey <no value>
 	PrivateKey string `column:"privateKey"`
 
-	// <no value>
+	//AliPayPublicKey <no value>
 	AliPayPublicKey string `column:"aliPayPublicKey"`
 
-	// <no value>
+	//AppId <no value>
 	AppId string `column:"appId"`
 
-	// <no value>
+	//ServiceUrl <no value>
 	ServiceUrl string `column:"serviceUrl"`
 
-	// <no value>
+	//Charset <no value>
 	Charset string `column:"charset"`
 
-	// <no value>
+	//SignType <no value>
 	SignType string `column:"signType"`
 
-	// <no value>
+	//Format <no value>
 	Format string `column:"format"`
 
-	// <no value>
+	//CertPath <no value>
 	CertPath string `column:"certPath"`
 
-	// <no value>
+	//AlipayPublicCertPath <no value>
 	AlipayPublicCertPath string `column:"alipayPublicCertPath"`
 
-	// <no value>
+	//RootCertPath <no value>
 	RootCertPath string `column:"rootCertPath"`
 
-	// <no value>
+	//EncryptType <no value>
 	EncryptType string `column:"encryptType"`
 
-	// <no value>
+	//AesKey <no value>
 	AesKey string `column:"aesKey"`
 
-	// <no value>
+	//CreateTime <no value>
 	CreateTime time.Time `column:"createTime"`
 
-	// <no value>
+	//CreateUserId <no value>
 	CreateUserId string `column:"createUserId"`
 
-	// <no value>
+	//UpdateTime <no value>
 	UpdateTime time.Time `column:"updateTime"`
 
-	// <no value>
+	//UpdateUserId <no value>
 	UpdateUserId string `column:"updateUserId"`
 
-	// 状态 0不可用,1可用
+	//Active 状态 0不可用,1可用
 	Active int `column:"active"`
 
 	//------------------数据库字段结束,自定义字段写在下面---------------//
 
 }
 
-//获取表名称
+//GetTableName 获取表名称
 func (entity *AliPayconfigStruct) GetTableName() string {
 	return AliPayconfigStructTableName
 }
 
-//获取数据库表的主键字段名称.因为要兼容Map,只能是数据库的字段名称.对应的struct 属性field
+//GetPKColumnName 获取数据库表的主键字段名称.因为要兼容Map,只能是数据库的字段名称.
 func (entity *AliPayconfigStruct) GetPKColumnName() string {
 	return "id"
 }

@@ -4,7 +4,7 @@ package orm
 type IEntityStruct interface {
 	//获取表名称
 	GetTableName() string
-	//获取数据库表的主键字段名称.因为要兼容Map,只能是数据库的字段名称.对应的struct 属性field
+	//获取数据库表的主键字段名称.因为要兼容Map,只能是数据库的字段名称.
 	GetPKColumnName() string
 	//兼容主键序列.如果有值,优先级最高
 	GetPkSequence() string
@@ -14,7 +14,7 @@ type IEntityStruct interface {
 type IEntityMap interface {
 	//获取表名称
 	GetTableName() string
-	//获取数据库表的主键字段名称.因为要兼容Map,只能是数据库的字段名称.对应的struct 属性field
+	//获取数据库表的主键字段名称.因为要兼容Map,只能是数据库的字段名称.
 	GetPKColumnName() string
 	//针对Map类型,记录数据库字段
 	GetDBFieldMap() map[string]interface{}
@@ -34,7 +34,7 @@ func (entity *EntityStruct) GetTableName() string {
 }
 */
 
-//GetPKColumnName 获取数据库表的主键字段名称.因为要兼容Map,只能是数据库的字段名称.对应的struct 属性field
+//GetPKColumnName 获取数据库表的主键字段名称.因为要兼容Map,只能是数据库的字段名称.
 func (entity *EntityStruct) GetPKColumnName() string {
 	return defaultPkName
 }
@@ -78,7 +78,7 @@ func (entity *EntityMap) SetPKColumnName(pkName string) {
 	entity.pkColumnName = pkName
 }
 
-//GetPKColumnName 获取数据库表的主键字段名称.因为要兼容Map,只能是数据库的字段名称.对应的struct 属性field
+//GetPKColumnName 获取数据库表的主键字段名称.因为要兼容Map,只能是数据库的字段名称.
 func (entity *EntityMap) GetPKColumnName() string {
 	return entity.pkColumnName
 }

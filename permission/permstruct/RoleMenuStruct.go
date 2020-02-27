@@ -12,25 +12,25 @@ type RoleMenuStruct struct {
 	//引入默认的struct,隔离IEntityStruct的方法改动
 	orm.EntityStruct
 
-	// 编号
+	//Id 编号
 	Id string `column:"id"`
 
-	// 角色编号
+	//RoleId 角色编号
 	RoleId string `column:"roleId"`
 
-	// 菜单编号
+	//MenuId 菜单编号
 	MenuId string `column:"menuId"`
 
 	//------------------数据库字段结束,自定义字段写在下面---------------//
 
 }
 
-//获取表名称
+//GetTableName 获取表名称
 func (entity *RoleMenuStruct) GetTableName() string {
 	return RoleMenuStructTableName
 }
 
-//获取数据库表的主键字段名称.因为要兼容Map,只能是数据库的字段名称.对应的struct 属性field
+//GetPKColumnName 获取数据库表的主键字段名称.因为要兼容Map,只能是数据库的字段名称.
 func (entity *RoleMenuStruct) GetPKColumnName() string {
 	return "id"
 }
