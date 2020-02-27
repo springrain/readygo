@@ -423,6 +423,11 @@ func QueryStructList(session *Session, finder *Finder, rowsSlicePtr interface{},
 //bug(springrain)需要测试一下 in 数组, like ,还有查询一个基础类型(例如 string)的功能
 //如果没有事务,session传入nil,使用默认的BaseDao进行查询.如果有事务,参照使用orm.Transaction方法传入session.可以使用BaseDao.GetSession()方法,为多数据库预留的方法,正常不建议使用
 func QueryMap(session *Session, finder *Finder) (map[string]interface{}, error) {
+
+	if finder == nil {
+		return nil, errors.New("QueryMap的finder参数不能为nil")
+	}
+
 	var sessionerr error
 	session, sessionerr = checkSession(session, false)
 	if sessionerr != nil {
@@ -447,17 +452,21 @@ func QueryMap(session *Session, finder *Finder) (map[string]interface{}, error) 
 //根据数据库字段的类型,完成从[]byte到golang类型的映射,理论上其他查询方法都可以调用此方法,但是需要处理sql.Nullxxx等驱动支持的类型
 //如果没有事务,session传入nil,使用默认的BaseDao进行查询.如果有事务,参照使用orm.Transaction方法传入session.可以使用BaseDao.GetSession()方法,为多数据库预留的方法,正常不建议使用
 func QueryMapList(session *Session, finder *Finder, page *Page) ([]map[string]interface{}, error) {
+
+	if finder == nil {
+		return nil, errors.New("QueryMap的finder参数不能为nil")
+	}
+	//检查session
+	var sessionerr error
+	session, sessionerr = checkSession(session, false)
+	if sessionerr != nil {
+		return nil, sessionerr
+	}
 	sqlstr, err := wrapQuerySQL(session.dbType, finder, nil)
 	if err != nil {
 		err = fmt.Errorf("QueryMapList查询错误:%w", err)
 		logger.Error(err)
 		return nil, err
-	}
-
-	var sessionerr error
-	session, sessionerr = checkSession(session, false)
-	if sessionerr != nil {
-		return nil, sessionerr
 	}
 
 	//根据语句和参数查询
@@ -663,6 +672,13 @@ func DeleteStruct(session *Session, entity IEntityStruct) error {
 		return pkNameErr
 	}
 
+	value, e := structFieldValue(entity, pkName)
+	if e != nil {
+		e = fmt.Errorf("DeleteStruct-->structFieldValue获取主键值错误:%w", e)
+		logger.Error(e)
+		return e
+	}
+
 	//必须要有session和事务
 	var sessionerr error
 	session, sessionerr = checkSession(session, true)
@@ -670,12 +686,6 @@ func DeleteStruct(session *Session, entity IEntityStruct) error {
 		return sessionerr
 	}
 
-	value, e := structFieldValue(entity, pkName)
-	if e != nil {
-		e = fmt.Errorf("DeleteStruct-->structFieldValue获取主键值错误:%w", e)
-		logger.Error(e)
-		return e
-	}
 	//SQL语句
 	sqlstr, err := wrapDeleteStructSQL(session.dbType, entity)
 	if err != nil {
