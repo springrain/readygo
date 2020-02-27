@@ -198,7 +198,7 @@ func QueryStruct(session *Session, finder *Finder, entity interface{}) error {
 		return err
 	}
 
-	//检查session.有可能会创建session或者开启事务,所以要尽可能的接近执行时调用.
+	//检查session.有可能会创建session或者开启事务,所以要尽可能的接近执行时检查.
 	var sessionerr error
 	session, sessionerr = checkSession(session, false)
 	if sessionerr != nil {
@@ -336,7 +336,7 @@ func QueryStructList(session *Session, finder *Finder, rowsSlicePtr interface{},
 		return err
 	}
 
-	//检查session.有可能会创建session或者开启事务,所以要尽可能的接近执行时调用.
+	//检查session.有可能会创建session或者开启事务,所以要尽可能的接近执行时检查.
 	var sessionerr error
 	session, sessionerr = checkSession(session, false)
 	if sessionerr != nil {
@@ -497,7 +497,7 @@ func QueryMapList(session *Session, finder *Finder, page *Page) ([]map[string]in
 		return nil, err
 	}
 
-	//检查session.有可能会创建session或者开启事务,所以要尽可能的接近执行时调用.
+	//检查session.有可能会创建session或者开启事务,所以要尽可能的接近执行时检查.
 	var sessionerr error
 	session, sessionerr = checkSession(session, false)
 	if sessionerr != nil {
@@ -603,7 +603,7 @@ func UpdateFinder(session *Session, finder *Finder) error {
 		return err
 	}
 
-	//必须要有session和事务.有可能会创建session或者开启事务,所以要尽可能的接近执行时调用
+	//必须要有session和事务.有可能会创建session或者开启事务,所以要尽可能的接近执行时检查
 	var sessionerr error
 	session, sessionerr = checkSession(session, true)
 	if sessionerr != nil {
@@ -659,7 +659,7 @@ func SaveStruct(session *Session, entity IEntityStruct) error {
 		return err
 	}
 
-	//必须要有session和事务.有可能会创建session或者开启事务,所以要尽可能的接近执行时调用
+	//必须要有session和事务.有可能会创建session或者开启事务,所以要尽可能的接近执行时检查
 	var sessionerr error
 	session, sessionerr = checkSession(session, true)
 	if sessionerr != nil {
@@ -760,7 +760,7 @@ func DeleteStruct(session *Session, entity IEntityStruct) error {
 		return err
 	}
 
-	//必须要有session和事务.有可能会创建session或者开启事务,所以要尽可能的接近执行时调用
+	//必须要有session和事务.有可能会创建session或者开启事务,所以要尽可能的接近执行时检查
 	var sessionerr error
 	session, sessionerr = checkSession(session, true)
 	if sessionerr != nil {
@@ -808,7 +808,7 @@ func SaveEntityMap(session *Session, entity IEntityMap) error {
 		return err
 	}
 
-	//必须要有session和事务.有可能会创建session或者开启事务,所以要尽可能的接近执行时调用
+	//必须要有session和事务.有可能会创建session或者开启事务,所以要尽可能的接近执行时检查
 	var sessionerr error
 	session, sessionerr = checkSession(session, true)
 	if sessionerr != nil {
@@ -856,7 +856,7 @@ func UpdateEntityMap(session *Session, entity IEntityMap) error {
 		return err
 	}
 
-	//必须要有session和事务.有可能会创建session或者开启事务,所以要尽可能的接近执行时调用
+	//必须要有session和事务.有可能会创建session或者开启事务,所以要尽可能的接近执行时检查
 	var sessionerr error
 	session, sessionerr = checkSession(session, true)
 	if sessionerr != nil {
@@ -1055,7 +1055,7 @@ func updateStructFunc(session *Session, entity IEntityStruct, onlyupdatenotnull 
 		return err
 	}
 
-	//必须要有session和事务.有可能会创建session或者开启事务,所以要尽可能的接近执行时调用
+	//必须要有session和事务.有可能会创建session或者开启事务,所以要尽可能的接近执行时检查
 	var sessionerr error
 	session, sessionerr = checkSession(session, true)
 	if sessionerr != nil {
@@ -1135,7 +1135,7 @@ func selectCount(session *Session, finder *Finder) (int, error) {
 //变量名建议errFoo这样的驼峰
 var errSession = errors.New("如果没有事务,session传入nil,使用默认的BaseDao.如果有事务,参照使用orm.Transaction方法传入session.手动获取BaseDao.GetSession()是为多数据库预留的方法,正常不建议使用")
 
-//检查session.有可能会创建session或者开启事务,所以要尽可能的接近执行时调用.
+//检查session.有可能会创建session或者开启事务,所以要尽可能的接近执行时检查.
 //如果没有事务,session传入nil,使用默认的BaseDao进行查询.如果有事务,参照使用orm.Transaction方法传入session.可以使用BaseDao.GetSession()方法,为多数据库预留的方法,正常不建议使用
 func checkSession(session *Session, hastx bool) (*Session, error) {
 
