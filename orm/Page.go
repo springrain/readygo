@@ -28,7 +28,7 @@ func NewPage() Page {
 }
 
 //设置总条数,计算其他值
-func (page *Page) SetTotalCount(total int) {
+func (page *Page) setTotalCount(total int) {
 	page.TotalCount = total
 	page.PageCount = (page.TotalCount + page.PageSize - 1) / page.PageSize
 	if page.PageNo >= page.PageCount {

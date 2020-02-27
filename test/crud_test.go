@@ -45,8 +45,7 @@ func initDate() {
 
 func TestQuey(t *testing.T) {
 
-	finder := orm.NewFinder()
-	finder.Append("select * from ").Append(permstruct.UserStructTableName)
+	finder := orm.NewSelectFinder(permstruct.UserStructTableName)
 
 	page := orm.NewPage()
 
@@ -59,7 +58,7 @@ func TestQuey(t *testing.T) {
 		//标记测试失败
 		t.Errorf("TestQuey错误:%v", err)
 	}
-
+	fmt.Println("总条数:", page.TotalCount)
 	fmt.Println(users)
 
 }

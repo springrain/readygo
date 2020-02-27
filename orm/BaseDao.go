@@ -355,7 +355,7 @@ func QueryStructList(session *Session, finder *Finder, rowsSlicePtr interface{},
 				logger.Error(counterr)
 				return counterr
 			}
-			page.SetTotalCount(count)
+			page.setTotalCount(count)
 		}
 		return nil
 	}
@@ -409,7 +409,7 @@ func QueryStructList(session *Session, finder *Finder, rowsSlicePtr interface{},
 			logger.Error(counterr)
 			return counterr
 		}
-		page.SetTotalCount(count)
+		page.setTotalCount(count)
 	}
 
 	return nil
@@ -518,7 +518,7 @@ func QueryMapList(session *Session, finder *Finder, page *Page) ([]map[string]in
 			logger.Error(counterr)
 			return resultMapList, counterr
 		}
-		page.SetTotalCount(count)
+		page.setTotalCount(count)
 	}
 
 	return resultMapList, nil
