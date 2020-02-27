@@ -11,7 +11,7 @@ golang开发脚手架
 
 
 #### 例子
-具体可以查看 [UserStructService.go](https://gitee.com/chunanyong/readygo/tree/master/permission/permservice)
+具体可以参照 [UserStructService.go](https://gitee.com/chunanyong/readygo/tree/master/permission/permservice)
 
 1.  增
     ```
