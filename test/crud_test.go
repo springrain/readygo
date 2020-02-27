@@ -54,7 +54,6 @@ func TestQuey(t *testing.T) {
 	err := orm.QueryStructList(nil, finder, &users, &page)
 
 	if err != nil {
-		fmt.Println(err)
 		//标记测试失败
 		t.Errorf("TestQuey错误:%v", err)
 	}
