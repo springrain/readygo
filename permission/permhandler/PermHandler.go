@@ -1,3 +1,11 @@
+/*
+ * @Author: your name
+ * @Date: 2020-02-26 20:15:09
+ * @LastEditTime: 2020-02-27 15:53:10
+ * @LastEditors: Please set LastEditors
+ * @Description: In User Settings Edit
+ * @FilePath: \readygo\permission\permhandler\PermHandler.go
+ */
 package permhandler
 
 import (

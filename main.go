@@ -1,3 +1,11 @@
+/*
+ * @Author: your name
+ * @Date: 2020-02-25 23:00:00
+ * @LastEditTime: 2020-02-27 17:13:53
+ * @LastEditors: Please set LastEditors
+ * @Description: In User Settings Edit
+ * @FilePath: \readygo\main.go
+ */
 package main
 
 import (
@@ -5,12 +13,14 @@ import (
 	"readygo/ginext"
 	"readygo/orm"
 	"readygo/permission/permhandler"
+	"readygo/utility/jwe"
 
 	"github.com/gin-gonic/gin"
 )
 
 //初始化BaseDao
 func init() {
+
 	baseDaoConfig := orm.DataSourceConfig{
 		Host:     "127.0.0.1",
 		Port:     3306,
@@ -22,6 +32,7 @@ func init() {
 	_, _ = orm.NewBaseDao(&baseDaoConfig)
 }
 func main() {
+
 	// Creates a router without any middleware by default
 	r := gin.New()
 
@@ -46,5 +57,31 @@ func main() {
 	r.GET("/ping", func(c *gin.Context) {
 		c.JSON(200, gin.H{"hello": "world"})
 	})
+
+	r.GET("/login", func(c *gin.Context) {
+		user := jwe.TokenUser{
+			Name:  "readygo",
+			Role:  "admin",
+			Group: 0,
+		}
+		token, err := jwe.CreateToken("1001", user)
+		if err == nil {
+			c.JSON(200, gin.H{"result": "OK", "token": token})
+		} else {
+			c.JSON(500, gin.H{"result": "Error", "msg": err.Error()})
+		}
+	})
+
+	r.GET("/userInfo", func(c *gin.Context) {
+		user := jwe.TokenUser{}
+		token := c.GetHeader("READYGOTOKEN")
+		userid, err := jwe.GetInfoFromToken(token, &user)
+		if err == nil {
+			c.JSON(200, gin.H{"result": "OK", "userid": userid, "extInfo": user})
+		} else {
+			c.JSON(500, gin.H{"result": "Error", "msg": err.Error()})
+		}
+	})
+
 	r.Run(":8080") // listen and serve on 0.0.0.0:8080 (for windows "localhost:8080")
 }
