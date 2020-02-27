@@ -39,7 +39,7 @@ var allowBaseTypeMap = map[reflect.Kind]bool{
 	reflect.Float64: true,
 }
 
-//数据库操作基类,隔离原生操作数据库API入口,所有数据库操作必须通过BaseDao进行.
+//BaseDao 数据库操作基类,隔离原生操作数据库API入口,所有数据库操作必须通过BaseDao进行.
 type BaseDao struct {
 	config     *DataSourceConfig
 	dataSource *dataSource
@@ -167,7 +167,7 @@ func Transaction(session *Session, doTransaction func(session *Session) (interfa
 	return nil, nil
 }
 
-//不要偷懒调用QueryStructList返回第一条,1.需要构建一个selice,2.调用方传递的对象其他值会被抛弃或者覆盖.
+//QueryStruct 不要偷懒调用QueryStructList返回第一条,1.需要构建一个selice,2.调用方传递的对象其他值会被抛弃或者覆盖.
 //根据Finder和封装为指定的entity类型,entity必须是*struct类型或者基础类型的指针.把查询的数据赋值给entity,所以要求指针类型
 //如果没有事务,session传入nil,使用默认的BaseDao进行查询.如果有事务,参照使用orm.Transaction方法传入session.可以使用BaseDao.GetSession()方法,为多数据库预留的方法,正常不建议使用
 func QueryStruct(session *Session, finder *Finder, entity interface{}) error {
@@ -274,7 +274,7 @@ func QueryStruct(session *Session, finder *Finder, entity interface{}) error {
 	return nil
 }
 
-//不要偷懒调用QueryMapList,需要处理sql驱动支持的sql.Nullxxx的数据类型,也挺麻烦的
+//QueryStructList 不要偷懒调用QueryMapList,需要处理sql驱动支持的sql.Nullxxx的数据类型,也挺麻烦的
 //根据Finder和封装为指定的entity类型,entity必须是*[]struct类型,已经初始化好的数组,此方法只Append元素,这样调用方就不需要强制类型转换了
 //如果没有事务,session传入nil,使用默认的BaseDao进行查询.如果有事务,参照使用orm.Transaction方法传入session.可以使用BaseDao.GetSession()方法,为多数据库预留的方法,正常不建议使用
 func QueryStructList(session *Session, finder *Finder, rowsSlicePtr interface{}, page *Page) error {
@@ -602,7 +602,7 @@ func SaveStruct(session *Session, entity IEntityStruct) error {
 	//如果是自增主键
 	if autoIncrement {
 		//需要数据库支持,获取自增主键
-		autoIncrementIdInt64, e := res.LastInsertId()
+		autoIncrementIDInt64, e := res.LastInsertId()
 		if e != nil { //数据库不支持自增主键,不再赋值给struct属性
 			e = fmt.Errorf("数据库不支持自增主键,不再赋值给struct属性:%w", e)
 			logger.Error(e)
@@ -610,10 +610,10 @@ func SaveStruct(session *Session, entity IEntityStruct) error {
 		}
 		pkName := entity.GetPKColumnName()
 		//int64 转 int
-		strInt64 := strconv.FormatInt(autoIncrementIdInt64, 10)
-		autoIncrementIdInt, _ := strconv.Atoi(strInt64)
+		strInt64 := strconv.FormatInt(autoIncrementIDInt64, 10)
+		autoIncrementIDInt, _ := strconv.Atoi(strInt64)
 		//设置自增主键的值
-		seterr := setFieldValueByColumnName(entity, pkName, autoIncrementIdInt)
+		seterr := setFieldValueByColumnName(entity, pkName, autoIncrementIDInt)
 		if seterr != nil {
 			seterr = fmt.Errorf("反射赋值数据库返回的自增主键错误:%w", seterr)
 			logger.Error(seterr)
@@ -1001,7 +1001,8 @@ func selectCount(session *Session, finder *Finder) (int, error) {
 
 }
 
-var sessionErr = errors.New("如果没有事务,session传入nil,使用默认的BaseDao.如果有事务,参照使用orm.Transaction方法传入session.手动获取BaseDao.GetSession()是为多数据库预留的方法,正常不建议使用")
+//变量名建议errFoo这样的驼峰
+var errSession = errors.New("如果没有事务,session传入nil,使用默认的BaseDao.如果有事务,参照使用orm.Transaction方法传入session.手动获取BaseDao.GetSession()是为多数据库预留的方法,正常不建议使用")
 
 //检查session
 //如果没有事务,session传入nil,使用默认的BaseDao进行查询.如果有事务,参照使用orm.Transaction方法传入session.可以使用BaseDao.GetSession()方法,为多数据库预留的方法,正常不建议使用
@@ -1011,16 +1012,16 @@ func checkSession(session *Session, hastx bool) (*Session, error) {
 		if !hastx { //如果要求没有事务,实例化一个默认的session
 			session = getDefaultDao().GetSession()
 		} else { //如果要求有事务,错误
-			return nil, sessionErr
+			return nil, errSession
 		}
 
 	} else { //如果session存在
 		if session.db == nil { //禁止外部构建
-			return session, sessionErr
+			return session, errSession
 		}
 		tx := session.tx
 		if tx == nil && hastx { //如果要求有事务
-			return session, sessionErr
+			return session, errSession
 		}
 	}
 
