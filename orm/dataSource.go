@@ -14,7 +14,7 @@ type dataSource struct {
 	*sql.DB
 }
 
-//数据库连接池的配置
+//DataSourceConfig 数据库连接池的配置
 type DataSourceConfig struct {
 	Host     string
 	Port     int
@@ -25,6 +25,7 @@ type DataSourceConfig struct {
 	DBType string
 }
 
+//创建一个新的datasource,内部调用,避免外部直接使用datasource
 func newDataSource(config *DataSourceConfig) (*dataSource, error) {
 	dsn, e := wrapDBDSN(config)
 	if e != nil {
@@ -59,7 +60,7 @@ func newDataSource(config *DataSourceConfig) (*dataSource, error) {
 
 //const beginStatus = 1
 
-// Session 会话
+// Session 数据库session会话,可以原生查询或者事务
 type Session struct {
 	db *sql.DB // 原生db
 	tx *sql.Tx // 原生事务
