@@ -136,14 +136,14 @@ func (finder *Finder) GetSQL() (string, error) {
 	//重新记录参数值
 	newValues := make([]interface{}, 0)
 	//新的sql
-	var newSqlStr strings.Builder
+	var newSQLStr strings.Builder
 	//?切割的语句实际长度比?号个数多1,先把第一个语句片段加上,后面就是比参数的索引大1
-	newSqlStr.WriteString(questions[0])
+	newSQLStr.WriteString(questions[0])
 
 	//遍历所有的参数
 	for i, v := range finder.Values {
 		//先拼接?,?号切割之后,?号就丢失了,先补充上
-		newSqlStr.WriteString("?")
+		newSQLStr.WriteString("?")
 
 		valueOf := reflect.ValueOf(v)
 		typeOf := reflect.TypeOf(v)
@@ -166,7 +166,7 @@ func (finder *Finder) GetSQL() (string, error) {
 			//记录新值
 			newValues = append(newValues, v)
 			//记录SQL
-			newSqlStr.WriteString(questions[i+1])
+			newSQLStr.WriteString(questions[i+1])
 			continue
 		}
 		//字节数组是特殊的情况
@@ -174,24 +174,24 @@ func (finder *Finder) GetSQL() (string, error) {
 			//记录新值
 			newValues = append(newValues, v)
 			//记录SQL
-			newSqlStr.WriteString(questions[i+1])
+			newSQLStr.WriteString(questions[i+1])
 			continue
 		}
 		for j := 0; j < sliceLen; j++ {
 			//每多一个参数,对应",?" 两个符号.增加的问号长度总计是(sliceLen-1)*2.
 			if j >= 1 {
 				//记录SQL
-				newSqlStr.WriteString(",?")
+				newSQLStr.WriteString(",?")
 			}
 			//记录新值
 			sliceValue := valueOf.Index(j).Interface()
 			newValues = append(newValues, sliceValue)
 		}
 		//记录SQL
-		newSqlStr.WriteString(questions[i+1])
+		newSQLStr.WriteString(questions[i+1])
 	}
 	//重新赋值
-	finder.sqlstr = newSqlStr.String()
+	finder.sqlstr = newSQLStr.String()
 	finder.Values = newValues
 	return finder.sqlstr, nil
 }

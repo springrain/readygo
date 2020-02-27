@@ -1,5 +1,6 @@
 package orm
 
+//Page 分页对象
 type Page struct {
 	//当前页码,从1开始
 	PageNo int
@@ -19,7 +20,7 @@ type Page struct {
 	LastPage bool
 }
 
-//创建Page对象
+//NewPage 创建Page对象
 func NewPage() Page {
 	page := Page{}
 	page.PageNo = 1
@@ -27,7 +28,7 @@ func NewPage() Page {
 	return page
 }
 
-//设置总条数,计算其他值
+//setTotalCount 设置总条数,计算其他值
 func (page *Page) setTotalCount(total int) {
 	page.TotalCount = total
 	page.PageCount = (page.TotalCount + page.PageSize - 1) / page.PageSize

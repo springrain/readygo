@@ -416,7 +416,7 @@ func QueryStructList(session *Session, finder *Finder, rowsSlicePtr interface{},
 
 }
 
-//根据Finder查询,封装Map
+//QueryMap 根据Finder查询,封装Map
 //bug(springrain)需要测试一下 in 数组, like ,还有查询一个基础类型(例如 string)的功能
 //如果没有事务,session传入nil,使用默认的BaseDao进行查询.如果有事务,参照使用orm.Transaction方法传入session.可以使用BaseDao.GetSession()方法,为多数据库预留的方法,正常不建议使用
 func QueryMap(session *Session, finder *Finder) (map[string]interface{}, error) {
@@ -440,7 +440,7 @@ func QueryMap(session *Session, finder *Finder) (map[string]interface{}, error) 
 	return resultMapList[0], nil
 }
 
-//根据Finder查询,封装Map数组
+//QueryMapList 根据Finder查询,封装Map数组
 //根据数据库字段的类型,完成从[]byte到golang类型的映射,理论上其他查询方法都可以调用此方法,但是需要处理sql.Nullxxx等驱动支持的类型
 //如果没有事务,session传入nil,使用默认的BaseDao进行查询.如果有事务,参照使用orm.Transaction方法传入session.可以使用BaseDao.GetSession()方法,为多数据库预留的方法,正常不建议使用
 func QueryMapList(session *Session, finder *Finder, page *Page) ([]map[string]interface{}, error) {
@@ -524,7 +524,7 @@ func QueryMapList(session *Session, finder *Finder, page *Page) ([]map[string]in
 	return resultMapList, nil
 }
 
-//更新Finder
+//UpdateFinder 更新Finder语句
 //session不能为nil,参照使用orm.Transaction方法传入session.请不要自己构建Session
 func UpdateFinder(session *Session, finder *Finder) error {
 
@@ -561,7 +561,7 @@ func UpdateFinder(session *Session, finder *Finder) error {
 	return nil
 }
 
-//保存Struct对象,必须是IEntityStruct类型
+//SaveStruct 保存Struct对象,必须是*IEntityStruct类型
 //bug(chunanuyong) 如果是自增主键,需要返回.需要sql驱动支持
 //session不能为nil,参照使用orm.Transaction方法传入session.请不要自己构建Session
 func SaveStruct(session *Session, entity IEntityStruct) error {
@@ -625,7 +625,7 @@ func SaveStruct(session *Session, entity IEntityStruct) error {
 
 }
 
-//更新struct所有属性,必须是IEntityStruct类型
+//UpdateStruct 更新struct所有属性,必须是*IEntityStruct类型
 //session不能为nil,参照使用orm.Transaction方法传入session.请不要自己构建Session
 func UpdateStruct(session *Session, entity IEntityStruct) error {
 	err := updateStructFunc(session, entity, false)
@@ -636,7 +636,7 @@ func UpdateStruct(session *Session, entity IEntityStruct) error {
 	return nil
 }
 
-//更新struct不为nil的属性,必须是IEntityStruct类型
+//UpdateStructNotNil 更新struct不为nil的属性,必须是*IEntityStruct类型
 //session不能为nil,参照使用orm.Transaction方法传入session.请不要自己构建Session
 func (baseDao *BaseDao) UpdateStructNotNil(session *Session, entity IEntityStruct) error {
 	err := updateStructFunc(session, entity, true)
@@ -647,7 +647,7 @@ func (baseDao *BaseDao) UpdateStructNotNil(session *Session, entity IEntityStruc
 	return nil
 }
 
-// 根据主键删除一个对象.必须是IEntityStruct类型
+//DeleteStruct 根据主键删除一个对象.必须是*IEntityStruct类型
 //session不能为nil,参照使用orm.Transaction方法传入session.请不要自己构建Session
 func DeleteStruct(session *Session, entity IEntityStruct) error {
 	//必须要有session和事务
@@ -656,9 +656,7 @@ func DeleteStruct(session *Session, entity IEntityStruct) error {
 	if sessionerr != nil {
 		return sessionerr
 	}
-	if entity == nil {
-		return errors.New("对象不能为空")
-	}
+
 	pkName, pkNameErr := entityPKFieldName(entity)
 	if pkNameErr != nil {
 		pkNameErr = fmt.Errorf("DeleteStruct-->entityPKFieldName获取主键名称错误:%w", pkNameErr)
@@ -692,7 +690,7 @@ func DeleteStruct(session *Session, entity IEntityStruct) error {
 
 }
 
-//保存IEntityMap对象.使用Map保存数据,需要在数据中封装好包括Id在内的所有数据.不适用于复杂情况
+//SaveMap 保存IEntityMap对象.使用Map保存数据,需要在数据中封装好包括Id在内的所有数据.不适用于复杂情况
 //session不能为nil,参照使用orm.Transaction方法传入session.请不要自己构建Session
 func SaveMap(session *Session, entity IEntityMap) error {
 	//必须要有session和事务
@@ -713,9 +711,7 @@ func SaveMap(session *Session, entity IEntityMap) error {
 	}
 
 	//流弊的...,把数组展开变成多个参数的形式
-
 	_, errexec := session.exec(sqlstr, values...)
-
 	if errexec != nil {
 		errexec = fmt.Errorf("SaveMap执行保存错误:%w", errexec)
 		logger.Error(errexec)
@@ -726,7 +722,7 @@ func SaveMap(session *Session, entity IEntityMap) error {
 
 }
 
-//更新IEntityMap对象.使用Map修改数据,需要在数据中封装好包括Id在内的所有数据.不适用于复杂情况
+//UpdateMap 更新IEntityMap对象.使用Map修改数据,需要在数据中封装好包括Id在内的所有数据.不适用于复杂情况
 //session不能为nil,参照使用orm.Transaction方法传入session.请不要自己构建Session
 func UpdateMap(session *Session, entity IEntityMap) error {
 	//必须要有session和事务
@@ -745,7 +741,7 @@ func UpdateMap(session *Session, entity IEntityMap) error {
 		logger.Error(err)
 		return err
 	}
-	//fmt.Println(sqlstr)
+
 	//流弊的...,把数组展开变成多个参数的形式
 	_, errexec := session.exec(sqlstr, values...)
 
@@ -815,6 +811,13 @@ func columnAndValue(entity interface{}) ([]reflect.StructField, []interface{}, e
 
 //获取实体类主键属性名称
 func entityPKFieldName(entity IEntityStruct) (string, error) {
+
+	//检查是否是指针对象
+	checkerr := checkEntityKind(entity)
+	if checkerr != nil {
+		return "", checkerr
+	}
+
 	//缓存的key,TypeOf和ValueOf的String()方法,返回值不一样
 	typeOf := reflect.TypeOf(entity).Elem()
 
