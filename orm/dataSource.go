@@ -21,7 +21,7 @@ type DataSourceConfig struct {
 	DBName   string
 	UserName string
 	PassWord string
-	//mysql,使用枚举
+	//mysql,postgres,oci8,adodb
 	DBType string
 }
 
