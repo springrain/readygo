@@ -14,17 +14,18 @@ type dataSource struct {
 	*sql.DB
 }
 
-//数据库连接池的配置
+//DataSourceConfig 数据库连接池的配置
 type DataSourceConfig struct {
 	Host     string
 	Port     int
 	DBName   string
 	UserName string
 	PassWord string
-	//mysql,使用枚举
+	//mysql,postgres,oci8,adodb
 	DBType string
 }
 
+//newDataSource 创建一个新的datasource,内部调用,避免外部直接使用datasource
 func newDataSource(config *DataSourceConfig) (*dataSource, error) {
 	dsn, e := wrapDBDSN(config)
 	if e != nil {
@@ -59,18 +60,18 @@ func newDataSource(config *DataSourceConfig) (*dataSource, error) {
 
 //const beginStatus = 1
 
-// Session 会话
+// Session 数据库session会话,可以原生查询或者事务
 type Session struct {
 	db *sql.DB // 原生db
 	tx *sql.Tx // 原生事务
-	//mysql,使用枚举,数据库类型
+	//mysql,postgres,oci8,adodb
 	dbType string
 
 	//commitSign   int8    // 提交标记，控制是否提交事务
 	//rollbackSign bool    // 回滚标记，控制是否回滚事务
 }
 
-// Begin 开启事务
+// begin 开启事务
 func (s *Session) begin() error {
 	//s.rollbackSign = true
 	if s.tx == nil {
@@ -88,7 +89,7 @@ func (s *Session) begin() error {
 	return nil
 }
 
-// Rollback 回滚事务
+// rollback 回滚事务
 func (s *Session) rollback() error {
 	//if s.tx != nil && s.rollbackSign == true {
 	if s.tx != nil {
@@ -104,7 +105,7 @@ func (s *Session) rollback() error {
 	return nil
 }
 
-// Commit 提交事务
+// commit 提交事务
 func (s *Session) commit() error {
 	//s.rollbackSign = false
 	if s.tx == nil {
@@ -122,7 +123,7 @@ func (s *Session) commit() error {
 
 }
 
-// Exec 执行sql语句，如果已经开启事务，就以事务方式执行，如果没有开启事务，就以非事务方式执行
+// exec 执行sql语句，如果已经开启事务，就以事务方式执行，如果没有开启事务，就以非事务方式执行
 func (s *Session) exec(query string, args ...interface{}) (sql.Result, error) {
 	if s.tx != nil {
 		return s.tx.Exec(query, args...)
@@ -130,7 +131,7 @@ func (s *Session) exec(query string, args ...interface{}) (sql.Result, error) {
 	return s.db.Exec(query, args...)
 }
 
-// QueryRow 如果已经开启事务，就以事务方式执行，如果没有开启事务，就以非事务方式执行
+// queryRow 如果已经开启事务，就以事务方式执行，如果没有开启事务，就以非事务方式执行
 func (s *Session) queryRow(query string, args ...interface{}) *sql.Row {
 	if s.tx != nil {
 		return s.tx.QueryRow(query, args...)
@@ -138,7 +139,7 @@ func (s *Session) queryRow(query string, args ...interface{}) *sql.Row {
 	return s.db.QueryRow(query, args...)
 }
 
-// Query 查询数据，如果已经开启事务，就以事务方式执行，如果没有开启事务，就以非事务方式执行
+// query 查询数据，如果已经开启事务，就以事务方式执行，如果没有开启事务，就以非事务方式执行
 func (s *Session) query(query string, args ...interface{}) (*sql.Rows, error) {
 	if s.tx != nil {
 		return s.tx.Query(query, args...)
@@ -146,7 +147,7 @@ func (s *Session) query(query string, args ...interface{}) (*sql.Rows, error) {
 	return s.db.Query(query, args...)
 }
 
-// Prepare 预执行，如果已经开启事务，就以事务方式执行，如果没有开启事务，就以非事务方式执行
+// prepare 预执行，如果已经开启事务，就以事务方式执行，如果没有开启事务，就以非事务方式执行
 func (s *Session) prepare(query string) (*sql.Stmt, error) {
 	if s.tx != nil {
 		return s.tx.Prepare(query)

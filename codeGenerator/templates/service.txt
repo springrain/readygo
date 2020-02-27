@@ -6,77 +6,92 @@ import (
 )
 
 //Save{{.structName}} 保存{{.tableComment}}
-//如果入参session为nil或者没事务,则会使用本机的开启,并提交.如果session有事务,则只使用,不提交,有开启方提交事务.但是如果遇到错误或者异常,虽然不是事务的开启方,也会回滚事务,让事务尽早回滚
+//如果入参session为nil,使用defaultDao开启事务并最后提交.如果入参session没有事务,调用session.begin()开启事务并最后提交.如果入参session有事务,只使用不提交,有开启方提交事务.但是如果遇到错误或者异常,虽然不是事务的开启方,也会回滚事务,让事务尽早回滚
 func Save{{.structName}}(session *orm.Session, {{.pname}} *{{.packageName}}.{{.structName}}) error {
 
     //匿名函数return的error如果不为nil,事务就会回滚
-	_, err := orm.Transaction(session,func(session *orm.Session) (interface{}, error) {
+	_, errSave{{.structName}} := orm.Transaction(session,func(session *orm.Session) (interface{}, error) {
 
 		//事务下的业务代码开始
+		errSave{{.structName}} := orm.SaveStruct(session, {{.pname}})
 
-		err := orm.SaveStruct(session, {{.pname}})
-		if err != nil {
-			return nil, err
+
+		if errSave{{.structName}} != nil {
+			return nil, errSave{{.structName}}
 		}
-		return nil, nil
 
+		return nil, nil
 		//事务下的业务代码结束
 
 	})
-	if err != nil {
-		return err
+
+	//记录错误
+	if errSave{{.structName}} != nil {
+		errSave{{.structName}} := fmt.Errorf("{{.servicePackageName}}.Save{{.structName}}错误:%w", errSave{{.structName}})
+		logger.Error(errSave{{.structName}})
+		return errSave{{.structName}}
 	}
+
 	return nil
 }
 
 //Update{{.structName}} 更新{{.tableComment}}
-//如果入参session为nil或者没事务,则会使用本机的开启,并提交.如果session有事务,则只使用,不提交,有开启方提交事务.但是如果遇到错误或者异常,虽然不是事务的开启方,也会回滚事务,让事务尽早回滚
+//如果入参session为nil,使用defaultDao开启事务并最后提交.如果入参session没有事务,调用session.begin()开启事务并最后提交.如果入参session有事务,只使用不提交,有开启方提交事务.但是如果遇到错误或者异常,虽然不是事务的开启方,也会回滚事务,让事务尽早回滚
 func Update{{.structName}}(session *orm.Session, {{.pname}} *{{.packageName}}.{{.structName}}) error {
 	
     //匿名函数return的error如果不为nil,事务就会回滚
-	_, err := orm.Transaction(session,func(session *orm.Session) (interface{}, error) {
+	_, errUpdate{{.structName}} := orm.Transaction(session,func(session *orm.Session) (interface{}, error) {
 
 		//事务下的业务代码开始
+		errUpdate{{.structName}} := orm.UpdateStruct(session, {{.pname}})
 
-		err := orm.UpdateStruct(session, {{.pname}})
-		if err != nil {
-			return nil, err
+
+		if errUpdate{{.structName}} != nil {
+			return nil, errUpdate{{.structName}}
 		}
 
 		return nil, nil
-
 		//事务下的业务代码结束
 
 	})
-	if err != nil {
-		return err
+
+	//记录错误
+	if errUpdate{{.structName}} != nil {
+		errUpdate{{.structName}} := fmt.Errorf("{{.servicePackageName}}.Update{{.structName}}错误:%w", errUpdate{{.structName}})
+		logger.Error(errUpdate{{.structName}})
+		return errUpdate{{.structName}}
 	}
+
 	return nil
 }
 
 //Delete{{.structName}} 删除{{.tableComment}}
-//如果入参session为nil或者没事务,则会使用本机的开启,并提交.如果session有事务,则只使用,不提交,有开启方提交事务.但是如果遇到错误或者异常,虽然不是事务的开启方,也会回滚事务,让事务尽早回滚
+//如果入参session为nil,使用defaultDao开启事务并最后提交.如果入参session没有事务,调用session.begin()开启事务并最后提交.如果入参session有事务,只使用不提交,有开启方提交事务.但是如果遇到错误或者异常,虽然不是事务的开启方,也会回滚事务,让事务尽早回滚
 func Delete{{.structName}}(session *orm.Session, {{.pname}} *{{.packageName}}.{{.structName}}) error {
 	
     //匿名函数return的error如果不为nil,事务就会回滚
-	_, err := orm.Transaction(session,func(session *orm.Session) (interface{}, error) {
+	_, errDelete{{.structName}} := orm.Transaction(session,func(session *orm.Session) (interface{}, error) {
 
 		//事务下的业务代码开始
+		errDelete{{.structName}} := orm.DeleteStruct(session, {{.pname}})
 
-		err := orm.DeleteStruct(session, {{.pname}})
-		if err != nil {
-			return nil, err
+
+		if errDelete{{.structName}} != nil {
+			return nil, errDelete{{.structName}}
 		}
 
 		return nil, nil
-
 		//事务下的业务代码结束
 
 	})
 
-	if err != nil {
-		return err
+    //记录错误
+	if errDelete{{.structName}} != nil {
+		errDelete{{.structName}} := fmt.Errorf("{{.servicePackageName}}.Delete{{.structName}}错误:%w", errDelete{{.structName}})
+		logger.Error(errDelete{{.structName}})
+		return errDelete{{.structName}}
 	}
+
 	return nil
 }
 
@@ -91,10 +106,15 @@ func Find{{.structName}}ById(session *orm.Session, id string) (*{{.packageName}}
 	//根据Id查询
 	finder := orm.NewSelectFinder(" WHERE id=?", id)
 	{{.pname}} := {{.packageName}}.{{.structName}}{}
-	err := orm.QueryStruct(session, finder, &{{.pname}})
-	if err != nil {
-		return nil, err
+	errFind{{.structName}}ById := orm.QueryStruct(session, finder, &{{.pname}})
+
+	//记录错误
+	if errFind{{.structName}}ById != nil {
+		errFind{{.structName}}ById := fmt.Errorf("{{.servicePackageName}}.Find{{.structName}}ById错误:%w", errFind{{.structName}}ById)
+		logger.Error(errFind{{.structName}}ById)
+		return nil, errFind{{.structName}}ById
 	}
+
 	return &{{.pname}}, nil
 
 }
@@ -103,9 +123,14 @@ func Find{{.structName}}ById(session *orm.Session, id string) (*{{.packageName}}
 //session如果为nil,则会使用默认的datasource进行无事务查询
 func Find{{.structName}}List(session *orm.Session, finder *orm.Finder, page *orm.Page) ([]{{.packageName}}.{{.structName}}, error) {
 	{{.pname}}List := make([]{{.packageName}}.{{.structName}}, 0)
-	err := orm.QueryStructList(session, finder, &{{.pname}}List, page)
-	if err != nil {
-		return nil, err
+	errFind{{.structName}}List := orm.QueryStructList(session, finder, &{{.pname}}List, page)
+
+	//记录错误
+	if errFind{{.structName}}List != nil {
+		errFind{{.structName}}List := fmt.Errorf("{{.servicePackageName}}.Find{{.structName}}List错误:%w", errFind{{.structName}}List)
+		logger.Error(errFind{{.structName}}List)
+		return nil, errFind{{.structName}}List
 	}
+
 	return {{.pname}}List, nil
 }

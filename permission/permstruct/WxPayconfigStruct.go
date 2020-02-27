@@ -14,58 +14,58 @@ type WxPayconfigStruct struct {
 	//引入默认的struct,隔离IEntityStruct的方法改动
 	orm.EntityStruct
 
-	// <no value>
+	//Id <no value>
 	Id string `column:"id"`
 
-	// 站点Id
+	//OrgId 站点Id
 	OrgId string `column:"orgId"`
 
-	// 开发者Id
+	//AppId 开发者Id
 	AppId string `column:"appId"`
 
-	// 应用密钥
+	//Secret 应用密钥
 	Secret string `column:"secret"`
 
-	// 微信支付商户号
+	//MchId 微信支付商户号
 	MchId string `column:"mchId"`
 
-	// 交易过程生成签名的密钥，仅保留在商户系统和微信支付后台，不会在网络中传播
+	//Key 交易过程生成签名的密钥，仅保留在商户系统和微信支付后台，不会在网络中传播
 	Key string `column:"key"`
 
-	// 证书地址
+	//CertificateFile 证书地址
 	CertificateFile string `column:"certificateFile"`
 
-	// 通知地址
+	//NotifyUrl 通知地址
 	NotifyUrl string `column:"notifyUrl"`
 
-	// 加密方式,MD5和HMAC-SHA256
+	//SignType 加密方式,MD5和HMAC-SHA256
 	SignType string `column:"signType"`
 
-	// <no value>
+	//CreateTime <no value>
 	CreateTime time.Time `column:"createTime"`
 
-	// <no value>
+	//CreateUserId <no value>
 	CreateUserId string `column:"createUserId"`
 
-	// <no value>
+	//UpdateTime <no value>
 	UpdateTime time.Time `column:"updateTime"`
 
-	// <no value>
+	//UpdateUserId <no value>
 	UpdateUserId string `column:"updateUserId"`
 
-	// 状态 0不可用,1可用
+	//Active 状态 0不可用,1可用
 	Active int `column:"active"`
 
 	//------------------数据库字段结束,自定义字段写在下面---------------//
 
 }
 
-//获取表名称
+//GetTableName 获取表名称
 func (entity *WxPayconfigStruct) GetTableName() string {
 	return WxPayconfigStructTableName
 }
 
-//获取数据库表的主键字段名称.因为要兼容Map,只能是数据库的字段名称.对应的struct 属性field
+//GetPKColumnName 获取数据库表的主键字段名称.因为要兼容Map,只能是数据库的字段名称.
 func (entity *WxPayconfigStruct) GetPKColumnName() string {
 	return "id"
 }

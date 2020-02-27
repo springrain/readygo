@@ -4,34 +4,53 @@
 golang开发脚手架
 
 #### 软件架构
-软件架构说明
+基于gin和自研ORM  
+[自带代码生成器](https://gitee.com/chunanyong/readygo/tree/master/codeGenerator)  
+使用orm.Finder作为sql载体,所有的sql语句最终都是通过finder执行.  
+支持事务传播  
 
 
-#### 安装教程
+#### 例子
+具体可以参照 [UserStructService.go](https://gitee.com/chunanyong/readygo/tree/master/permission/permservice)
 
-1.  xxxx
-2.  xxxx
-3.  xxxx
+1.  增
+    ```
+    var user permstruct.UserStruct
+    err := orm.SaveStruct(nil, &user)
+    ```
+2.  删
+    ```
+    err := orm.DeleteStruct(nil,&user)
+    ```
+  
+3.  改
+    ```
+    err := orm.UpdateStruct(nil,&user)
+    //finder更新
+    err := orm.UpdateFinder(nil,finder)
+    ```
+4.  查
+    ```
+	finder := orm.NewSelectFinder(permstruct.UserStructTableName)
+	page := orm.NewPage()
+	var users = make([]permstruct.UserStruct, 0)
+	err := orm.QueryStructList(nil, finder, &users, &page)
+    ```
+5.  事务传播
+    ```
+    //匿名函数return的error如果不为nil,事务就会回滚
+	_, errSaveUserStruct := orm.Transaction(session, func(session *orm.Session) (interface{}, error) {
 
-#### 使用说明
+		//事务下的业务代码开始
+		errSaveUserStruct := orm.SaveStruct(session, userStruct)
 
-1.  xxxx
-2.  xxxx
-3.  xxxx
+		if errSaveUserStruct != nil {
+			return nil, errSaveUserStruct
+		}
 
-#### 参与贡献
+		return nil, nil
+		//事务下的业务代码结束
 
-1.  Fork 本仓库
-2.  新建 Feat_xxx 分支
-3.  提交代码
-4.  新建 Pull Request
+	})
+    ```
 
-
-#### 码云特技
-
-1.  使用 Readme\_XXX.md 来支持不同的语言，例如 Readme\_en.md, Readme\_zh.md
-2.  码云官方博客 [blog.gitee.com](https://blog.gitee.com)
-3.  你可以 [https://gitee.com/explore](https://gitee.com/explore) 这个地址来了解码云上的优秀开源项目
-4.  [GVP](https://gitee.com/gvp) 全称是码云最有价值开源项目，是码云综合评定出的优秀开源项目
-5.  码云官方提供的使用手册 [https://gitee.com/help](https://gitee.com/help)
-6.  码云封面人物是一档用来展示码云会员风采的栏目 [https://gitee.com/gitee-stars/](https://gitee.com/gitee-stars/)

@@ -13,7 +13,7 @@ type {{.structName}} struct {
 	//引入默认的struct,隔离IEntityStruct的方法改动
 	orm.EntityStruct
 	{{range $i, $v := .columns}}
-    // {{$v.COLUMN_COMMENT}}
+    //{{$v.field}} {{$v.COLUMN_COMMENT}}
     {{$v.field}} {{$v.DATA_TYPE}} `column:"{{$v.COLUMN_NAME}}"`
     {{end}}
 	//------------------数据库字段结束,自定义字段写在下面---------------//
@@ -22,12 +22,12 @@ type {{.structName}} struct {
 }
 
 
-//获取表名称
+//GetTableName 获取表名称
 func (entity *{{.structName}}) GetTableName() string {
 	return {{.structName}}TableName
 }
 
-//获取数据库表的主键字段名称.因为要兼容Map,只能是数据库的字段名称.对应的struct 属性field
+//GetPKColumnName 获取数据库表的主键字段名称.因为要兼容Map,只能是数据库的字段名称.
 func (entity *{{.structName}}) GetPKColumnName() string {
 	return "{{.pkName}}"
 }
