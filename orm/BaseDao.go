@@ -348,7 +348,7 @@ func QueryStructList(session *Session, finder *Finder, rowsSlicePtr interface{},
 		}
 
 		//查询总条数
-		if page != nil && finder.SelectPageCount {
+		if page != nil && finder.SelectTotalCount {
 			count, counterr := selectCount(session, finder)
 			if counterr != nil {
 				counterr = fmt.Errorf("查询总条数错误:%w", counterr)
@@ -402,7 +402,7 @@ func QueryStructList(session *Session, finder *Finder, rowsSlicePtr interface{},
 	}
 
 	//查询总条数
-	if page != nil && finder.SelectPageCount {
+	if page != nil && finder.SelectTotalCount {
 		count, counterr := selectCount(session, finder)
 		if counterr != nil {
 			counterr = fmt.Errorf("查询总条数错误:%w", counterr)
@@ -511,7 +511,7 @@ func QueryMapList(session *Session, finder *Finder, page *Page) ([]map[string]in
 
 	//bug(springrain) 还缺少查询总条数的逻辑
 	//查询总条数
-	if page != nil && finder.SelectPageCount {
+	if page != nil && finder.SelectTotalCount {
 		count, counterr := selectCount(session, finder)
 		if counterr != nil {
 			counterr = fmt.Errorf("查询总条数错误:%w", counterr)

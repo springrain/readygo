@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-//查询数据库的载体,所有的sql语句都要通过Finder执行.
+//Finder 查询数据库的载体,所有的sql语句都要通过Finder执行.
 type Finder struct {
 	//拼接SQL
 	sqlBuilder strings.Builder
@@ -18,21 +18,21 @@ type Finder struct {
 	// 设置总条数查询的finder.Struct不能为nil,自己引用自己,go无法初始化Finder struct,使用可以为nil的指针,就可以了.
 	//CountFinder Finder
 	CountFinder *Finder
-	//是否自动查询总页数,默认true
-	SelectPageCount bool
+	//是否自动查询总条数,默认true
+	SelectTotalCount bool
 	//SQL语句
 	sqlstr string
 }
 
-// 初始化一个Finder,生成一个空的Finder
+//NewFinder 初始化一个Finder,生成一个空的Finder
 func NewFinder() *Finder {
 	finder := Finder{}
-	finder.SelectPageCount = true
+	finder.SelectTotalCount = true
 	finder.Values = make([]interface{}, 0)
 	return &finder
 }
 
-//根据表名初始化查询的Finder
+//NewSelectFinder 根据表名初始化查询的Finder
 //NewSelectFinder("tableName") SELECT * FROM tableName
 //NewSelectFinder("tableName", "id,name") SELECT id,name FROM tableName
 func NewSelectFinder(tableName string, strs ...string) *Finder {
@@ -50,7 +50,7 @@ func NewSelectFinder(tableName string, strs ...string) *Finder {
 	return finder
 }
 
-//根据表名初始化更新的Finder,  UPDATE tableName SET
+//NewUpdateFinder 根据表名初始化更新的Finder,  UPDATE tableName SET
 func NewUpdateFinder(tableName string) *Finder {
 	finder := NewFinder()
 	finder.sqlBuilder.WriteString("UPDATE ")
@@ -59,7 +59,7 @@ func NewUpdateFinder(tableName string) *Finder {
 	return finder
 }
 
-//根据表名初始化删除的Finder,  DELETE FROM tableName WHERE
+//NewDeleteFinder 根据表名初始化删除的Finder,  DELETE FROM tableName WHERE
 func NewDeleteFinder(tableName string) *Finder {
 	finder := NewFinder()
 	finder.sqlBuilder.WriteString("DELETE FROM ")
@@ -68,7 +68,7 @@ func NewDeleteFinder(tableName string) *Finder {
 	return finder
 }
 
-//添加SQL和参数的值,第一个参数是语句,后面的参数[可选]是参数的值,顺序要正确.
+//Append 添加SQL和参数的值,第一个参数是语句,后面的参数[可选]是参数的值,顺序要正确.
 //例如: finder.Append(" and id=? and name=? ",23123,"abc")
 //只拼接SQL,例如: finder.Append(" and name=123 ")
 func (finder *Finder) Append(s string, values ...interface{}) *Finder {
@@ -89,7 +89,7 @@ func (finder *Finder) Append(s string, values ...interface{}) *Finder {
 	return finder
 }
 
-//添加另一个Finder finder.AppendFinder(f)
+//AppendFinder 添加另一个Finder finder.AppendFinder(f)
 func (finder *Finder) AppendFinder(f *Finder) (*Finder, error) {
 	if f == nil {
 		return nil, errors.New("参数是nil")
@@ -106,7 +106,7 @@ func (finder *Finder) AppendFinder(f *Finder) (*Finder, error) {
 	return finder, nil
 }
 
-// 返回Finder封装的SQL语句
+//GetSQL 返回Finder封装的SQL语句
 func (finder *Finder) GetSQL() (string, error) {
 	if len(finder.sqlstr) > 0 {
 		return finder.sqlstr, nil
