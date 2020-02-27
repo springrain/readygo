@@ -706,9 +706,9 @@ func DeleteStruct(session *Session, entity IEntityStruct) error {
 
 }
 
-//SaveMap 保存*IEntityMap对象.使用Map保存数据,需要在数据中封装好包括Id在内的所有数据.不适用于复杂情况
+//SaveEntityMap 保存*IEntityMap对象.使用Map保存数据,需要在数据中封装好包括Id在内的所有数据.不适用于复杂情况
 //session不能为nil,参照使用orm.Transaction方法传入session.请不要自己构建Session
-func SaveMap(session *Session, entity IEntityMap) error {
+func SaveEntityMap(session *Session, entity IEntityMap) error {
 	//检查是否是指针对象
 	checkerr := checkEntityKind(entity)
 	if checkerr != nil {
@@ -741,9 +741,9 @@ func SaveMap(session *Session, entity IEntityMap) error {
 
 }
 
-//UpdateMap 更新*IEntityMap对象.使用Map修改数据,需要在数据中封装好包括Id在内的所有数据.不适用于复杂情况
+//UpdateEntityMap 更新*IEntityMap对象.使用Map修改数据,需要在数据中封装好包括Id在内的所有数据.不适用于复杂情况
 //session不能为nil,参照使用orm.Transaction方法传入session.请不要自己构建Session
-func UpdateMap(session *Session, entity IEntityMap) error {
+func UpdateEntityMap(session *Session, entity IEntityMap) error {
 	//检查是否是指针对象
 	checkerr := checkEntityKind(entity)
 	if checkerr != nil {
