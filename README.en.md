@@ -5,6 +5,7 @@ golang开发脚手架
 
 #### 软件架构
 基于gin和自研ORM  
+[自带代码生成器](https://gitee.com/chunanyong/readygo/tree/master/codeGenerator)  
 使用orm.Finder作为sql载体,所有的sql语句最终都是通过finder执行.  
 支持事务传播  
 
