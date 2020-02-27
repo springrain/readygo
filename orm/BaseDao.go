@@ -17,9 +17,8 @@ var defaultZeroTime = time.Date(1970, time.January, 1, 0, 0, 1, 0, time.UTC)
 //var defaultZeroTime = time.Now()
 
 //注释如果是 . 句号结尾,IDE的提示就截止了,注释结尾不要用 . 结束
-//允许的Type
-//bug(springrain) 1.需要完善支持的数据类型和赋值接口,例如sql.NullString
-//处理基础类型的查询
+
+//allowBaseTypeMap 允许基础类型查询,用于查询单个基础类型字段,例如 select id from t_user
 var allowBaseTypeMap = map[reflect.Kind]bool{
 	reflect.String: true,
 
