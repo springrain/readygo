@@ -13,8 +13,8 @@ type Finder struct {
 	sqlBuilder strings.Builder
 	//SQL的参数值
 	Values []interface{}
-	//默认false 不允许SQL注入的 ' 单引号
-	InjectionSQL bool
+	//注入检查,默认true 不允许SQL注入的 ' 单引号
+	InjectionCheck bool
 	// 设置总条数查询的finder.Struct不能为nil,自己引用自己,go无法初始化Finder struct,使用可以为nil的指针,就可以了.
 	//CountFinder Finder
 	CountFinder *Finder
@@ -28,6 +28,7 @@ type Finder struct {
 func NewFinder() *Finder {
 	finder := Finder{}
 	finder.SelectTotalCount = true
+	finder.InjectionCheck = true
 	finder.Values = make([]interface{}, 0)
 	return &finder
 }
@@ -114,7 +115,7 @@ func (finder *Finder) GetSQL() (string, error) {
 	sqlstr := finder.sqlBuilder.String()
 	finder.sqlstr = sqlstr
 	//包含单引号,属于非法字符串
-	if !finder.InjectionSQL && (strings.Index(sqlstr, "'") >= 0) {
+	if finder.InjectionCheck && (strings.Index(sqlstr, "'") >= 0) {
 		return sqlstr, errors.New("SQL语句请不要直接拼接字符串参数!!!使用标准的占位符实现,例如  finder.Append(' and id=? and name=? ','123','abc')")
 	}
 
