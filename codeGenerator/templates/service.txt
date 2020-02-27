@@ -10,14 +10,14 @@ import (
 func Save{{.structName}}(session *orm.Session, {{.pname}} *{{.packageName}}.{{.structName}}) error {
 
     //匿名函数return的error如果不为nil,事务就会回滚
-	_, save{{.structName}}Err := orm.Transaction(session,func(session *orm.Session) (interface{}, error) {
+	_, errSave{{.structName}} := orm.Transaction(session,func(session *orm.Session) (interface{}, error) {
 
 		//事务下的业务代码开始
-		save{{.structName}}Err := orm.SaveStruct(session, {{.pname}})
+		errSave{{.structName}} := orm.SaveStruct(session, {{.pname}})
 
 
-		if save{{.structName}}Err != nil {
-			return nil, save{{.structName}}Err
+		if errSave{{.structName}} != nil {
+			return nil, errSave{{.structName}}
 		}
 
 		return nil, nil
@@ -26,10 +26,10 @@ func Save{{.structName}}(session *orm.Session, {{.pname}} *{{.packageName}}.{{.s
 	})
 
 	//记录错误
-	if save{{.structName}}Err != nil {
-		save{{.structName}}Err := fmt.Errorf("{{.servicePackageName}}.Save{{.structName}}错误:%w", save{{.structName}}Err)
-		logger.Error(save{{.structName}}Err)
-		return save{{.structName}}Err
+	if errSave{{.structName}} != nil {
+		errSave{{.structName}} := fmt.Errorf("{{.servicePackageName}}.Save{{.structName}}错误:%w", errSave{{.structName}})
+		logger.Error(errSave{{.structName}})
+		return errSave{{.structName}}
 	}
 
 	return nil
@@ -40,14 +40,14 @@ func Save{{.structName}}(session *orm.Session, {{.pname}} *{{.packageName}}.{{.s
 func Update{{.structName}}(session *orm.Session, {{.pname}} *{{.packageName}}.{{.structName}}) error {
 	
     //匿名函数return的error如果不为nil,事务就会回滚
-	_, update{{.structName}}Err := orm.Transaction(session,func(session *orm.Session) (interface{}, error) {
+	_, errUpdate{{.structName}} := orm.Transaction(session,func(session *orm.Session) (interface{}, error) {
 
 		//事务下的业务代码开始
-		update{{.structName}}Err := orm.UpdateStruct(session, {{.pname}})
+		errUpdate{{.structName}} := orm.UpdateStruct(session, {{.pname}})
 
 
-		if update{{.structName}}Err != nil {
-			return nil, update{{.structName}}Err
+		if errUpdate{{.structName}} != nil {
+			return nil, errUpdate{{.structName}}
 		}
 
 		return nil, nil
@@ -56,10 +56,10 @@ func Update{{.structName}}(session *orm.Session, {{.pname}} *{{.packageName}}.{{
 	})
 
 	//记录错误
-	if update{{.structName}}Err != nil {
-		update{{.structName}}Err := fmt.Errorf("{{.servicePackageName}}.Update{{.structName}}错误:%w", update{{.structName}}Err)
-		logger.Error(update{{.structName}}Err)
-		return update{{.structName}}Err
+	if errUpdate{{.structName}} != nil {
+		errUpdate{{.structName}} := fmt.Errorf("{{.servicePackageName}}.Update{{.structName}}错误:%w", errUpdate{{.structName}})
+		logger.Error(errUpdate{{.structName}})
+		return errUpdate{{.structName}}
 	}
 
 	return nil
@@ -70,14 +70,14 @@ func Update{{.structName}}(session *orm.Session, {{.pname}} *{{.packageName}}.{{
 func Delete{{.structName}}(session *orm.Session, {{.pname}} *{{.packageName}}.{{.structName}}) error {
 	
     //匿名函数return的error如果不为nil,事务就会回滚
-	_, delete{{.structName}}Err := orm.Transaction(session,func(session *orm.Session) (interface{}, error) {
+	_, errDelete{{.structName}} := orm.Transaction(session,func(session *orm.Session) (interface{}, error) {
 
 		//事务下的业务代码开始
-		delete{{.structName}}Err := orm.DeleteStruct(session, {{.pname}})
+		errDelete{{.structName}} := orm.DeleteStruct(session, {{.pname}})
 
 
-		if delete{{.structName}}Err != nil {
-			return nil, delete{{.structName}}Err
+		if errDelete{{.structName}} != nil {
+			return nil, errDelete{{.structName}}
 		}
 
 		return nil, nil
@@ -86,10 +86,10 @@ func Delete{{.structName}}(session *orm.Session, {{.pname}} *{{.packageName}}.{{
 	})
 
     //记录错误
-	if delete{{.structName}}Err != nil {
-		delete{{.structName}}Err := fmt.Errorf("{{.servicePackageName}}.Delete{{.structName}}错误:%w", delete{{.structName}}Err)
-		logger.Error(delete{{.structName}}Err)
-		return delete{{.structName}}Err
+	if errDelete{{.structName}} != nil {
+		errDelete{{.structName}} := fmt.Errorf("{{.servicePackageName}}.Delete{{.structName}}错误:%w", errDelete{{.structName}})
+		logger.Error(errDelete{{.structName}})
+		return errDelete{{.structName}}
 	}
 
 	return nil
@@ -106,13 +106,13 @@ func Find{{.structName}}ById(session *orm.Session, id string) (*{{.packageName}}
 	//根据Id查询
 	finder := orm.NewSelectFinder(" WHERE id=?", id)
 	{{.pname}} := {{.packageName}}.{{.structName}}{}
-	find{{.structName}}ByIdErr := orm.QueryStruct(session, finder, &{{.pname}})
+	errFind{{.structName}}ById := orm.QueryStruct(session, finder, &{{.pname}})
 
 	//记录错误
-	if find{{.structName}}ByIdErr != nil {
-		find{{.structName}}ByIdErr := fmt.Errorf("{{.servicePackageName}}.Find{{.structName}}ById错误:%w", find{{.structName}}ByIdErr)
-		logger.Error(find{{.structName}}ByIdErr)
-		return nil, find{{.structName}}ByIdErr
+	if errFind{{.structName}}ById != nil {
+		errFind{{.structName}}ById := fmt.Errorf("{{.servicePackageName}}.Find{{.structName}}ById错误:%w", errFind{{.structName}}ById)
+		logger.Error(errFind{{.structName}}ById)
+		return nil, errFind{{.structName}}ById
 	}
 
 	return &{{.pname}}, nil
@@ -123,13 +123,13 @@ func Find{{.structName}}ById(session *orm.Session, id string) (*{{.packageName}}
 //session如果为nil,则会使用默认的datasource进行无事务查询
 func Find{{.structName}}List(session *orm.Session, finder *orm.Finder, page *orm.Page) ([]{{.packageName}}.{{.structName}}, error) {
 	{{.pname}}List := make([]{{.packageName}}.{{.structName}}, 0)
-	find{{.structName}}ListErr := orm.QueryStructList(session, finder, &{{.pname}}List, page)
+	errFind{{.structName}}List := orm.QueryStructList(session, finder, &{{.pname}}List, page)
 
 	//记录错误
-	if find{{.structName}}ListErr != nil {
-		find{{.structName}}ListErr := fmt.Errorf("{{.servicePackageName}}.Find{{.structName}}List错误:%w", find{{.structName}}ListErr)
-		logger.Error(find{{.structName}}ListErr)
-		return nil, find{{.structName}}ListErr
+	if errFind{{.structName}}List != nil {
+		errFind{{.structName}}List := fmt.Errorf("{{.servicePackageName}}.Find{{.structName}}List错误:%w", errFind{{.structName}}List)
+		logger.Error(errFind{{.structName}}List)
+		return nil, errFind{{.structName}}List
 	}
 
 	return {{.pname}}List, nil

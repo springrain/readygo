@@ -13,13 +13,13 @@ import (
 func SaveUserStruct(session *orm.Session, userStruct *permstruct.UserStruct) error {
 
 	//匿名函数return的error如果不为nil,事务就会回滚
-	_, saveUserStructErr := orm.Transaction(session, func(session *orm.Session) (interface{}, error) {
+	_, errSaveUserStruct := orm.Transaction(session, func(session *orm.Session) (interface{}, error) {
 
 		//事务下的业务代码开始
-		saveUserStructErr := orm.SaveStruct(session, userStruct)
+		errSaveUserStruct := orm.SaveStruct(session, userStruct)
 
-		if saveUserStructErr != nil {
-			return nil, saveUserStructErr
+		if errSaveUserStruct != nil {
+			return nil, errSaveUserStruct
 		}
 
 		return nil, nil
@@ -28,10 +28,10 @@ func SaveUserStruct(session *orm.Session, userStruct *permstruct.UserStruct) err
 	})
 
 	//记录错误
-	if saveUserStructErr != nil {
-		saveUserStructErr := fmt.Errorf("permservice.SaveUserStruct错误:%w", saveUserStructErr)
-		logger.Error(saveUserStructErr)
-		return saveUserStructErr
+	if errSaveUserStruct != nil {
+		errSaveUserStruct := fmt.Errorf("permservice.SaveUserStruct错误:%w", errSaveUserStruct)
+		logger.Error(errSaveUserStruct)
+		return errSaveUserStruct
 	}
 
 	return nil
@@ -42,13 +42,13 @@ func SaveUserStruct(session *orm.Session, userStruct *permstruct.UserStruct) err
 func UpdateUserStruct(session *orm.Session, userStruct *permstruct.UserStruct) error {
 
 	//匿名函数return的error如果不为nil,事务就会回滚
-	_, updateUserStructErr := orm.Transaction(session, func(session *orm.Session) (interface{}, error) {
+	_, errUpdateUserStruct := orm.Transaction(session, func(session *orm.Session) (interface{}, error) {
 
 		//事务下的业务代码开始
-		updateUserStructErr := orm.UpdateStruct(session, userStruct)
+		errUpdateUserStruct := orm.UpdateStruct(session, userStruct)
 
-		if updateUserStructErr != nil {
-			return nil, updateUserStructErr
+		if errUpdateUserStruct != nil {
+			return nil, errUpdateUserStruct
 		}
 
 		return nil, nil
@@ -57,10 +57,10 @@ func UpdateUserStruct(session *orm.Session, userStruct *permstruct.UserStruct) e
 	})
 
 	//记录错误
-	if updateUserStructErr != nil {
-		updateUserStructErr := fmt.Errorf("permservice.UpdateUserStruct错误:%w", updateUserStructErr)
-		logger.Error(updateUserStructErr)
-		return updateUserStructErr
+	if errUpdateUserStruct != nil {
+		errUpdateUserStruct := fmt.Errorf("permservice.UpdateUserStruct错误:%w", errUpdateUserStruct)
+		logger.Error(errUpdateUserStruct)
+		return errUpdateUserStruct
 	}
 
 	return nil
@@ -71,13 +71,13 @@ func UpdateUserStruct(session *orm.Session, userStruct *permstruct.UserStruct) e
 func DeleteUserStruct(session *orm.Session, userStruct *permstruct.UserStruct) error {
 
 	//匿名函数return的error如果不为nil,事务就会回滚
-	_, deleteUserStructErr := orm.Transaction(session, func(session *orm.Session) (interface{}, error) {
+	_, errDeleteUserStruct := orm.Transaction(session, func(session *orm.Session) (interface{}, error) {
 
 		//事务下的业务代码开始
-		deleteUserStructErr := orm.DeleteStruct(session, userStruct)
+		errDeleteUserStruct := orm.DeleteStruct(session, userStruct)
 
-		if deleteUserStructErr != nil {
-			return nil, deleteUserStructErr
+		if errDeleteUserStruct != nil {
+			return nil, errDeleteUserStruct
 		}
 
 		return nil, nil
@@ -86,10 +86,10 @@ func DeleteUserStruct(session *orm.Session, userStruct *permstruct.UserStruct) e
 	})
 
 	//记录错误
-	if deleteUserStructErr != nil {
-		deleteUserStructErr := fmt.Errorf("permservice.DeleteUserStruct错误:%w", deleteUserStructErr)
-		logger.Error(deleteUserStructErr)
-		return deleteUserStructErr
+	if errDeleteUserStruct != nil {
+		errDeleteUserStruct := fmt.Errorf("permservice.DeleteUserStruct错误:%w", errDeleteUserStruct)
+		logger.Error(errDeleteUserStruct)
+		return errDeleteUserStruct
 	}
 
 	return nil
@@ -106,13 +106,13 @@ func FindUserStructById(session *orm.Session, id string) (*permstruct.UserStruct
 	//根据Id查询
 	finder := orm.NewSelectFinder(" WHERE id=?", id)
 	userStruct := permstruct.UserStruct{}
-	findUserStructByIdErr := orm.QueryStruct(session, finder, &userStruct)
+	errFindUserStructById := orm.QueryStruct(session, finder, &userStruct)
 
 	//记录错误
-	if findUserStructByIdErr != nil {
-		findUserStructByIdErr := fmt.Errorf("permservice.FindUserStructById错误:%w", findUserStructByIdErr)
-		logger.Error(findUserStructByIdErr)
-		return nil, findUserStructByIdErr
+	if errFindUserStructById != nil {
+		errFindUserStructById := fmt.Errorf("permservice.FindUserStructById错误:%w", errFindUserStructById)
+		logger.Error(errFindUserStructById)
+		return nil, errFindUserStructById
 	}
 
 	return &userStruct, nil
@@ -123,13 +123,13 @@ func FindUserStructById(session *orm.Session, id string) (*permstruct.UserStruct
 //session如果为nil,则会使用默认的datasource进行无事务查询
 func FindUserStructList(session *orm.Session, finder *orm.Finder, page *orm.Page) ([]permstruct.UserStruct, error) {
 	userStructList := make([]permstruct.UserStruct, 0)
-	findUserStructListErr := orm.QueryStructList(session, finder, &userStructList, page)
+	errFindUserStructList := orm.QueryStructList(session, finder, &userStructList, page)
 
 	//记录错误
-	if findUserStructListErr != nil {
-		findUserStructListErr := fmt.Errorf("permservice.FindUserStructList错误:%w", findUserStructListErr)
-		logger.Error(findUserStructListErr)
-		return nil, findUserStructListErr
+	if errFindUserStructList != nil {
+		errFindUserStructList := fmt.Errorf("permservice.FindUserStructList错误:%w", errFindUserStructList)
+		logger.Error(errFindUserStructList)
+		return nil, errFindUserStructList
 	}
 
 	return userStructList, nil
