@@ -52,17 +52,17 @@ type EntityMap struct {
 	tableName string
 	//主键列名
 	pkColumnName string
-	//数据库字段
-	DBFieldMap map[string]interface{}
-	//自定义的kv
-	TransientMap map[string]interface{}
+	//数据库字段,不暴露外部
+	dbFieldMap map[string]interface{}
+	//自定义的kv字段,不暴露外部
+	transientMap map[string]interface{}
 }
 
 //NewEntityMap 初始化Map,必须传入表名称
 func NewEntityMap(tbName string) *EntityMap {
 	entityMap := EntityMap{}
-	entityMap.DBFieldMap = map[string]interface{}{}
-	entityMap.TransientMap = map[string]interface{}{}
+	entityMap.dbFieldMap = map[string]interface{}{}
+	entityMap.transientMap = map[string]interface{}{}
 	entityMap.tableName = tbName
 	entityMap.pkColumnName = defaultPkName
 	return &entityMap
@@ -85,17 +85,17 @@ func (entity *EntityMap) GetPKColumnName() string {
 
 //GetDBFieldMap 针对Map类型,记录数据库字段
 func (entity *EntityMap) GetDBFieldMap() map[string]interface{} {
-	return entity.DBFieldMap
+	return entity.dbFieldMap
 }
 
 //Set 设置数据库字段
 func (entity *EntityMap) Set(key string, value interface{}) map[string]interface{} {
-	entity.DBFieldMap[key] = value
-	return entity.DBFieldMap
+	entity.dbFieldMap[key] = value
+	return entity.dbFieldMap
 }
 
 //Put 设置非数据库字段
 func (entity *EntityMap) Put(key string, value interface{}) map[string]interface{} {
-	entity.TransientMap[key] = value
-	return entity.TransientMap
+	entity.transientMap[key] = value
+	return entity.transientMap
 }
