@@ -170,11 +170,6 @@ func Transaction(session *Session, doTransaction func(session *Session) (interfa
 //根据Finder和封装为指定的entity类型,entity必须是*struct类型或者基础类型的指针.把查询的数据赋值给entity,所以要求指针类型
 //如果没有事务,session传入nil,使用默认的BaseDao进行查询.如果有事务,参照使用orm.Transaction方法传入session.可以使用BaseDao.GetSession()方法,为多数据库预留的方法,正常不建议使用
 func QueryStruct(session *Session, finder *Finder, entity interface{}) error {
-	var sessionerr error
-	session, sessionerr = checkSession(session, false)
-	if sessionerr != nil {
-		return sessionerr
-	}
 
 	checkerr := checkEntityKind(entity)
 	if checkerr != nil {
@@ -182,6 +177,14 @@ func QueryStruct(session *Session, finder *Finder, entity interface{}) error {
 		logger.Error(checkerr)
 		return checkerr
 	}
+
+	//检查session
+	var sessionerr error
+	session, sessionerr = checkSession(session, false)
+	if sessionerr != nil {
+		return sessionerr
+	}
+
 	//获取到sql语句
 	sqlstr, err := wrapQuerySQL(session.dbType, finder, nil)
 	if err != nil {
@@ -277,11 +280,7 @@ func QueryStruct(session *Session, finder *Finder, entity interface{}) error {
 //根据Finder和封装为指定的entity类型,entity必须是*[]struct类型,已经初始化好的数组,此方法只Append元素,这样调用方就不需要强制类型转换了
 //如果没有事务,session传入nil,使用默认的BaseDao进行查询.如果有事务,参照使用orm.Transaction方法传入session.可以使用BaseDao.GetSession()方法,为多数据库预留的方法,正常不建议使用
 func QueryStructList(session *Session, finder *Finder, rowsSlicePtr interface{}, page *Page) error {
-	var sessionerr error
-	session, sessionerr = checkSession(session, false)
-	if sessionerr != nil {
-		return sessionerr
-	}
+
 	if rowsSlicePtr == nil { //如果为nil
 		return errors.New("数组必须是*[]struct类型或者基础类型数组的指针")
 	}
@@ -305,7 +304,12 @@ func QueryStructList(session *Session, finder *Finder, rowsSlicePtr interface{},
 	if !(sliceElementType.Kind() == reflect.Struct || allowBaseTypeMap[sliceElementType.Kind()]) {
 		return errors.New("数组必须是*[]struct类型或者基础类型数组的指针")
 	}
-
+	//检查session
+	var sessionerr error
+	session, sessionerr = checkSession(session, false)
+	if sessionerr != nil {
+		return sessionerr
+	}
 	sqlstr, err := wrapQuerySQL(session.dbType, finder, nil)
 	if err != nil {
 		err = fmt.Errorf("获取查询语句异常:%w", err)
@@ -443,17 +447,17 @@ func QueryMap(session *Session, finder *Finder) (map[string]interface{}, error) 
 //根据数据库字段的类型,完成从[]byte到golang类型的映射,理论上其他查询方法都可以调用此方法,但是需要处理sql.Nullxxx等驱动支持的类型
 //如果没有事务,session传入nil,使用默认的BaseDao进行查询.如果有事务,参照使用orm.Transaction方法传入session.可以使用BaseDao.GetSession()方法,为多数据库预留的方法,正常不建议使用
 func QueryMapList(session *Session, finder *Finder, page *Page) ([]map[string]interface{}, error) {
-
-	var sessionerr error
-	session, sessionerr = checkSession(session, false)
-	if sessionerr != nil {
-		return nil, sessionerr
-	}
 	sqlstr, err := wrapQuerySQL(session.dbType, finder, nil)
 	if err != nil {
 		err = fmt.Errorf("QueryMapList查询错误:%w", err)
 		logger.Error(err)
 		return nil, err
+	}
+
+	var sessionerr error
+	session, sessionerr = checkSession(session, false)
+	if sessionerr != nil {
+		return nil, sessionerr
 	}
 
 	//根据语句和参数查询
@@ -526,14 +530,6 @@ func QueryMapList(session *Session, finder *Finder, page *Page) ([]map[string]in
 //UpdateFinder 更新Finder语句
 //session不能为nil,参照使用orm.Transaction方法传入session.请不要自己构建Session
 func UpdateFinder(session *Session, finder *Finder) error {
-
-	//必须要有session和事务
-	var sessionerr error
-	session, sessionerr = checkSession(session, true)
-	if sessionerr != nil {
-		return sessionerr
-	}
-
 	if finder == nil {
 		return errors.New("finder不能为空")
 	}
@@ -543,6 +539,13 @@ func UpdateFinder(session *Session, finder *Finder) error {
 		logger.Error(err)
 		return err
 	}
+	//必须要有session和事务
+	var sessionerr error
+	session, sessionerr = checkSession(session, true)
+	if sessionerr != nil {
+		return sessionerr
+	}
+
 	sqlstr, err = wrapSQL(session.dbType, sqlstr)
 	if err != nil {
 		err = fmt.Errorf("UpdateFinder-->wrapSQL错误:%w", err)
@@ -564,12 +567,7 @@ func UpdateFinder(session *Session, finder *Finder) error {
 //bug(chunanuyong) 如果是自增主键,需要返回.需要sql驱动支持
 //session不能为nil,参照使用orm.Transaction方法传入session.请不要自己构建Session
 func SaveStruct(session *Session, entity IEntityStruct) error {
-	//必须要有session和事务
-	var sessionerr error
-	session, sessionerr = checkSession(session, true)
-	if sessionerr != nil {
-		return sessionerr
-	}
+
 	if entity == nil {
 		return errors.New("对象不能为空")
 	}
@@ -582,6 +580,14 @@ func SaveStruct(session *Session, entity IEntityStruct) error {
 	if len(columns) < 1 {
 		return errors.New("没有tag信息,请检查struct中 column 的tag")
 	}
+
+	//必须要有session和事务
+	var sessionerr error
+	session, sessionerr = checkSession(session, true)
+	if sessionerr != nil {
+		return sessionerr
+	}
+
 	//SQL语句
 	sqlstr, autoIncrement, err := wrapSaveStructSQL(session.dbType, entity, &columns, &values)
 	if err != nil {
@@ -649,18 +655,19 @@ func (baseDao *BaseDao) UpdateStructNotNil(session *Session, entity IEntityStruc
 //DeleteStruct 根据主键删除一个对象.必须是*IEntityStruct类型
 //session不能为nil,参照使用orm.Transaction方法传入session.请不要自己构建Session
 func DeleteStruct(session *Session, entity IEntityStruct) error {
-	//必须要有session和事务
-	var sessionerr error
-	session, sessionerr = checkSession(session, true)
-	if sessionerr != nil {
-		return sessionerr
-	}
 
 	pkName, pkNameErr := entityPKFieldName(entity)
 	if pkNameErr != nil {
 		pkNameErr = fmt.Errorf("DeleteStruct-->entityPKFieldName获取主键名称错误:%w", pkNameErr)
 		logger.Error(pkNameErr)
 		return pkNameErr
+	}
+
+	//必须要有session和事务
+	var sessionerr error
+	session, sessionerr = checkSession(session, true)
+	if sessionerr != nil {
+		return sessionerr
 	}
 
 	value, e := structFieldValue(entity, pkName)
@@ -689,18 +696,21 @@ func DeleteStruct(session *Session, entity IEntityStruct) error {
 
 }
 
-//SaveMap 保存IEntityMap对象.使用Map保存数据,需要在数据中封装好包括Id在内的所有数据.不适用于复杂情况
+//SaveMap 保存*IEntityMap对象.使用Map保存数据,需要在数据中封装好包括Id在内的所有数据.不适用于复杂情况
 //session不能为nil,参照使用orm.Transaction方法传入session.请不要自己构建Session
 func SaveMap(session *Session, entity IEntityMap) error {
+	//检查是否是指针对象
+	checkerr := checkEntityKind(entity)
+	if checkerr != nil {
+		return checkerr
+	}
 	//必须要有session和事务
 	var sessionerr error
 	session, sessionerr = checkSession(session, true)
 	if sessionerr != nil {
 		return sessionerr
 	}
-	if entity == nil {
-		return errors.New("对象不能为空")
-	}
+
 	//SQL语句
 	sqlstr, values, err := wrapSaveMapSQL(session.dbType, entity)
 	if err != nil {
@@ -721,18 +731,22 @@ func SaveMap(session *Session, entity IEntityMap) error {
 
 }
 
-//UpdateMap 更新IEntityMap对象.使用Map修改数据,需要在数据中封装好包括Id在内的所有数据.不适用于复杂情况
+//UpdateMap 更新*IEntityMap对象.使用Map修改数据,需要在数据中封装好包括Id在内的所有数据.不适用于复杂情况
 //session不能为nil,参照使用orm.Transaction方法传入session.请不要自己构建Session
 func UpdateMap(session *Session, entity IEntityMap) error {
+	//检查是否是指针对象
+	checkerr := checkEntityKind(entity)
+	if checkerr != nil {
+		return checkerr
+	}
+
 	//必须要有session和事务
 	var sessionerr error
 	session, sessionerr = checkSession(session, true)
 	if sessionerr != nil {
 		return sessionerr
 	}
-	if entity == nil {
-		return errors.New("对象不能为空")
-	}
+
 	//SQL语句
 	sqlstr, values, err := wrapUpdateMapSQL(session.dbType, entity)
 	if err != nil {
@@ -905,6 +919,11 @@ func wrapMap(columns []string, values []columnValue) (map[string]columnValue, er
 //更新对象
 //session不能为nil,参照使用orm.Transaction方法传入session.请不要自己构建Session
 func updateStructFunc(session *Session, entity IEntityStruct, onlyupdatenotnull bool) error {
+
+	if entity == nil {
+		return errors.New("对象不能为空")
+	}
+
 	//必须要有session和事务
 	var sessionerr error
 	session, sessionerr = checkSession(session, true)
@@ -912,9 +931,6 @@ func updateStructFunc(session *Session, entity IEntityStruct, onlyupdatenotnull 
 		return sessionerr
 	}
 
-	if entity == nil {
-		return errors.New("对象不能为空")
-	}
 	columns, values, columnAndValueErr := columnAndValue(entity)
 	if columnAndValueErr != nil {
 		return columnAndValueErr

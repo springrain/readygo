@@ -59,13 +59,13 @@ type EntityMap struct {
 }
 
 //NewEntityMap 初始化Map,必须传入表名称
-func NewEntityMap(tbName string) EntityMap {
+func NewEntityMap(tbName string) *EntityMap {
 	entityMap := EntityMap{}
 	entityMap.DBFieldMap = map[string]interface{}{}
 	entityMap.TransientMap = map[string]interface{}{}
 	entityMap.tableName = tbName
 	entityMap.pkColumnName = defaultPkName
-	return entityMap
+	return &entityMap
 }
 
 //GetTableName 获取表名称
