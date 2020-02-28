@@ -206,7 +206,7 @@ func QueryStruct(session *Session, finder *Finder, entity interface{}) error {
 	}
 
 	//根据语句和参数查询
-	rows, e := session.query(sqlstr, finder.Values...)
+	rows, e := session.query(sqlstr, finder.values...)
 
 	if e != nil {
 		e = fmt.Errorf("查询数据库错误:%w", e)
@@ -344,7 +344,7 @@ func QueryStructList(session *Session, finder *Finder, rowsSlicePtr interface{},
 	}
 
 	//根据语句和参数查询
-	rows, e := session.query(sqlstr, finder.Values...)
+	rows, e := session.query(sqlstr, finder.values...)
 
 	if e != nil {
 		e = fmt.Errorf("查询rows异常:%w", e)
@@ -505,7 +505,7 @@ func QueryMapList(session *Session, finder *Finder, page *Page) ([]map[string]in
 	}
 
 	//根据语句和参数查询
-	rows, e := session.query(sqlstr, finder.Values...)
+	rows, e := session.query(sqlstr, finder.values...)
 	if e != nil {
 		e = fmt.Errorf("查询rows错误:%w", e)
 		logger.Error(e)
@@ -611,7 +611,7 @@ func UpdateFinder(session *Session, finder *Finder) error {
 	}
 
 	//流弊的...,把数组展开变成多个参数的形式
-	_, errexec := session.exec(sqlstr, finder.Values...)
+	_, errexec := session.exec(sqlstr, finder.values...)
 
 	if errexec != nil {
 		errexec = fmt.Errorf("执行更新错误:%w", errexec)
@@ -1121,7 +1121,7 @@ func selectCount(session *Session, finder *Finder) (int, error) {
 
 	countFinder := NewFinder()
 	countFinder.Append(countsql)
-	countFinder.Values = finder.Values
+	countFinder.values = finder.values
 
 	count := -1
 	cerr := QueryStruct(session, countFinder, &count)

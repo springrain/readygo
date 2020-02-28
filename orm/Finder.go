@@ -12,7 +12,7 @@ type Finder struct {
 	//拼接SQL
 	sqlBuilder strings.Builder
 	//SQL的参数值
-	Values []interface{}
+	values []interface{}
 	//注入检查,默认true 不允许SQL注入的 ' 单引号
 	InjectionCheck bool
 	// 设置总条数查询的finder.Struct不能为nil,自己引用自己,go无法初始化Finder struct,使用可以为nil的指针,就可以了.
@@ -29,7 +29,7 @@ func NewFinder() *Finder {
 	finder := Finder{}
 	finder.SelectTotalCount = true
 	finder.InjectionCheck = true
-	finder.Values = make([]interface{}, 0)
+	finder.values = make([]interface{}, 0)
 	return &finder
 }
 
@@ -74,6 +74,11 @@ func NewDeleteFinder(tableName string) *Finder {
 //只拼接SQL,例如: finder.Append(" and name=123 ")
 func (finder *Finder) Append(s string, values ...interface{}) *Finder {
 
+	//不要自己构建finder,使用Newxxx方法
+	if finder.values == nil {
+		return nil
+	}
+
 	if len(s) > 0 {
 		if len(finder.sqlstr) > 0 {
 			finder.sqlstr = ""
@@ -86,7 +91,7 @@ func (finder *Finder) Append(s string, values ...interface{}) *Finder {
 	//for _, v := range values {
 	//	finder.Values = append(finder.Values, v)
 	//}
-	finder.Values = append(finder.Values, values...)
+	finder.values = append(finder.values, values...)
 	return finder
 }
 
@@ -95,6 +100,12 @@ func (finder *Finder) AppendFinder(f *Finder) (*Finder, error) {
 	if f == nil {
 		return nil, errors.New("参数是nil")
 	}
+
+	//不要自己构建finder,使用Newxxx方法
+	if finder.values == nil {
+		return nil, errors.New("不要自己构建finder,使用Newxxx方法")
+	}
+
 	//添加f的SQL
 	sqlstr, err := f.GetSQL()
 	if err != nil {
@@ -103,12 +114,16 @@ func (finder *Finder) AppendFinder(f *Finder) (*Finder, error) {
 	finder.sqlstr = ""
 	finder.sqlBuilder.WriteString(sqlstr)
 	//添加f的值
-	finder.Values = append(finder.Values, f.Values...)
+	finder.values = append(finder.values, f.values...)
 	return finder, nil
 }
 
 //GetSQL 返回Finder封装的SQL语句
 func (finder *Finder) GetSQL() (string, error) {
+	//不要自己构建finder,使用Newxxx方法
+	if finder.values == nil {
+		return "", errors.New("不要自己构建finder,使用Newxxx方法")
+	}
 	if len(finder.sqlstr) > 0 {
 		return finder.sqlstr, nil
 	}
@@ -121,7 +136,7 @@ func (finder *Finder) GetSQL() (string, error) {
 
 	//处理sql语句中的in,实际就是把数组变量展开,例如 id in(?) ["1","2","3"] 语句变更为 id in (?,?,?) 参数也展开到参数数组里
 	//这里认为 slice类型的参数就是in
-	if finder.Values == nil || len(finder.Values) < 1 { //如果没有参数
+	if finder.values == nil || len(finder.values) < 1 { //如果没有参数
 		return sqlstr, nil
 	}
 
@@ -141,7 +156,7 @@ func (finder *Finder) GetSQL() (string, error) {
 	newSQLStr.WriteString(questions[0])
 
 	//遍历所有的参数
-	for i, v := range finder.Values {
+	for i, v := range finder.values {
 		//先拼接?,?号切割之后,?号就丢失了,先补充上
 		newSQLStr.WriteString("?")
 
@@ -192,6 +207,6 @@ func (finder *Finder) GetSQL() (string, error) {
 	}
 	//重新赋值
 	finder.sqlstr = newSQLStr.String()
-	finder.Values = newValues
+	finder.values = newValues
 	return finder.sqlstr, nil
 }
