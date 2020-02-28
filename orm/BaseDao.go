@@ -73,11 +73,14 @@ func getDefaultDao() *BaseDao {
 
 // GetSession 获取一个Session
 //如果参数session为nil,使用默认的datasource进行获取session.如果是多库,就需要使用Dao手动调用GetSession(),获得session,传给需要的方法
-func (baseDao *BaseDao) GetSession() *Session {
+func (baseDao *BaseDao) GetSession() (*Session, error) {
+	if baseDao == nil || baseDao.dataSource == nil {
+		return nil, errors.New("请不要自己创建baseDao,使用NewBaseDao方法进行创建")
+	}
 	session := new(Session)
 	session.db = baseDao.dataSource.DB
 	session.dbType = baseDao.config.DBType
-	return session
+	return session, nil
 }
 
 /*
@@ -1141,7 +1144,11 @@ func checkSession(session *Session, hastx bool) (*Session, error) {
 
 	if session == nil { //session为空
 		if !hastx { //如果要求没有事务,实例化一个默认的session
-			session = getDefaultDao().GetSession()
+			var errGetSession error
+			session, errGetSession = getDefaultDao().GetSession()
+			if errGetSession != nil {
+				return nil, errGetSession
+			}
 		} else { //如果要求有事务,错误
 			return nil, errSession
 		}
