@@ -8,13 +8,16 @@ import (
 //memeryCacheManager 内存的缓存管理器.缓存的结构是map[cacheName string]map[key stringvalue interface{}
 //缓存实现小写保护,避免外部直接使用实现而不使用函数,避免多个缓存实现混杂在业务中.
 type memeryCacheManager struct {
-	// 用于缓存反射的信息,sync.Map内部处理了并发锁.用指针地址.
+	// 用于缓存反射的信息,sync.Map内部处理了并发锁.用指针地址
+	//为什么不使用指针也可以直接Load获取值啊?golang里的struct对象能直接调用指针的方法吗?
 	memeryCacheMap *sync.Map
 }
 
 //NewMemeryCacheManager 创建内存管理器,需要给CacheManger中的cacheManager变量赋值
 func NewMemeryCacheManager() error {
 	newMemeryCacheManager := memeryCacheManager{}
+	var cacheMap sync.Map
+	newMemeryCacheManager.memeryCacheMap = &cacheMap
 	//newmap := make(map[string]interface{})
 	//newMemeryCacheManager.cacheMap = &newmap
 	//赋值变量,cacheManager只能初始化一次,后面的会覆盖前面的,作为缓存实现
@@ -30,7 +33,7 @@ func (cacheManager *memeryCacheManager) getFromCache(cacheName string, key strin
 		return nil, errCache
 	}
 	//获取cache中Map的值
-	value, _ := (*cache).Load(key)
+	value, _ := cache.Load(key)
 	return value, nil
 }
 
@@ -46,7 +49,7 @@ func (cacheManager *memeryCacheManager) putToCache(cacheName string, key string,
 		return errors.New("key值不能为空")
 	}
 	//map赋值
-	(*cache).Store(key, value)
+	cache.Store(key, value)
 	return nil
 }
 
@@ -72,7 +75,7 @@ func (cacheManager *memeryCacheManager) evictKey(cacheName string, key string) e
 		return errors.New("key值不能为空")
 	}
 	//删除Key值
-	(*cache).Delete(key)
+	cache.Delete(key)
 	return nil
 }
 
