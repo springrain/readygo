@@ -23,8 +23,8 @@ const (
 	dbPKNamePrefix = "_dbPKName_"
 )
 
-// 用于缓存反射的信息,sync.Map内部处理了并发锁.全局变量不能使用:=简写声明
-var cacheStructFieldInfoMap sync.Map
+// 用于缓存反射的信息,sync.Map内部处理了并发锁
+var cacheStructFieldInfoMap *sync.Map = &sync.Map{}
 
 //获取StructField的信息.只对struct或者*struct判断,如果是指针,返回指针下实际的struct类型.
 //第一个返回值是可以输出的字段(首字母大写),第二个是不能输出的字段(首字母小写)
@@ -55,7 +55,7 @@ func structFieldInfo(typeOf reflect.Type) error {
 	}
 
 	// 声明所有字段的载体
-	var allFieldMap sync.Map
+	var allFieldMap *sync.Map = &sync.Map{}
 	anonymous := make([]reflect.StructField, 0)
 
 	//遍历所有字段,记录匿名属性
@@ -69,7 +69,7 @@ func structFieldInfo(typeOf reflect.Type) error {
 		}
 	}
 	//调用匿名struct的递归方法
-	recursiveAnonymousStruct(&allFieldMap, anonymous)
+	recursiveAnonymousStruct(allFieldMap, anonymous)
 
 	//缓存的数据
 	exportStructFieldMap := make(map[string]reflect.StructField)

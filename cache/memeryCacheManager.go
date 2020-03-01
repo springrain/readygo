@@ -10,6 +10,7 @@ import (
 type memeryCacheManager struct {
 	// 用于缓存反射的信息,sync.Map内部处理了并发锁.用指针地址
 	//为什么不使用指针也可以直接Load获取值啊?golang里的struct对象能直接调用指针的方法吗?
+	//参照:https://blog.csdn.net/qq_31930499/article/details/93335096
 	memeryCacheMap *sync.Map
 }
 
