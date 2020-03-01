@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"readygo/orm"
 	"readygo/permission/permstruct"
+	"sync"
 	"testing"
-	"time"
 )
 
 var baseDao *orm.BaseDao
@@ -49,7 +49,7 @@ func TestQuey(t *testing.T) {
 
 	page := orm.NewPage()
 
-	var users = make([]permstruct.UserStruct, 0)
+	var users []permstruct.UserStruct
 
 	err := orm.QueryStructList(nil, finder, &users, &page)
 
@@ -61,25 +61,89 @@ func TestQuey(t *testing.T) {
 	fmt.Println(users)
 
 }
+func TestNull(t *testing.T)  {
+	finder := orm.NewFinder()
 
-func TestTranc(t *testing.T) {
+	finder.Append("select nil ")
+
+	queryMap, err := orm.QueryMap(nil, finder)
+
+	if err != nil{
+		t.Errorf("TestNull：%v",err)
+	}
+
+	fmt.Println(queryMap)
+}
+
+func TestCount(t *testing.T)  {
+	finder := orm.NewFinder()
+
+	finder.Append("select count(*) as c from ").Append(permstruct.WxCpconfigStructTableName)
+
+	queryMap, err := orm.QueryMap(nil, finder)
+
+	if err != nil{
+		t.Errorf("TestCount错误：%v",err)
+	}
+
+	fmt.Println(queryMap)
+}
+
+
+func worker(id int, wg *sync.WaitGroup) {
+
+	defer wg.Done()
+
+	fmt.Println(id)
+
 
 	orm.Transaction(nil, func(session *orm.Session) (interface{}, error) {
 
 		var u permstruct.UserStruct
+		//
+		//u.UserName = "zyf"
+		//u.CreateTime = time.Now()
+		//u.Sex = "男"+string(id)
+		////u.Active = 2/0
+		//
+		//e2 := orm.SaveStruct(session, &u)
+		//if e2 != nil {
+		//	//标记测试失败
+		//	//t.Errorf("TestTrancSave错误:%v", e2)
+		//	return nil, e2
+		//}
 
-		u.UserName = "zyf"
-		u.CreateTime = time.Now()
-		u.Sex = "男"
+		finder := orm.NewSelectFinder(permstruct.UserStructTableName).Append(" where id = ?","1583077877688617000")
 
-		e2 := orm.SaveStruct(session, &u)
-		if e2 != nil {
+		orm.QueryStruct(nil,finder,&u)
+
+		u.UserName = u.UserName + "test" + string(id)
+
+		u.UserType = id
+
+
+		e3 := orm.UpdateStruct(session, &u)
+		if e3 != nil {
 			//标记测试失败
-			t.Errorf("TestTranc错误:%v", e2)
-			return nil, e2
+			//t.Errorf("TestTrancUpdate错误:%v", e3)
+			return nil, e3
 		}
 
 		return nil, nil
 	})
+}
+
+
+func TestTranc(t *testing.T) {
+
+	var wg sync.WaitGroup
+
+	for i := 1; i <= 500; i++ {
+		wg.Add(1)
+		go worker(i, &wg)
+	}
+
+	wg.Wait()
+
 
 }
