@@ -196,7 +196,7 @@ func QueryStruct(session *Session, finder *Finder, entity interface{}) error {
 	//获取到sql语句
 	sqlstr, err := wrapQuerySQL(dbType, finder, nil)
 	if err != nil {
-		err = fmt.Errorf("获取查询语句错误:%w", err)
+		err = fmt.Errorf("获取查询SQL语句错误:%w", err)
 		logger.Error(err)
 		return err
 	}
@@ -210,6 +210,7 @@ func QueryStruct(session *Session, finder *Finder, entity interface{}) error {
 
 	//根据语句和参数查询
 	rows, e := session.query(sqlstr, finder.values...)
+	defer rows.Close()
 
 	if e != nil {
 		e = fmt.Errorf("查询数据库错误:%w", e)
@@ -334,7 +335,7 @@ func QueryStructList(session *Session, finder *Finder, rowsSlicePtr interface{},
 
 	sqlstr, err := wrapQuerySQL(dbType, finder, nil)
 	if err != nil {
-		err = fmt.Errorf("获取查询语句异常:%w", err)
+		err = fmt.Errorf("获取查询SQL语句错误:%w", err)
 		logger.Error(err)
 		return err
 	}
@@ -348,7 +349,7 @@ func QueryStructList(session *Session, finder *Finder, rowsSlicePtr interface{},
 
 	//根据语句和参数查询
 	rows, e := session.query(sqlstr, finder.values...)
-
+	defer rows.Close()
 	if e != nil {
 		e = fmt.Errorf("查询rows异常:%w", e)
 		logger.Error(e)
@@ -495,7 +496,7 @@ func QueryMapList(session *Session, finder *Finder, page *Page) ([]map[string]in
 
 	sqlstr, err := wrapQuerySQL(dbType, finder, nil)
 	if err != nil {
-		err = fmt.Errorf("QueryMapList查询错误:%w", err)
+		err = fmt.Errorf("QueryMapList查询SQL语句错误:%w", err)
 		logger.Error(err)
 		return nil, err
 	}
@@ -509,6 +510,7 @@ func QueryMapList(session *Session, finder *Finder, page *Page) ([]map[string]in
 
 	//根据语句和参数查询
 	rows, e := session.query(sqlstr, finder.values...)
+	defer rows.Close()
 	if e != nil {
 		e = fmt.Errorf("查询rows错误:%w", e)
 		logger.Error(e)
@@ -601,7 +603,7 @@ func UpdateFinder(session *Session, finder *Finder) error {
 
 	sqlstr, err = wrapSQL(dbType, sqlstr)
 	if err != nil {
-		err = fmt.Errorf("UpdateFinder-->wrapSQL错误:%w", err)
+		err = fmt.Errorf("UpdateFinder-->wrapSQL获取SQL语句错误:%w", err)
 		logger.Error(err)
 		return err
 	}
