@@ -2,16 +2,21 @@ package cache
 
 import "sync"
 
-//memeryCacheMap 缓存管理器接口.缓存的结构是map[cacheName string]map[key stringvalue interface{}
-// 用于缓存反射的信息,sync.Map内部处理了并发锁.
-var memeryCacheMap sync.Map
-
-//memeryCaheManager 内存的缓存管理器
+//memeryCacheManager 内存的缓存管理器.缓存的结构是map[cacheName string]map[key stringvalue interface{}
 type memeryCacheManager struct {
+	// 用于缓存反射的信息,sync.Map内部处理了并发锁.用指针地址.
+	memeryCacheMap *sync.Map
+	//cache的Map,用于实际存储map缓存.用指针地址.
+	cacheMap *map[string]interface{}
 }
 
 //NewMemeryCacheManager 创建内存管理器,需要给CacheManger中的cacheManager变量赋值
 func NewMemeryCacheManager() error {
+	newMemeryCacheManager := memeryCacheManager{}
+	newmap := make(map[string]interface{})
+	newMemeryCacheManager.cacheMap = &newmap
+	//赋值变量,cacheManager只能初始化一次,后面的会覆盖前面的,作为缓存实现
+	cacheManager = &newMemeryCacheManager
 	return nil
 }
 

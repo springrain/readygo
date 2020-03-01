@@ -9,7 +9,7 @@ type iCacheManage interface {
 
 	//putToCache 设置指定cache中的key
 	//缓存的结构是map[cacheName string]map[key string]valu interface{}
-	putToCach(cacheName string, key string, value interface{}) error
+	putToCache(cacheName string, key string, value interface{}) error
 
 	//clearCache 清理cache
 	//缓存的结构是map[cacheName string]map[key string]valu interface{}

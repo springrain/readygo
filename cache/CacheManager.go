@@ -14,7 +14,7 @@ func GetFromCache(cacheName string, key string) (interface{}, error) {
 //PutToCache 设置指定cache中的key值
 //缓存的结构是map[cacheName string]map[key string]value interface{}
 func PutToCache(cacheName string, key string, value interface{}) error {
-	return cacheManager.putToCach(cacheName, key, value)
+	return cacheManager.putToCache(cacheName, key, value)
 }
 
 //ClearCache 清理cache
