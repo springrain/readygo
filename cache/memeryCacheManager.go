@@ -94,6 +94,7 @@ func (cacheManager *memeryCacheManager) getCache(cacheName string) (*sync.Map, e
 	}
 
 	//cacheManager中没值,初始化一个sync.Map放进去,返回这个map
-	cacheManager.memeryCacheMap.Store(cacheName, &sync.Map{})
-	return &cache, nil
+	cache := &sync.Map{}
+	cacheManager.memeryCacheMap.Store(cacheName, cache)
+	return cache, nil
 }
