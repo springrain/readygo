@@ -1,0 +1,125 @@
+package permservice
+
+import (
+	"errors"
+	"readygo/orm"
+)
+
+//保存用户部门中间表,session参数是为了保证在其他事务内,可以为nil
+func SaveUserOrgStruct(session *orm.Session, userOrgStruct *permstruct.UserOrgStruct) error {
+
+	if session != nil { //如果在其他的事务内
+		err := orm.SaveStruct(session, userOrgStruct)
+		if err != nil {
+			return err
+		}
+		return nil
+	}
+
+	//不再其他事务内,新开事务
+	_, err := orm.Transaction(func(session *orm.Session) (interface{}, error) {
+		//事务下的业务代码
+
+		err := orm.SaveStruct(session, userOrgStruct)
+		if err != nil {
+			return nil, err
+		}
+		return nil, nil
+
+	})
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+//更新用户部门中间表,session参数是为了保证在其他事务内,可以为nil
+func UpdateUserOrgStruct(session *orm.Session, userOrgStruct *permstruct.UserOrgStruct) error {
+
+	if session != nil { //如果在其他的事务内
+		err := orm.UpdateStruct(session, userOrgStruct)
+		if err != nil {
+			return err
+		}
+		return nil
+	}
+
+	//不再其他事务内,新开事务
+	_, err := orm.Transaction(func(session *orm.Session) (interface{}, error) {
+		//业务代码开始
+
+		err := orm.UpdateStruct(session, userOrgStruct)
+		if err != nil {
+			return nil, err
+		}
+
+		return nil, nil
+
+		//业务代码结束
+
+	})
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+//删除用户部门中间表,session参数是为了保证在其他事务内,可以为nil
+func DeleteUserOrgStruct(session *orm.Session, userOrgStruct *permstruct.UserOrgStruct) error {
+
+	if session != nil { //如果在其他的事务内
+		err := orm.UpdateStruct(session, userOrgStruct)
+		if err != nil {
+			return err
+		}
+		return nil
+	}
+
+	//不再其他事务内,新开事务
+	_, err := orm.Transaction(func(session *orm.Session) (interface{}, error) {
+		//业务代码开始
+
+		err := orm.DeleteStruct(session, userOrgStruct)
+		if err != nil {
+			return nil, err
+		}
+
+		return nil, nil
+
+		//业务代码结束
+
+	})
+
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+//根据Id查询用户部门中间表信息,session参数是为了保证在其他事务内,可以为nil
+func FindUserOrgStructById(session *orm.Session, id string) (*permstruct.UserOrgStruct, error) {
+	//如果Id为空
+	if len(id) < 1 {
+		return nil, errors.New("id为空")
+	}
+
+	//根据Id查询
+	finder := orm.NewSelectFinder(" WHERE id=?", id)
+	userOrgStruct := permstruct.UserOrgStruct{}
+	err := orm.QueryStruct(session, finder, &userOrgStruct)
+	if err != nil {
+		return nil, err
+	}
+	return &userOrgStruct, nil
+
+}
+
+//根据Finder查询用户部门中间表列表,session参数是为了保证在其他事务内,可以为nil
+func FindUserOrgStructList(session *orm.Session, finder *orm.Finder, page *orm.Page) ([]permstruct.UserOrgStruct, error) {
+	userOrgStructList := make([]permstruct.UserOrgStruct, 0)
+	err := orm.QueryStructList(session, finder, &userOrgStructList, page)
+	if err != nil {
+		return nil, err
+	}
+	return userOrgStructList, nil
+}
