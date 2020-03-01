@@ -55,7 +55,7 @@ func NewRedisClient(redisConfig *RedisConfig) error {
 	} else { //redis 集群
 		redisClusterClient = redis.NewClusterClient(&redis.ClusterOptions{
 			Addrs:          addrs,
-			RouteByLatency: true,
+			RouteByLatency: true,                 //从最近的master或者slave读取
 			Password:       redisConfig.Password, // no password set
 			PoolSize:       redisConfig.PoolSize,
 			MinIdleConns:   redisConfig.MinIdleConns,
