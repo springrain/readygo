@@ -6,6 +6,7 @@ import (
 )
 
 //memeryCacheManager 内存的缓存管理器.缓存的结构是map[cacheName string]map[key stringvalue interface{}
+//缓存实现小写保护,避免外部直接使用实现而不使用函数,这样就会出现多个缓存实现混杂在业务中.
 type memeryCacheManager struct {
 	// 用于缓存反射的信息,sync.Map内部处理了并发锁.用指针地址.
 	memeryCacheMap *sync.Map
@@ -23,21 +24,55 @@ func NewMemeryCacheManager() error {
 
 //getFromCache 从cache中获取key的
 func (cacheManager *memeryCacheManager) getFromCache(cacheName string, key string) (interface{}, error) {
-	return nil, nil
+	//获取cache
+	cache, errCache := cacheManager.getCache(cacheName)
+	if errCache != nil {
+		return nil, errCache
+	}
+	//获取cache中Map的值
+	value := (*cache)[key]
+	return value, nil
 }
 
 //putToCache 设置指定cache中的key
 func (cacheManager *memeryCacheManager) putToCache(cacheName string, key string, value interface{}) error {
+	//获取cache
+	cache, errCache := cacheManager.getCache(cacheName)
+	if errCache != nil {
+		return errCache
+	}
+	//key值不能为空
+	if len(key) < 1 {
+		return errors.New("key值不能为空")
+	}
+	//map赋值
+	(*cache)[key] = value
 	return nil
 }
 
 //clearCahe 清理cache
 func (cacheManager *memeryCacheManager) clearCache(cacheName string) error {
+	//cacheName值不能为空
+	if len(cacheName) < 1 {
+		return errors.New("cacheName值不能为空")
+	}
+	cacheManager.memeryCacheMap.Delete(cacheName)
 	return nil
 }
 
 //evictKey 失效一个cache中的key
 func (cacheManager *memeryCacheManager) evictKey(cacheName string, key string) error {
+	//获取cache
+	cache, errCache := cacheManager.getCache(cacheName)
+	if errCache != nil {
+		return errCache
+	}
+	//key值不能为空
+	if len(key) < 1 {
+		return errors.New("key值不能为空")
+	}
+	//删除Key值
+	delete((*cache), key)
 	return nil
 }
 
