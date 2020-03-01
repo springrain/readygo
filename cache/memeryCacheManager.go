@@ -2,7 +2,7 @@ package cache
 
 import "sync"
 
-//memeryCacheMap 缓存管理器接口.缓存的结构是map[cacheName string]map[key stringvalue interface{
+//memeryCacheMap 缓存管理器接口.缓存的结构是map[cacheName string]map[key stringvalue interface{}
 // 用于缓存反射的信息,sync.Map内部处理了并发锁.
 var memeryCacheMap sync.Map
 
