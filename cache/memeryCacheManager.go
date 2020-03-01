@@ -17,8 +17,7 @@ type memeryCacheManager struct {
 //NewMemeryCacheManager 创建内存管理器,需要给CacheManger中的cacheManager变量赋值
 func NewMemeryCacheManager() error {
 	newMemeryCacheManager := memeryCacheManager{}
-	var cacheMap sync.Map
-	newMemeryCacheManager.memeryCacheMap = &cacheMap
+	newMemeryCacheManager.memeryCacheMap = &sync.Map{}
 	//newmap := make(map[string]interface{})
 	//newMemeryCacheManager.cacheMap = &newmap
 	//赋值变量,cacheManager只能初始化一次,后面的会覆盖前面的,作为缓存实现
@@ -95,7 +94,6 @@ func (cacheManager *memeryCacheManager) getCache(cacheName string) (*sync.Map, e
 	}
 
 	//cacheManager中没值,初始化一个sync.Map放进去,返回这个map
-	var cache sync.Map
-	cacheManager.memeryCacheMap.Store(cacheName, &cache)
+	cacheManager.memeryCacheMap.Store(cacheName, &sync.Map{})
 	return &cache, nil
 }
