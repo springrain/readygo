@@ -44,7 +44,7 @@ func NewRedisClient(redisConfig *RedisConfig) error {
 	}
 	if redisConfig.MinIdleConns == 0 { //默认最少10个连接
 		if redisConfig.PoolSize < 10 {
-			redisConfig.MinIdleConns = redisConfig.MinIdleConns
+			redisConfig.MinIdleConns = redisConfig.PoolSize
 		} else {
 			redisConfig.MinIdleConns = 10
 		}
