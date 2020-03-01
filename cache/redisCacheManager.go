@@ -1,7 +1,7 @@
 package cache
 
 //redisCacheManager redis的缓存接口实现,缓存的结构是map[cacheName string]map[key string]value interface{}
-//缓存实现小写保护,避免外部直接使用实现而不使用函数,这样就会出现多个缓存实现混杂在业务中.
+//缓存实现小写保护,避免外部直接使用实现而不使用函数,避免多个缓存实现混杂在业务中.
 type redisCacheManager struct {
 }
 

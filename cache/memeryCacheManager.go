@@ -6,7 +6,7 @@ import (
 )
 
 //memeryCacheManager 内存的缓存管理器.缓存的结构是map[cacheName string]map[key stringvalue interface{}
-//缓存实现小写保护,避免外部直接使用实现而不使用函数,这样就会出现多个缓存实现混杂在业务中.
+//缓存实现小写保护,避免外部直接使用实现而不使用函数,避免多个缓存实现混杂在业务中.
 type memeryCacheManager struct {
 	// 用于缓存反射的信息,sync.Map内部处理了并发锁.用指针地址.
 	memeryCacheMap *sync.Map
