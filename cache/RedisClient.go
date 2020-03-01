@@ -2,6 +2,7 @@ package cache
 
 import (
 	"errors"
+	"runtime"
 	"strings"
 
 	"github.com/go-redis/redis/v7"
@@ -36,6 +37,18 @@ func NewRedisClient(redisConfig *RedisConfig) error {
 
 	if len(redisConfig.Addr) < 1 {
 		return errors.New("服务器地址不能为空")
+	}
+
+	if redisConfig.PoolSize == 0 { //默认每个CPU 10个连接
+		redisConfig.PoolSize = runtime.NumCPU() * 10
+	}
+	if redisConfig.MinIdleConns == 0 { //默认最少10个连接
+		if redisConfig.PoolSize < 10 {
+			redisConfig.MinIdleConns = redisConfig.MinIdleConns
+		} else {
+			redisConfig.MinIdleConns = 10
+		}
+
 	}
 
 	//分割连接地址,判断是单机还是集群cluster
