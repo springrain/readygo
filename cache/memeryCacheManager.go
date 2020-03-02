@@ -1,6 +1,7 @@
 package cache
 
 import (
+	"encoding/json"
 	"errors"
 	"sync"
 )
@@ -24,19 +25,38 @@ func NewMemeryCacheManager() error {
 }
 
 //getFromCache 从cache中获取key的
-func (cacheManager *memeryCacheManager) getFromCache(cacheName string, key string) (interface{}, error) {
+//valuePtr形参是接收值的对象指针,例如 &user
+//取出json的[]byte进行转化,小写的属性json无法转化,struct需要实现MarshalJSON和UnmarshalJSON的接口方法
+func (cacheManager *memeryCacheManager) getFromCache(cacheName string, key string, valuePtr interface{}) error {
+	if cacheName == "" || key == "" || valuePtr == nil {
+		return errors.New("值不能为空")
+	}
 	//获取cache
 	cache, errCache := cacheManager.getCache(cacheName)
 	if errCache != nil {
-		return nil, errCache
+		return errCache
 	}
-	//获取cache中Map的值
-	value, _ := cache.Load(key)
-	return value, nil
+	//获取cache中json的[]byte格式数据
+	jsonData, _ := cache.Load(key)
+	//转换成json的[]byte
+	jsonBytes, jsonOK := jsonData.([]byte)
+	if !jsonOK { //取值失败
+		return errors.New("缓存中的格式值错误")
+	}
+	if len(jsonBytes) < 1 { //缓存中没有值
+		return nil
+	}
+	//赋值
+	errJSON := json.Unmarshal(jsonBytes, valuePtr)
+	return errJSON
 }
 
 //putToCache 设置指定cache中的key
-func (cacheManager *memeryCacheManager) putToCache(cacheName string, key string, value interface{}) error {
+//值变成json的[]byte进行保存,小写的属性json无法转化,struct需要实现MarshalJSON和UnmarshalJSON的接口方法
+func (cacheManager *memeryCacheManager) putToCache(cacheName string, key string, valuePtr interface{}) error {
+	if cacheName == "" || key == "" || valuePtr == nil {
+		return errors.New("值不能为空")
+	}
 	//获取cache
 	cache, errCache := cacheManager.getCache(cacheName)
 	if errCache != nil {
@@ -46,8 +66,15 @@ func (cacheManager *memeryCacheManager) putToCache(cacheName string, key string,
 	if len(key) < 1 {
 		return errors.New("key值不能为空")
 	}
+
+	//对象转成json的[]byte
+	jsonData, errJSON := json.Marshal(valuePtr)
+	if errJSON != nil {
+		return errJSON
+	}
+
 	//map赋值
-	cache.Store(key, value)
+	cache.Store(key, jsonData)
 	return nil
 }
 
@@ -63,6 +90,9 @@ func (cacheManager *memeryCacheManager) clearCache(cacheName string) error {
 
 //evictKey 失效一个cache中的key
 func (cacheManager *memeryCacheManager) evictKey(cacheName string, key string) error {
+	if cacheName == "" || key == "" {
+		return errors.New("值不能为空")
+	}
 	//获取cache
 	cache, errCache := cacheManager.getCache(cacheName)
 	if errCache != nil {

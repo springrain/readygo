@@ -10,8 +10,8 @@ func TestMemeryCache(t *testing.T) {
 
 	cache.NewMemeryCacheManager()
 	cache.PutToCache("cacheName", "testKey", "testValue")
-	value, _ := cache.GetFromCache("cacheName", "testKey")
-	a := value.(string)
+	a := ""
+	cache.GetFromCache("cacheName", "testKey", &a)
 	fmt.Println(a)
 
 }

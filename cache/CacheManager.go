@@ -7,8 +7,9 @@ var cacheManager iCacheManage
 
 //GetFromCache 从cache中获取key的值.默认使用
 //缓存的结构是map[cacheName string]map[key string]value interface{}
-func GetFromCache(cacheName string, key string) (interface{}, error) {
-	return cacheManager.getFromCache(cacheName, key)
+//valuePtr形参是接收值的对象指针,例如 &user
+func GetFromCache(cacheName string, key string, valuePtr interface{}) error {
+	return cacheManager.getFromCache(cacheName, key, valuePtr)
 }
 
 //PutToCache 设置指定cache中的key值

@@ -1,6 +1,7 @@
 package cache
 
 import (
+	"encoding/json"
 	"errors"
 	"runtime"
 	"strings"
@@ -90,14 +91,22 @@ func NewRedisClient(redisConfig *RedisConfig) error {
 	return nil
 }
 
-//为redisCacheManager设置值,不再单独提供redis的API,统一为cacheManager接口
-func hset(hname string, key string, value interface{}) error {
-
+//hset 为redisCacheManager设置值,不再单独提供redis的API,统一为cacheManager接口
+//值变成json的[]byte进行保存,小写的属性json无法转化,struct需要实现MarshalJSON和UnmarshalJSON的接口方法
+func hset(hname string, key string, valuePtr interface{}) error {
+	if hname == "" || key == "" || valuePtr == nil {
+		return errors.New("值不能为空")
+	}
+	//把值转成JSON的[]byte格式
+	value, errJSON := json.Marshal(valuePtr)
+	if errJSON != nil {
+		return errJSON
+	}
 	var errResult error
 	if redisClient != nil { //单机redis
-		_, errResult = redisClient.HSet(hname, key, value).Result()
+		_, errResult = redisClient.Do("hset", hname, key, value).Result()
 	} else if redisClusterClient != nil { //集群Redis
-		_, errResult = redisClusterClient.HSet(hname, key, value).Result()
+		_, errResult = redisClusterClient.Do("hset", hname, key, value).Result()
 	} else {
 		return errors.New("没有redisClient或redisClusterClient实现")
 	}
@@ -109,20 +118,75 @@ func hset(hname string, key string, value interface{}) error {
 
 }
 
-func hget(hname string, key string) (interface{}, error) {
-
+//hget 获取指定的值
+//取出json的[]byte进行转化,小写的属性json无法转化,struct需要实现MarshalJSON和UnmarshalJSON的接口方法
+func hget(hname string, key string, valuePtr interface{}) error {
+	if hname == "" || key == "" || valuePtr == nil {
+		return errors.New("值不能为空")
+	}
 	var errResult error
+	var jsonData interface{}
 	if redisClient != nil { //单机redis
-		_, errResult = redisClient.HGet(hname, key).Result()
+		jsonData, errResult = redisClient.Do("hget", hname, key).Result()
 	} else if redisClusterClient != nil { //集群Redis
-		_, errResult = redisClusterClient.HGet(hname, key).Result()
+		jsonData, errResult = redisClusterClient.Do("hget", hname, key).Result()
 	} else {
-		return nil, errors.New("没有redisClient或redisClusterClient实现")
+		return errors.New("没有redisClient或redisClusterClient实现")
 	}
 	//获值错误
 	if errResult != nil {
-		return nil, errResult
+		return errResult
 	}
+	//转换成json的[]byte
+	jsonBytes, jsonOK := jsonData.([]byte)
+	if !jsonOK { //取值失败
+		return errors.New("缓存中的格式值错误")
+	}
+	if len(jsonBytes) < 1 { //缓存中没有值
+		return nil
+	}
+	//赋值
+	errJSON := json.Unmarshal(jsonBytes, valuePtr)
+	return errJSON
+}
 
-	return nil, errors.New("未能获取到值")
+//hdel 删除一个map中的key
+func hdel(hname string, key string) error {
+	if hname == "" || key == "" {
+		return errors.New("值不能为空")
+	}
+	var errResult error
+	if redisClient != nil { //单机redis
+		_, errResult = redisClient.HDel(hname, key).Result()
+	} else if redisClusterClient != nil { //集群Redis
+		_, errResult = redisClusterClient.HDel(hname, key).Result()
+	} else {
+		return errors.New("没有redisClient或redisClusterClient实现")
+	}
+	//获值错误
+	if errResult != nil {
+		return errResult
+	}
+	return nil
+}
+
+//del 删除缓存
+func del(hname string) error {
+
+	if hname == "" {
+		return errors.New("值不能为空")
+	}
+	var errResult error
+	if redisClient != nil { //单机redis
+		_, errResult = redisClient.Del(hname).Result()
+	} else if redisClusterClient != nil { //集群Redis
+		_, errResult = redisClusterClient.Del(hname).Result()
+	} else {
+		return errors.New("没有redisClient或redisClusterClient实现")
+	}
+	//获值错误
+	if errResult != nil {
+		return errResult
+	}
+	return nil
 }
