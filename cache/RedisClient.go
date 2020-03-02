@@ -65,6 +65,12 @@ func NewRedisClient(redisConfig *RedisConfig) error {
 			MinIdleConns: redisConfig.MinIdleConns,
 		})
 
+		//验证连接有效性
+		_, err := redisClient.Ping().Result()
+		if err != nil {
+			return err
+		}
+
 	} else { //redis 集群
 		redisClusterClient = redis.NewClusterClient(&redis.ClusterOptions{
 			Addrs:          addrs,
@@ -73,7 +79,50 @@ func NewRedisClient(redisConfig *RedisConfig) error {
 			PoolSize:       redisConfig.PoolSize,
 			MinIdleConns:   redisConfig.MinIdleConns,
 		})
+
+		//验证连接有效性
+		_, err := redisClusterClient.Ping().Result()
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
+}
+
+//为redisCacheManager设置值,不再单独提供redis的API,统一为cacheManager接口
+func hset(hname string, key string, value interface{}) error {
+
+	var errResult error
+	if redisClient != nil { //单机redis
+		_, errResult = redisClient.HSet(hname, key, value).Result()
+	} else if redisClusterClient != nil { //集群Redis
+		_, errResult = redisClusterClient.HSet(hname, key, value).Result()
+	} else {
+		return errors.New("没有redisClient或redisClusterClient实现")
+	}
+	//获值错误
+	if errResult != nil {
+		return errResult
+	}
+	return nil
+
+}
+
+func hget(hname string, key string) (interface{}, error) {
+
+	var errResult error
+	if redisClient != nil { //单机redis
+		_, errResult = redisClient.HGet(hname, key).Result()
+	} else if redisClusterClient != nil { //集群Redis
+		_, errResult = redisClusterClient.HGet(hname, key).Result()
+	} else {
+		return nil, errors.New("没有redisClient或redisClusterClient实现")
+	}
+	//获值错误
+	if errResult != nil {
+		return nil, errResult
+	}
+
+	return nil, errors.New("未能获取到值")
 }
