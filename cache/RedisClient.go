@@ -5,6 +5,7 @@ import (
 	"errors"
 	"runtime"
 	"strings"
+	"time"
 
 	"github.com/go-redis/redis/v7"
 )
@@ -171,16 +172,16 @@ func hdel(hname string, key string) error {
 }
 
 //del 删除缓存
-func del(hname string) error {
+func del(cacheName string) error {
 
-	if hname == "" {
+	if cacheName == "" {
 		return errors.New("值不能为空")
 	}
 	var errResult error
 	if redisClient != nil { //单机redis
-		_, errResult = redisClient.Del(hname).Result()
+		_, errResult = redisClient.Del(cacheName).Result()
 	} else if redisClusterClient != nil { //集群Redis
-		_, errResult = redisClusterClient.Del(hname).Result()
+		_, errResult = redisClusterClient.Del(cacheName).Result()
 	} else {
 		return errors.New("没有redisClient或redisClusterClient实现")
 	}
@@ -191,4 +192,40 @@ func del(hname string) error {
 	return nil
 }
 
-//func Lock()
+//Lock 加锁,如果成功返回true,并设定超时时间.如果获取锁失败,返回false
+//锁的名称,超时时间默认5秒
+func Lock(lockName string, timeout time.Duration) (bool, error) {
+	if lockName == "" {
+		return false, errors.New("lockName值不能为空")
+	}
+
+	if timeout == 0 { //如果没有超时时间,默认5秒
+		timeout = time.Second * 5
+	}
+
+	var locked bool
+	var errResult error
+	if redisClient != nil { //单机redis
+		locked, errResult = redisClient.SetNX(lockName, "", timeout).Result()
+	} else if redisClusterClient != nil { //集群Redis
+		locked, errResult = redisClusterClient.SetNX(lockName, "", timeout).Result()
+	} else {
+		return false, errors.New("没有redisClient或redisClusterClient实现")
+	}
+	//获值错误
+	if errResult != nil {
+		return false, errResult
+	}
+
+	return locked, nil
+}
+
+//UNLock 解锁
+func UNLock(lockName string) error {
+	if lockName == "" {
+		return errors.New("lockName值不能为空")
+	}
+	//删除key
+	err := del(lockName)
+	return err
+}
