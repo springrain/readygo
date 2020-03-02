@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"readygo/orm"
 	"readygo/permission/permstruct"
+	"strconv"
 	"sync"
 	"testing"
 )
@@ -115,7 +116,8 @@ func worker(id int, wg *sync.WaitGroup) {
 
 		orm.QueryStruct(session, finder, &u)
 
-		u.UserName = u.UserName + "test" + string(id)
+		//u.UserName = u.UserName + "test" + string(id)
+		u.UserName = strconv.Itoa(id)
 
 		u.UserType = id
 
