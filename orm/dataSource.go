@@ -34,7 +34,7 @@ func newDataSource(config *DataSourceConfig) (*dataSource, error) {
 		return nil, e
 	}
 
-	db, err := sql.Open(string(config.DBType), dsn)
+	db, err := sql.Open(config.DBType, dsn)
 	if err != nil {
 		err = fmt.Errorf("数据库打开失败:%w", err)
 		logger.Error(err)
