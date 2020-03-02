@@ -42,9 +42,9 @@ func newDataSource(config *DataSourceConfig) (*dataSource, error) {
 	}
 
 	//设置数据库最大连接数
-	db.SetMaxOpenConns(1000)
+	db.SetMaxOpenConns(50)
 	//设置数据库最大空闲连接数
-	db.SetMaxIdleConns(200)
+	db.SetMaxIdleConns(20)
 
 	//验证连接
 	if pingerr := db.Ping(); pingerr != nil {
