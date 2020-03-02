@@ -190,3 +190,5 @@ func del(hname string) error {
 	}
 	return nil
 }
+
+//func Lock()
