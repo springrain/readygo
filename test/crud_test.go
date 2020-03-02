@@ -61,41 +61,39 @@ func TestQuey(t *testing.T) {
 	fmt.Println(users)
 
 }
-func TestNull(t *testing.T)  {
+func TestNull(t *testing.T) {
 	finder := orm.NewFinder()
 
 	finder.Append("select nil ")
 
 	queryMap, err := orm.QueryMap(nil, finder)
 
-	if err != nil{
-		t.Errorf("TestNull：%v",err)
+	if err != nil {
+		t.Errorf("TestNull：%v", err)
 	}
 
 	fmt.Println(queryMap)
 }
 
-func TestCount(t *testing.T)  {
+func TestCount(t *testing.T) {
 	finder := orm.NewFinder()
 
 	finder.Append("select count(*) as c from ").Append(permstruct.WxCpconfigStructTableName)
 
 	queryMap, err := orm.QueryMap(nil, finder)
 
-	if err != nil{
-		t.Errorf("TestCount错误：%v",err)
+	if err != nil {
+		t.Errorf("TestCount错误：%v", err)
 	}
 
 	fmt.Println(queryMap)
 }
-
 
 func worker(id int, wg *sync.WaitGroup) {
 
 	defer wg.Done()
 
 	fmt.Println(id)
-
 
 	orm.Transaction(nil, func(session *orm.Session) (interface{}, error) {
 
@@ -113,14 +111,13 @@ func worker(id int, wg *sync.WaitGroup) {
 		//	return nil, e2
 		//}
 
-		finder := orm.NewSelectFinder(permstruct.UserStructTableName).Append(" where id = ?","1583077877688617000")
+		finder := orm.NewSelectFinder(permstruct.UserStructTableName).Append(" where id = ?", "1583077877688617000")
 
-		orm.QueryStruct(nil,finder,&u)
+		orm.QueryStruct(session, finder, &u)
 
 		u.UserName = u.UserName + "test" + string(id)
 
 		u.UserType = id
-
 
 		e3 := orm.UpdateStruct(session, &u)
 		if e3 != nil {
@@ -133,7 +130,6 @@ func worker(id int, wg *sync.WaitGroup) {
 	})
 }
 
-
 func TestTranc(t *testing.T) {
 
 	var wg sync.WaitGroup
@@ -144,6 +140,5 @@ func TestTranc(t *testing.T) {
 	}
 
 	wg.Wait()
-
 
 }
