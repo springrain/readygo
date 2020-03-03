@@ -53,4 +53,12 @@ golang开发脚手架
 
 	})
     ```
+6.  [测试](https://www.jianshu.com/p/1adc69468b6f)
+    ```
+    //函数测试
+    go test -run TestAdd2
+    //性能测试
+    go test -bench=.
+    go test -v -bench=. -cpu=8 -benchtime="3s" -timeout="5s" -benchmem
+    ```
 
