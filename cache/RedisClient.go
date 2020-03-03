@@ -212,8 +212,9 @@ func redisGet(cacheName string) (interface{}, error) {
 	return result, nil
 }
 
-//Lock 加锁,如果成功返回true,并设定超时时间.如果获取锁失败,返回false
-//锁的名称,超时时间默认5秒
+//Lock redis分布式锁,
+//参数:lockName锁的名称,timeout超时时间默认5秒
+//返回值:true获取锁成功,获取锁失败false,匿名函数返回值,错误信息
 func Lock(lockName string, timeout time.Duration, doLock func() (interface{}, error)) (bool, interface{}, error) {
 	if lockName == "" {
 		return false, nil, errors.New("lockName值不能为空")
