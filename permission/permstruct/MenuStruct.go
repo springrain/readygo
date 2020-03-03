@@ -1,9 +1,8 @@
 package permstruct
 
 import (
+	"readygo/zorm"
 	"time"
-
-	"readygo/orm"
 )
 
 //MenuStructTableName 表名常量,方便直接调用
@@ -12,7 +11,7 @@ const MenuStructTableName = "t_menu"
 // MenuStruct 菜单
 type MenuStruct struct {
 	//引入默认的struct,隔离IEntityStruct的方法改动
-	orm.EntityStruct
+	zorm.EntityStruct
 
 	//Id <no value>
 	Id string `column:"id"`

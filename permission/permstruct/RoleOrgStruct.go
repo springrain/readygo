@@ -1,8 +1,6 @@
 package permstruct
 
-import (
-	"readygo/orm"
-)
+import "readygo/zorm"
 
 //RoleOrgStructTableName 表名常量,方便直接调用
 const RoleOrgStructTableName = "t_role_org"
@@ -10,7 +8,7 @@ const RoleOrgStructTableName = "t_role_org"
 // RoleOrgStruct 角色部门中间表
 type RoleOrgStruct struct {
 	//引入默认的struct,隔离IEntityStruct的方法改动
-	orm.EntityStruct
+	zorm.EntityStruct
 
 	//Id 编号
 	Id string `column:"id"`

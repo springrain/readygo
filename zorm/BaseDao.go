@@ -1,4 +1,4 @@
-package orm
+package zorm
 
 import (
 	"errors"
@@ -86,7 +86,7 @@ func (baseDao *BaseDao) GetSession() (*Session, error) {
 /*
 Transaction 的示例代码
 //匿名函数return的error如果不为nil,事务就会回滚
-orm.Transaction(session *orm.Session,func(session *orm.Session) (interface{}, error) {
+orm.Transaction(session *zorm.Session,func(session *zorm.Session) (interface{}, error) {
 
 	//业务代码
 

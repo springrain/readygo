@@ -1,9 +1,8 @@
 package permstruct
 
 import (
+	"readygo/zorm"
 	"time"
-
-	"readygo/orm"
 )
 
 //OrgStructTableName 表名常量,方便直接调用
@@ -12,7 +11,7 @@ const OrgStructTableName = "t_org"
 // OrgStruct 部门
 type OrgStruct struct {
 	//引入默认的struct,隔离IEntityStruct的方法改动
-	orm.EntityStruct
+	zorm.EntityStruct
 
 	//Id 编号
 	Id string `column:"id"`

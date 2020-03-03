@@ -1,9 +1,8 @@
 package permstruct
 
 import (
+	"readygo/zorm"
 	"time"
-
-	"readygo/orm"
 )
 
 //UserStructTableName 表名常量,方便直接调用
@@ -12,7 +11,7 @@ const UserStructTableName = "t_user"
 // UserStruct 用户
 type UserStruct struct {
 	//引入默认的struct,隔离IEntityStruct的方法改动
-	orm.EntityStruct
+	zorm.EntityStruct
 
 	//Id
 	Id string `column:"id"`

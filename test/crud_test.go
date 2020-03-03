@@ -2,14 +2,14 @@ package test
 
 import (
 	"fmt"
-	"readygo/orm"
 	"readygo/permission/permstruct"
+	"readygo/zorm"
 	"strconv"
 	"sync"
 	"testing"
 )
 
-var baseDao *orm.BaseDao
+var baseDao *zorm.BaseDao
 
 //性别枚举
 type Gander int
@@ -29,7 +29,7 @@ const (
 
 func init() {
 
-	dataSourceConfig := orm.DataSourceConfig{
+	dataSourceConfig := zorm.DataSourceConfig{
 		Host:     "127.0.0.1",
 		Port:     3306,
 		DBName:   "readygo",
@@ -37,7 +37,7 @@ func init() {
 		PassWord: "root",
 		DBType:   "mysql",
 	}
-	baseDao, _ = orm.NewBaseDao(&dataSourceConfig)
+	baseDao, _ = zorm.NewBaseDao(&dataSourceConfig)
 }
 
 func initDate() {
@@ -46,13 +46,13 @@ func initDate() {
 
 func TestQuey(t *testing.T) {
 
-	finder := orm.NewSelectFinder(permstruct.UserStructTableName)
+	finder := zorm.NewSelectFinder(permstruct.UserStructTableName)
 
-	page := orm.NewPage()
+	page := zorm.NewPage()
 
 	var users []permstruct.UserStruct
 
-	err := orm.QueryStructList(nil, finder, &users, &page)
+	err := zorm.QueryStructList(nil, finder, &users, &page)
 
 	if err != nil {
 		//标记测试失败
@@ -63,11 +63,11 @@ func TestQuey(t *testing.T) {
 
 }
 func TestNull(t *testing.T) {
-	finder := orm.NewFinder()
+	finder := zorm.NewFinder()
 
 	finder.Append("select nil ")
 
-	queryMap, err := orm.QueryMap(nil, finder)
+	queryMap, err := zorm.QueryMap(nil, finder)
 
 	if err != nil {
 		t.Errorf("TestNull：%v", err)
@@ -77,11 +77,11 @@ func TestNull(t *testing.T) {
 }
 
 func TestCount(t *testing.T) {
-	finder := orm.NewFinder()
+	finder := zorm.NewFinder()
 
 	finder.Append("select count(*) as c from ").Append(permstruct.WxCpconfigStructTableName)
 
-	queryMap, err := orm.QueryMap(nil, finder)
+	queryMap, err := zorm.QueryMap(nil, finder)
 
 	if err != nil {
 		t.Errorf("TestCount错误：%v", err)
@@ -96,7 +96,7 @@ func worker(id int, wg *sync.WaitGroup) {
 
 	fmt.Println(id)
 
-	orm.Transaction(nil, func(session *orm.Session) (interface{}, error) {
+	zorm.Transaction(nil, func(session *zorm.Session) (interface{}, error) {
 
 		var u permstruct.UserStruct
 		//
@@ -105,23 +105,23 @@ func worker(id int, wg *sync.WaitGroup) {
 		//u.Sex = "男"+string(id)
 		////u.Active = 2/0
 		//
-		//e2 := orm.SaveStruct(session, &u)
+		//e2 := zorm.SaveStruct(session, &u)
 		//if e2 != nil {
 		//	//标记测试失败
 		//	//t.Errorf("TestTrancSave错误:%v", e2)
 		//	return nil, e2
 		//}
 
-		finder := orm.NewSelectFinder(permstruct.UserStructTableName).Append(" where id = ?", "1583077877688617000")
+		finder := zorm.NewSelectFinder(permstruct.UserStructTableName).Append(" where id = ?", "1583077877688617000")
 
-		orm.QueryStruct(session, finder, &u)
+		zorm.QueryStruct(session, finder, &u)
 
 		//u.UserName = u.UserName + "test" + string(id)
 		u.UserName = strconv.Itoa(id)
 
 		u.UserType = id
 
-		e3 := orm.UpdateStruct(session, &u)
+		e3 := zorm.UpdateStruct(session, &u)
 		if e3 != nil {
 			//标记测试失败
 			//t.Errorf("TestTrancUpdate错误:%v", e3)
@@ -136,7 +136,7 @@ func TestTranc(t *testing.T) {
 
 	var wg sync.WaitGroup
 
-	for i := 1; i <= 500; i++ {
+	for i := 1; i <= 1; i++ {
 		wg.Add(1)
 		go worker(i, &wg)
 	}

@@ -16,33 +16,33 @@ golang开发脚手架
 1.  增
     ```
     var user permstruct.UserStruct
-    err := orm.SaveStruct(nil, &user)
+    err := zorm.SaveStruct(nil, &user)
     ```
 2.  删
     ```
-    err := orm.DeleteStruct(nil,&user)
+    err := zorm.DeleteStruct(nil,&user)
     ```
   
 3.  改
     ```
-    err := orm.UpdateStruct(nil,&user)
+    err := zorm.UpdateStruct(nil,&user)
     //finder更新
-    err := orm.UpdateFinder(nil,finder)
+    err := zorm.UpdateFinder(nil,finder)
     ```
 4.  查
     ```
-	finder := orm.NewSelectFinder(permstruct.UserStructTableName)
-	page := orm.NewPage()
+	finder := zorm.NewSelectFinder(permstruct.UserStructTableName)
+	page := zorm.NewPage()
 	var users = make([]permstruct.UserStruct, 0)
-	err := orm.QueryStructList(nil, finder, &users, &page)
+	err := zorm.QueryStructList(nil, finder, &users, &page)
     ```
 5.  事务传播
     ```
     //匿名函数return的error如果不为nil,事务就会回滚
-	_, errSaveUserStruct := orm.Transaction(session, func(session *orm.Session) (interface{}, error) {
+	_, errSaveUserStruct := zorm.Transaction(session, func(session *zorm.Session) (interface{}, error) {
 
 		//事务下的业务代码开始
-		errSaveUserStruct := orm.SaveStruct(session, userStruct)
+		errSaveUserStruct := zorm.SaveStruct(session, userStruct)
 
 		if errSaveUserStruct != nil {
 			return nil, errSaveUserStruct

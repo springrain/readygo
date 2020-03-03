@@ -3,14 +3,14 @@ package permservice
 import (
 	"errors"
 	"readygo/cache"
-	"readygo/orm"
 	"readygo/permission/permstruct"
+	"readygo/zorm"
 )
 
 const userOrgRoleMenuCacheKey string = "userOrgRoleMenuCacheKey"
 
 //FindRoleByUserId 根据用户Id查询用户的角色
-func FindRoleByUserId(session *orm.Session, userId string) ([]permstruct.RoleStruct, error) {
+func FindRoleByUserId(session *zorm.Session, userId string) ([]permstruct.RoleStruct, error) {
 	if len(userId) < 1 {
 		return nil, errors.New("参数userId不能为空")
 	}
@@ -28,12 +28,12 @@ func FindRoleByUserId(session *orm.Session, userId string) ([]permstruct.RoleStr
 		return roles, nil
 	}
 	//按照 r.privateOrg,r.sortno desc 先处理强制部门权限的角色
-	finder := orm.NewFinder()
+	finder := zorm.NewFinder()
 	finder.Append("SELECT r.* from ").Append(permstruct.RoleStructTableName).Append(" r,")
 	finder.Append(permstruct.UserRoleStructTableName).Append("  re where re.userId=? and re.roleId=r.id and r.active=1 order by r.privateOrg,r.sortno desc", userId)
 
 	//查询列表
-	errQueryList := orm.QueryStructList(session, finder, roles, nil)
+	errQueryList := zorm.QueryStructList(session, finder, roles, nil)
 	if errQueryList != nil {
 		return nil, errQueryList
 	}

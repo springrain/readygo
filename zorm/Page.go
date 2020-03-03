@@ -1,4 +1,4 @@
-package orm
+package zorm
 
 //Page 分页对象
 type Page struct {

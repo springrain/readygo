@@ -1,4 +1,4 @@
-package orm
+package zorm
 
 //IEntityStruct Entity实体类接口,所有实体类必须实现,否则baseDao无法执行.baseDao函数形参只有Finder和IBaseEntity
 type IEntityStruct interface {
