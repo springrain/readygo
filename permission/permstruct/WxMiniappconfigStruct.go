@@ -1,9 +1,8 @@
 package permstruct
 
 import (
+	"readygo/zorm"
 	"time"
-
-	"readygo/orm"
 )
 
 //WxMiniappconfigStructTableName 表名常量,方便直接调用
@@ -12,7 +11,7 @@ const WxMiniappconfigStructTableName = "wx_miniappconfig"
 // WxMiniappconfigStruct 小程序配置表
 type WxMiniappconfigStruct struct {
 	//引入默认的struct,隔离IEntityStruct的方法改动
-	orm.EntityStruct
+	zorm.EntityStruct
 
 	//Id 主键id
 	Id string `column:"id"`

@@ -11,9 +11,9 @@ package main
 import (
 	"net/http"
 	"readygo/ginext"
-	"readygo/orm"
 	"readygo/permission/permhandler"
 	"readygo/utility/jwe"
+	"readygo/zorm"
 
 	"github.com/gin-gonic/gin"
 )
@@ -21,7 +21,7 @@ import (
 //初始化BaseDao
 func init() {
 
-	baseDaoConfig := orm.DataSourceConfig{
+	baseDaoConfig := zorm.DataSourceConfig{
 		Host:     "127.0.0.1",
 		Port:     3306,
 		DBName:   "readygo",
@@ -29,7 +29,7 @@ func init() {
 		PassWord: "root",
 		DBType:   "mysql",
 	}
-	_, _ = orm.NewBaseDao(&baseDaoConfig)
+	_, _ = zorm.NewBaseDao(&baseDaoConfig)
 }
 func main() {
 

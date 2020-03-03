@@ -2,7 +2,7 @@ package {{.packageName}}
 import (
 	"time"
 
-	"readygo/orm"
+	"readygo/zorm"
 )
 
 //{{.structName}}TableName 表名常量,方便直接调用
@@ -11,7 +11,7 @@ const {{.structName}}TableName = "{{.tableName}}"
 // {{.structName}} {{.tableComment}}
 type {{.structName}} struct {
 	//引入默认的struct,隔离IEntityStruct的方法改动
-	orm.EntityStruct
+	zorm.EntityStruct
 	{{range $i, $v := .columns}}
     //{{$v.field}} {{$v.COLUMN_COMMENT}}
     {{$v.field}} {{$v.DATA_TYPE}} `column:"{{$v.COLUMN_NAME}}"`

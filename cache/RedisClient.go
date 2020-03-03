@@ -219,10 +219,6 @@ func Lock(lockName string, timeout time.Duration, doLock func() (interface{}, er
 	if lockName == "" {
 		return false, nil, errors.New("lockName值不能为空")
 	}
-	//需要实例化redis客户端
-	if redisClient == nil && redisClusterClient == nil {
-		return false, nil, errors.New("需要先调用RedisClient文件中的NewRedisClient(redisConfig *RedisConfig)方法,初始化RedisClient")
-	}
 
 	if timeout == 0 { //如果没有超时时间,默认5秒
 		timeout = time.Second * 5

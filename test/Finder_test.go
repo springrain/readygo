@@ -2,7 +2,7 @@ package test
 
 import (
 	"fmt"
-	"readygo/orm"
+	"readygo/zorm"
 	"testing"
 )
 
@@ -10,7 +10,7 @@ import (
 
 func init() {
 
-	dataSourceConfig := orm.DataSourceConfig{
+	dataSourceConfig := zorm.DataSourceConfig{
 		Host:     "127.0.0.1",
 		Port:     3306,
 		DBName:   "readygo",
@@ -18,17 +18,17 @@ func init() {
 		PassWord: "root",
 		DBType:   "mysql",
 	}
-	baseDao, _ = orm.NewBaseDao(&dataSourceConfig)
+	baseDao, _ = zorm.NewBaseDao(&dataSourceConfig)
 }
 
 func TestAppend(t *testing.T) {
-	finder := orm.NewFinder()
+	finder := zorm.NewFinder()
 	finder.Append("SELECT * FROM t_user ")
 	fmt.Println(finder.GetSQL())
 }
 
 func TestNewSelectFinder(t *testing.T) {
-	finder := orm.NewSelectFinder("t_user", "id")
+	finder := zorm.NewSelectFinder("t_user", "id")
 	//finder.Append("SELECT * FROM t_user ")
 	fmt.Println(finder.GetSQL())
 }

@@ -1,9 +1,8 @@
 package permstruct
 
 import (
+	"readygo/zorm"
 	"time"
-
-	"readygo/orm"
 )
 
 //WxPayconfigStructTableName 表名常量,方便直接调用
@@ -12,7 +11,7 @@ const WxPayconfigStructTableName = "wx_payconfig"
 // WxPayconfigStruct 微信号需要的配置信息
 type WxPayconfigStruct struct {
 	//引入默认的struct,隔离IEntityStruct的方法改动
-	orm.EntityStruct
+	zorm.EntityStruct
 
 	//Id <no value>
 	Id string `column:"id"`
