@@ -15,10 +15,11 @@ func FindRoleByUserId(session *orm.Session, userId string) ([]permstruct.RoleStr
 		return nil, errors.New("参数userId不能为空")
 	}
 
-	cacheKey := "findRoleByUserId_" + userId
+	cacheKey := "FindRoleByUserId_" + userId
 
 	roles := make([]permstruct.RoleStruct, 0)
 
+	//从缓存中取数据
 	errFromCache := cache.GetFromCache(userOrgRoleMenuCacheKey, cacheKey, &roles)
 	if errFromCache != nil {
 		return nil, errFromCache
