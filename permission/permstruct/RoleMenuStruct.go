@@ -23,6 +23,8 @@ type RoleMenuStruct struct {
 
 	//------------------数据库字段结束,自定义字段写在下面---------------//
 
+	//Checked 是否选中,未选中就是删除.用于前台操作
+	Checked bool
 }
 
 //GetTableName 获取表名称

@@ -52,6 +52,8 @@ type OrgStruct struct {
 
 	//------------------数据库字段结束,自定义字段写在下面---------------//
 
+	//Children 子部门
+	Children []OrgStruct
 }
 
 //GetTableName 获取表名称

@@ -64,6 +64,8 @@ type UserStruct struct {
 
 	//------------------数据库字段结束,自定义字段写在下面---------------//
 
+	//Roles 用户的角色
+	Roles []RoleStruct
 }
 
 //GetTableName 获取表名称

@@ -55,6 +55,11 @@ type MenuStruct struct {
 
 	//------------------数据库字段结束,自定义字段写在下面---------------//
 
+	//RoleId 菜单是由哪个角色产生的,用于强制部门权限的判定
+	RoleId string
+
+	//Children 菜单下的子菜单
+	Children []MenuStruct
 }
 
 //GetTableName 获取表名称
