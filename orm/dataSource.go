@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"readygo/logger"
+	"time"
 
 	_ "github.com/go-sql-driver/mysql"
 )
@@ -44,7 +45,9 @@ func newDataSource(config *DataSourceConfig) (*dataSource, error) {
 	//设置数据库最大连接数
 	db.SetMaxOpenConns(50)
 	//设置数据库最大空闲连接数
-	db.SetMaxIdleConns(20)
+	db.SetMaxIdleConns(50)
+	//连接存活10分钟,10分钟后连接被销毁重建.避免数据库断开连接,造成死连接
+	db.SetConnMaxLifetime(time.Minute * 10)
 
 	//验证连接
 	if pingerr := db.Ping(); pingerr != nil {
