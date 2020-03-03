@@ -213,7 +213,7 @@ func redisGet(cacheName string) (interface{}, error) {
 }
 
 //Lock redis分布式锁,
-//参数:lockName锁的名称,timeout超时时间默认5秒
+//参数:lockName锁的名称,timeout超时时间默认5秒,分布式锁内业务的匿名函数
 //返回值:true获取锁成功,获取锁失败false,匿名函数返回值,错误信息
 func Lock(lockName string, timeout time.Duration, doLock func() (interface{}, error)) (bool, interface{}, error) {
 	if lockName == "" {
