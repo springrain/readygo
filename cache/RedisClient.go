@@ -92,9 +92,9 @@ func NewRedisClient(redisConfig *RedisConfig) error {
 	return nil
 }
 
-//hset 为redisCacheManager设置值,不再单独提供redis的API,统一为cacheManager接口
+//redisHset 为redisCacheManager设置值,不再单独提供redis的API,统一为cacheManager接口
 //值变成json的[]byte进行保存,小写的属性json无法转化,struct需要实现MarshalJSON和UnmarshalJSON的接口方法
-func hset(hname string, key string, valuePtr interface{}) error {
+func redisHset(hname string, key string, valuePtr interface{}) error {
 	if hname == "" || key == "" || valuePtr == nil {
 		return errors.New("值不能为空")
 	}
@@ -119,9 +119,9 @@ func hset(hname string, key string, valuePtr interface{}) error {
 
 }
 
-//hget 获取指定的值
+//redisHget 获取指定的值
 //取出json的[]byte进行转化,小写的属性json无法转化,struct需要实现MarshalJSON和UnmarshalJSON的接口方法
-func hget(hname string, key string, valuePtr interface{}) error {
+func redisHget(hname string, key string, valuePtr interface{}) error {
 	if hname == "" || key == "" || valuePtr == nil {
 		return errors.New("值不能为空")
 	}
@@ -151,8 +151,8 @@ func hget(hname string, key string, valuePtr interface{}) error {
 	return errJSON
 }
 
-//hdel 删除一个map中的key
-func hdel(hname string, key string) error {
+//redisHdel 删除一个map中的key
+func redisHdel(hname string, key string) error {
 	if hname == "" || key == "" {
 		return errors.New("值不能为空")
 	}
@@ -171,8 +171,8 @@ func hdel(hname string, key string) error {
 	return nil
 }
 
-//del 删除缓存
-func del(cacheName string) error {
+//redisDel 删除缓存
+func redisDel(cacheName string) error {
 
 	if cacheName == "" {
 		return errors.New("值不能为空")
@@ -192,40 +192,83 @@ func del(cacheName string) error {
 	return nil
 }
 
+func redisGet(cacheName string) (interface{}, error) {
+	if cacheName == "" {
+		return nil, errors.New("值不能为空")
+	}
+	var result interface{}
+	var errResult error
+	if redisClient != nil { //单机redis
+		result, errResult = redisClient.Do("get", cacheName).Result()
+	} else if redisClusterClient != nil { //集群Redis
+		result, errResult = redisClusterClient.Do("get", cacheName).Result()
+	} else {
+		return nil, errors.New("没有redisClient或redisClusterClient实现")
+	}
+	//获值错误
+	if errResult != nil {
+		return nil, errResult
+	}
+	return result, nil
+}
+
 //Lock 加锁,如果成功返回true,并设定超时时间.如果获取锁失败,返回false
 //锁的名称,超时时间默认5秒
-func Lock(lockName string, timeout time.Duration) (bool, error) {
+func Lock(lockName string, timeout time.Duration, doLock func() (interface{}, error)) (bool, interface{}, error) {
 	if lockName == "" {
-		return false, errors.New("lockName值不能为空")
+		return false, nil, errors.New("lockName值不能为空")
 	}
 
 	if timeout == 0 { //如果没有超时时间,默认5秒
 		timeout = time.Second * 5
 	}
 
-	var locked bool
-	var errResult error
+	var locked bool = false
+	var errResult error = nil
+	//获取超时的时间,作为value
+	value := time.Now().Add(timeout).Unix()
 	if redisClient != nil { //单机redis
-		locked, errResult = redisClient.SetNX(lockName, "", timeout).Result()
+		locked, errResult = redisClient.SetNX(lockName, value, timeout).Result()
 	} else if redisClusterClient != nil { //集群Redis
-		locked, errResult = redisClusterClient.SetNX(lockName, "", timeout).Result()
+		locked, errResult = redisClusterClient.SetNX(lockName, value, timeout).Result()
 	} else {
-		return false, errors.New("没有redisClient或redisClusterClient实现")
+		return false, nil, errors.New("没有redisClient或redisClusterClient实现")
 	}
-	//获值错误
-	if errResult != nil {
-		return false, errResult
+	//获值错误或者没有获取到锁
+	if errResult != nil || (!locked) {
+		return false, nil, errResult
 	}
+	//确保解锁逻辑执行
+	defer func() {
+		//当前时间
+		newValue := time.Now().Unix()
+		if newValue >= value { //已经过了超时时间,不需要解锁
+			return
+		}
 
-	return locked, nil
-}
+		lockValue, errLock := redisGet(lockName)
+		if errLock != nil { //从redis获取值出现异常,解锁
+			redisDel(lockName)
+			return
+		}
 
-//UNLock 解锁
-func UNLock(lockName string) error {
-	if lockName == "" {
-		return errors.New("lockName值不能为空")
-	}
-	//删除key
-	err := del(lockName)
-	return err
+		oldValue, newOK := lockValue.(int64)
+		if !newOK { //如果获取值异常,解锁
+			redisDel(lockName)
+			return
+		}
+		if oldValue != value { //值已经被其他的程序修改,已经不再是本程序的锁了,返回
+			return
+		}
+
+		//其他情况,解锁
+		redisDel(lockName)
+
+	}()
+
+	//调用业务逻辑
+	result, errLock := doLock()
+
+	//返回业务逻辑
+	return locked, result, errLock
 }

@@ -24,21 +24,21 @@ func NewRedisCacheManager() error {
 //valuePtr形参是接收值的对象指针,例如 &user
 //小写的属性json无法转化,struct需要实现MarshalJSON和UnmarshalJSON的接口方法
 func (cacheManager *redisCacheManager) getFromCache(cacheName string, key string, valuePtr interface{}) error {
-	return hget(cacheName, key, valuePtr)
+	return redisHget(cacheName, key, valuePtr)
 }
 
 //putToCache 设置指定cache中的key值
 //小写的属性json无法转化,struct需要实现MarshalJSON和UnmarshalJSON的接口方法
 func (cacheManager *redisCacheManager) putToCache(cacheName string, key string, valuePtr interface{}) error {
-	return hset(cacheName, key, valuePtr)
+	return redisHset(cacheName, key, valuePtr)
 }
 
 //clearCache 清理cache
 func (cacheManager *redisCacheManager) clearCache(cacheName string) error {
-	return del(cacheName)
+	return redisDel(cacheName)
 }
 
 //evictKey 失效一个cache中的key
 func (cacheManager *redisCacheManager) evictKey(cacheName string, key string) error {
-	return hdel(cacheName, key)
+	return redisHdel(cacheName, key)
 }
