@@ -65,7 +65,9 @@ func TestQuey(t *testing.T) {
 func TestNull(t *testing.T) {
 	finder := orm.NewFinder()
 
-	finder.Append("select nil ")
+	finder.Append("select * from t_user limit 1")
+
+
 
 	queryMap, err := orm.QueryMap(nil, finder)
 
@@ -136,7 +138,7 @@ func TestTranc(t *testing.T) {
 
 	var wg sync.WaitGroup
 
-	for i := 1; i <= 500; i++ {
+	for i := 1; i <= 6; i++ {
 		wg.Add(1)
 		go worker(i, &wg)
 	}
