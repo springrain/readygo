@@ -8,8 +8,8 @@ import (
 )
 
 const (
-	userOrgRoleMenuCacheKey string = "userOrgRoleMenuCacheKey"
-	qxCacheKey              string = "qxCacheKey"
+	//	userOrgRoleMenuCacheKey string = "userOrgRoleMenuCacheKey"
+	qxCacheKey string = "qxCacheKey"
 )
 
 //FindRoleByUserId 根据用户Id查询用户的角色
@@ -23,7 +23,7 @@ func FindRoleByUserId(dbConnection *zorm.DBConnection, userId string, page *zorm
 	roles := make([]permstruct.RoleStruct, 0)
 
 	//从缓存中取数据
-	errFromCache := cache.GetFromCache(userOrgRoleMenuCacheKey, cacheKey, &roles)
+	errFromCache := cache.GetFromCache(qxCacheKey, cacheKey, &roles)
 	if errFromCache != nil {
 		return nil, errFromCache
 	}
@@ -42,7 +42,7 @@ func FindRoleByUserId(dbConnection *zorm.DBConnection, userId string, page *zorm
 	}
 
 	//放入缓存
-	errPutCache := cache.PutToCache(userOrgRoleMenuCacheKey, cacheKey, &roles)
+	errPutCache := cache.PutToCache(qxCacheKey, cacheKey, &roles)
 	if errPutCache != nil {
 		return nil, errPutCache
 	}
