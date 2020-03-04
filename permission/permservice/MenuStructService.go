@@ -134,3 +134,30 @@ func FindMenuStructList(dbConnection *zorm.DBConnection, finder *zorm.Finder, pa
 
 	return menuStructList, nil
 }
+
+//FindMenuByPid 根据pid查询所有的子菜单
+func FindMenuByPid(dbConnection *zorm.DBConnection, pid string, page *zorm.Page) ([]string, error) {
+
+	f_select := zorm.NewSelectFinder(permstruct.AliPayconfigStructTableName, "id").Append(" WHERE active=1 ")
+
+	if len(pid) > 0 { // pid不是根节点
+		menu, errById := FindMenuStructById(dbConnection, pid)
+		if errById != nil {
+			return nil, errById
+		}
+
+		if menu.Comcode == "" { //没有编码,错误数据
+			return nil, errors.New("Comcode为空,错误数据,pid:" + pid)
+		}
+		f_select.Append(" and comcode like ? ", menu.Comcode+"%")
+	}
+
+	f_select.Append(" order by sortno desc ")
+	menuIds := make([]string, 0)
+	errQueryList := zorm.QueryStructList(dbConnection, f_select, &menuIds, page)
+	if errQueryList != nil {
+		return menuIds, errQueryList
+	}
+
+	return menuIds, nil
+}

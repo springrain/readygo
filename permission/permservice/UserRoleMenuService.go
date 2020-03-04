@@ -159,3 +159,61 @@ func FindMenuByUserId(dbConnection *zorm.DBConnection, userId string) ([]permstr
 	return menus, nil
 
 }
+
+//UpdateUserRoles 更新用户的角色信息
+func UpdateUserRoles(dbConnection *zorm.DBConnection, userId string, roleIds []string) error {
+
+	if len(userId) < 1 {
+		return errors.New("userId不能为空")
+	}
+	//查询用户的现有的角色,清理缓存
+	f_select_old := zorm.NewSelectFinder(permstruct.UserRoleStructTableName, "roleId").Append(" WHERE userId=? ", userId)
+	listOld := make([]string, 0)
+	errQueryList := zorm.QueryStructList(dbConnection, f_select_old, listOld, nil)
+	if errQueryList != nil {
+		return errQueryList
+	}
+	for _, roleId := range listOld {
+		cache.EvictKey(qxCacheKey, "FindUserByRoleId_"+roleId)
+	}
+
+	//开启事务,批量保存
+	_, errTransaction := zorm.Transaction(dbConnection, func(dbConnection *zorm.DBConnection) (interface{}, error) {
+
+		//删除用户现有的角色
+		f_del := zorm.NewDeleteFinder(permstruct.UserRoleStructTableName).Append(" WHERE userId=? ", userId)
+		errUpdateFinder := zorm.UpdateFinder(dbConnection, f_del)
+		if errUpdateFinder != nil {
+			return nil, errUpdateFinder
+		}
+		//清理用户的缓存
+		cache.EvictKey(qxCacheKey, "FindRoleByUserId_"+userId)
+		cache.EvictKey(qxCacheKey, "FindMenuByUserId_"+userId)
+
+		if len(roleIds) < 1 {
+			return nil, nil
+		}
+		for _, roleId := range roleIds {
+			//清理缓存
+			cache.EvictKey(qxCacheKey, "FindUserByRoleId_"+roleId)
+			ur := permstruct.UserRoleStruct{}
+			//ur.Id = ""
+			ur.UserId = userId
+			ur.RoleId = roleId
+			errSaveStruct := zorm.SaveStruct(dbConnection, &ur)
+			if errSaveStruct != nil {
+				return nil, errSaveStruct
+			}
+		}
+
+		return nil, nil
+	})
+
+	//判断事务日志
+	if errTransaction != nil {
+		return errTransaction
+	}
+
+	return nil
+
+}
