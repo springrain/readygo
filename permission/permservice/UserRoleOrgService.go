@@ -66,7 +66,53 @@ func FindAllUserByOrgId(dbConnection *zorm.DBConnection, orgId string, page *zor
 
 }
 
-//listUserId2ListUser 根据 ListUserId 查询封装List<User> 对象
+//FindOrgIdByUserId 根据userId查找所在的部门
+func FindOrgIdByUserId(dbConnection *zorm.DBConnection, userId string, page *zorm.Page) ([]string, error) {
+	if len(userId) < 1 {
+		return nil, errors.New("userId不能为空")
+	}
+	finder := zorm.NewFinder().Append("SELECT re.orgId FROM  ").Append(permstruct.UserOrgStructTableName).Append(" re ")
+	finder.Append("   WHERE re.userId=?    order by re.managerType desc   ", userId)
+
+	orgIds := make([]string, 0)
+	errQueryList := zorm.QueryStructList(dbConnection, finder, &orgIds, page)
+	if errQueryList != nil {
+		return nil, errQueryList
+	}
+
+	return orgIds, nil
+
+}
+
+//FindOrgByUserId 根据UserId,查找用户的部门对象
+func FindOrgByUserId(dbConnection *zorm.DBConnection, userId string, page *zorm.Page) ([]permstruct.OrgStruct, error) {
+
+	orgIds, errByUserId := FindOrgIdByUserId(dbConnection, userId, page)
+
+	if errByUserId != nil {
+		return nil, errByUserId
+	}
+	return listOrgId2ListOrg(dbConnection, orgIds)
+}
+
+func FindUserOrgByUserId(dbConnection *zorm.DBConnection, userId string, page *zorm.Page) ([]permstruct.UserOrgStruct, error) {
+	if len(userId) < 1 {
+		return nil, errors.New("userId不能为空")
+	}
+	finder := zorm.NewFinder().Append("SELECT re.* FROM  ").Append(permstruct.UserOrgStructTableName).Append(" re ")
+	finder.Append("   WHERE re.userId=?    order by re.managerType desc   ", userId)
+
+	userOrgs := make([]permstruct.UserOrgStruct, 0)
+	errQueryList := zorm.QueryStructList(dbConnection, finder, &userOrgs, page)
+	if errQueryList != nil {
+		return nil, errQueryList
+	}
+
+	return userOrgs, nil
+
+}
+
+//listUserId2ListUser 根据 userIds 查询出 []permstruct.UserStruct
 func listUserId2ListUser(dbConnection *zorm.DBConnection, userIds []string) ([]permstruct.UserStruct, error) {
 
 	if len(userIds) < 1 {
@@ -79,8 +125,32 @@ func listUserId2ListUser(dbConnection *zorm.DBConnection, userIds []string) ([]p
 		if errByUserId != nil {
 			return nil, errByUserId
 		}
+		if user == nil {
+			continue
+		}
 		users = append(users, *user)
 	}
 	return users, nil
+
+}
+
+//listOrgId2ListOrg  根据 orgIds 查询出 []permstruct.OrgStruct
+func listOrgId2ListOrg(dbConnection *zorm.DBConnection, orgIds []string) ([]permstruct.OrgStruct, error) {
+	if len(orgIds) < 1 {
+		return nil, nil
+	}
+
+	orgs := make([]permstruct.OrgStruct, 0)
+	for _, orgId := range orgIds {
+		org, errByOrgId := FindOrgStructById(dbConnection, orgId)
+		if errByOrgId != nil {
+			return nil, errByOrgId
+		}
+		if org == nil {
+			continue
+		}
+		orgs = append(orgs, *org)
+	}
+	return orgs, nil
 
 }
