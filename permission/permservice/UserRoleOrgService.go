@@ -95,6 +95,7 @@ func FindOrgByUserId(dbConnection *zorm.DBConnection, userId string, page *zorm.
 	return listOrgId2ListOrg(dbConnection, orgIds)
 }
 
+//FindUserOrgByUserId 根据userId查找部门UserOrg中间表对象
 func FindUserOrgByUserId(dbConnection *zorm.DBConnection, userId string, page *zorm.Page) ([]permstruct.UserOrgStruct, error) {
 	if len(userId) < 1 {
 		return nil, errors.New("userId不能为空")
