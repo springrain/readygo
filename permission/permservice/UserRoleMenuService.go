@@ -13,7 +13,7 @@ const (
 )
 
 //FindRoleByUserId 根据用户Id查询用户的角色
-func FindRoleByUserId(session *zorm.Session, userId string) ([]permstruct.RoleStruct, error) {
+func FindRoleByUserId(dbConnection *zorm.DBConnection, userId string) ([]permstruct.RoleStruct, error) {
 	if len(userId) < 1 {
 		return nil, errors.New("参数userId不能为空")
 	}
@@ -36,7 +36,7 @@ func FindRoleByUserId(session *zorm.Session, userId string) ([]permstruct.RoleSt
 	finder.Append(permstruct.UserRoleStructTableName).Append("  re where re.userId=? and re.roleId=r.id and r.active=1 order by r.privateOrg,r.sortno desc", userId)
 
 	//查询列表
-	errQueryList := zorm.QueryStructList(session, finder, &roles, nil)
+	errQueryList := zorm.QueryStructList(dbConnection, finder, &roles, nil)
 	if errQueryList != nil {
 		return nil, errQueryList
 	}
@@ -52,7 +52,7 @@ func FindRoleByUserId(session *zorm.Session, userId string) ([]permstruct.RoleSt
 }
 
 //FindMenuByRoleId 根据角色Id,查询这个角色有权限的菜单
-func FindMenuByRoleId(session *zorm.Session, roleId string) ([]permstruct.MenuStruct, error) {
+func FindMenuByRoleId(dbConnection *zorm.DBConnection, roleId string) ([]permstruct.MenuStruct, error) {
 
 	if len(roleId) < 1 {
 		return nil, errors.New("roleId的值不能为空")
@@ -74,7 +74,7 @@ func FindMenuByRoleId(session *zorm.Session, roleId string) ([]permstruct.MenuSt
 	finder.Append(permstruct.RoleMenuStructTableName).Append("  re where re.roleId=? and re.menuId=m.id and m.active=1 order by m.sortno desc ", roleId)
 
 	//查询列表
-	errQueryList := zorm.QueryStructList(session, finder, &menus, nil)
+	errQueryList := zorm.QueryStructList(dbConnection, finder, &menus, nil)
 	if errQueryList != nil {
 		return nil, errQueryList
 	}

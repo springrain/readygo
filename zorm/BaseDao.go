@@ -73,22 +73,22 @@ func getDefaultDao() *BaseDao {
 	return defaultDao
 }
 
-// GetSession 获取一个Session
-//如果参数session为nil,使用默认的datasource进行获取session.如果是多库,就需要使用Dao手动调用GetSession(),获得session,传给需要的方法
-func (baseDao *BaseDao) GetSession() (*Session, error) {
+// GetdbConnection 获取一个dbConnection
+//如果参数dbConnection为nil,使用默认的datasource进行获取dbConnection.如果是多库,就需要使用Dao手动调用GetdbConnection(),获得dbConnection,传给需要的方法
+func (baseDao *BaseDao) GetdbConnection() (*DBConnection, error) {
 	if baseDao == nil || baseDao.dataSource == nil {
 		return nil, errors.New("请不要自己创建baseDao,使用NewBaseDao方法进行创建")
 	}
-	session := new(Session)
-	session.db = baseDao.dataSource.DB
-	session.dbType = baseDao.config.DBType
-	return session, nil
+	dbConnection := new(DBConnection)
+	dbConnection.db = baseDao.dataSource.DB
+	dbConnection.dbType = baseDao.config.DBType
+	return dbConnection, nil
 }
 
 /*
 Transaction 的示例代码
 //匿名函数return的error如果不为nil,事务就会回滚
-orm.Transaction(session *zorm.Session,func(session *zorm.Session) (interface{}, error) {
+orm.Transaction(dbConnection *zorm.DBConnection,func(dbConnection *zorm.DBConnection) (interface{}, error) {
 
 	//业务代码
 
@@ -97,23 +97,23 @@ orm.Transaction(session *zorm.Session,func(session *zorm.Session) (interface{}, 
     return nil, nil
 })
 */
-//事务方法,隔离session相关的API.必须通过这个方法进行事务处理,统一事务方式
-//如果入参session为nil,使用defaultDao开启事务并最后提交.如果入参session没有事务,调用session.begin()开启事务并最后提交.如果入参session有事务,只使用不提交,有开启方提交事务.但是如果遇到错误或者异常,虽然不是事务的开启方,也会回滚事务,让事务尽早回滚.
-//session的传入,还可以处理多个数据库的情况.
-//不要去掉匿名函数的session参数,因为如果Transaction的session参数是nil,新建的session对象就会丢失,业务代码用的还是传递的nil,虽然是指针
-//bug(springrain)如果有大神修改了匿名函数内的参数名,例如改为session2,这样业务代码实际使用的是Transaction的session参数,如果为nil,会抛异常,如果不为nil,实际就是一个对象.影响有限.也可以把匿名函数抽到外部
+//事务方法,隔离dbConnection相关的API.必须通过这个方法进行事务处理,统一事务方式
+//如果入参dbConnection为nil,使用defaultDao开启事务并最后提交.如果入参dbConnection没有事务,调用dbConnection.begin()开启事务并最后提交.如果入参dbConnection有事务,只使用不提交,有开启方提交事务.但是如果遇到错误或者异常,虽然不是事务的开启方,也会回滚事务,让事务尽早回滚.
+//dbConnection的传入,还可以处理多个数据库的情况.
+//不要去掉匿名函数的dbConnection参数,因为如果Transaction的dbConnection参数是nil,新建的dbConnection对象就会丢失,业务代码用的还是传递的nil,虽然是指针
+//bug(springrain)如果有大神修改了匿名函数内的参数名,例如改为dbConnection2,这样业务代码实际使用的是Transaction的dbConnection参数,如果为nil,会抛异常,如果不为nil,实际就是一个对象.影响有限.也可以把匿名函数抽到外部
 //return的error如果不为nil,事务就会回滚
-func Transaction(session *Session, doTransaction func(session *Session) (interface{}, error)) (interface{}, error) {
-	//是否是session的开启方,如果是开启方,才可以提交事务
+func Transaction(dbConnection *DBConnection, doTransaction func(dbConnection *DBConnection) (interface{}, error)) (interface{}, error) {
+	//是否是dbConnection的开启方,如果是开启方,才可以提交事务
 	txOpen := false
-	//如果session不存在,则会用默认的datasource开启事务
-	if session == nil || session.tx == nil {
+	//如果dbConnection不存在,则会用默认的datasource开启事务
+	if dbConnection == nil || dbConnection.tx == nil {
 		var checkerr error
-		session, checkerr = checkSession(session, false)
+		dbConnection, checkerr = checkDBConnection(dbConnection, false)
 		if checkerr != nil {
 			return nil, checkerr
 		}
-		beginerr := session.begin()
+		beginerr := dbConnection.begin()
 		if beginerr != nil {
 			beginerr = fmt.Errorf("事务开启失败:%w ", beginerr)
 			logger.Error(beginerr)
@@ -138,7 +138,7 @@ func Transaction(session *Session, doTransaction func(session *Session) (interfa
 			//if !txOpen { //如果不是开启方,也应该回滚事务,虽然可能造成日志不准确,但是回滚要尽早
 			//	return
 			//}
-			rberr := session.rollback()
+			rberr := dbConnection.rollback()
 			if rberr != nil {
 				rberr = fmt.Errorf("recover内事务回滚失败:%w", rberr)
 				logger.Error(rberr)
@@ -147,12 +147,12 @@ func Transaction(session *Session, doTransaction func(session *Session) (interfa
 		}
 	}()
 
-	info, err := doTransaction(session)
+	info, err := doTransaction(dbConnection)
 	if err != nil {
 		err = fmt.Errorf("事务执行失败:%w", err)
 		logger.Error(err)
 		//不是开启方回滚事务,有可能造成日志记录不准确,但是回滚最重要了,尽早回滚
-		rberr := session.rollback()
+		rberr := dbConnection.rollback()
 		if rberr != nil {
 			rberr = fmt.Errorf("事务回滚失败:%w", rberr)
 			logger.Error(rberr)
@@ -160,7 +160,7 @@ func Transaction(session *Session, doTransaction func(session *Session) (interfa
 		return info, err
 	}
 	if txOpen { //如果是事务开启方,提交事务
-		commitError := session.commit()
+		commitError := dbConnection.commit()
 		if commitError != nil {
 			commitError = fmt.Errorf("事务提交失败:%w", commitError)
 			logger.Error(commitError)
@@ -173,8 +173,8 @@ func Transaction(session *Session, doTransaction func(session *Session) (interfa
 
 //QueryStruct 不要偷懒调用QueryStructList返回第一条,1.需要构建一个selice,2.调用方传递的对象其他值会被抛弃或者覆盖.
 //根据Finder和封装为指定的entity类型,entity必须是*struct类型或者基础类型的指针.把查询的数据赋值给entity,所以要求指针类型
-//如果没有事务,session传入nil,使用默认的BaseDao进行查询.如果有事务,参照使用orm.Transaction方法传入session.可以使用BaseDao.GetSession()方法,为多数据库预留的方法,正常不建议使用
-func QueryStruct(session *Session, finder *Finder, entity interface{}) error {
+//如果没有事务,dbConnection传入nil,使用默认的BaseDao进行查询.如果有事务,参照使用orm.Transaction方法传入dbConnection.可以使用BaseDao.GetDBConnection()方法,为多数据库预留的方法,正常不建议使用
+func QueryStruct(dbConnection *DBConnection, finder *Finder, entity interface{}) error {
 
 	checkerr := checkEntityKind(entity)
 	if checkerr != nil {
@@ -183,16 +183,16 @@ func QueryStruct(session *Session, finder *Finder, entity interface{}) error {
 		return checkerr
 	}
 
-	//自己构建的session
-	if session != nil && session.db == nil {
-		return errSession
+	//自己构建的dbConnection
+	if dbConnection != nil && dbConnection.db == nil {
+		return errDBConnection
 	}
 
 	var dbType string = ""
-	if session == nil { //session为nil,使用defaultDao
+	if dbConnection == nil { //dbConnection为nil,使用defaultDao
 		dbType = getDefaultDao().config.DBType
 	} else {
-		dbType = session.dbType
+		dbType = dbConnection.dbType
 	}
 
 	//获取到sql语句
@@ -203,15 +203,15 @@ func QueryStruct(session *Session, finder *Finder, entity interface{}) error {
 		return err
 	}
 
-	//检查session.有可能会创建session或者开启事务,所以要尽可能的接近执行时检查.
-	var sessionerr error
-	session, sessionerr = checkSession(session, false)
-	if sessionerr != nil {
-		return sessionerr
+	//检查dbConnection.有可能会创建dbConnection或者开启事务,所以要尽可能的接近执行时检查.
+	var dbConnectionerr error
+	dbConnection, dbConnectionerr = checkDBConnection(dbConnection, false)
+	if dbConnectionerr != nil {
+		return dbConnectionerr
 	}
 
 	//根据语句和参数查询
-	rows, e := session.query(sqlstr, finder.values...)
+	rows, e := dbConnection.query(sqlstr, finder.values...)
 	defer rows.Close()
 
 	if e != nil {
@@ -296,8 +296,8 @@ func QueryStruct(session *Session, finder *Finder, entity interface{}) error {
 
 //QueryStructList 不要偷懒调用QueryMapList,需要处理sql驱动支持的sql.Nullxxx的数据类型,也挺麻烦的
 //根据Finder和封装为指定的entity类型,entity必须是*[]struct类型,已经初始化好的数组,此方法只Append元素,这样调用方就不需要强制类型转换了
-//如果没有事务,session传入nil,使用默认的BaseDao进行查询.如果有事务,参照使用orm.Transaction方法传入session.可以使用BaseDao.GetSession()方法,为多数据库预留的方法,正常不建议使用
-func QueryStructList(session *Session, finder *Finder, rowsSlicePtr interface{}, page *Page) error {
+//如果没有事务,dbConnection传入nil,使用默认的BaseDao进行查询.如果有事务,参照使用orm.Transaction方法传入dbConnection.可以使用BaseDao.GetDBConnection()方法,为多数据库预留的方法,正常不建议使用
+func QueryStructList(dbConnection *DBConnection, finder *Finder, rowsSlicePtr interface{}, page *Page) error {
 
 	if rowsSlicePtr == nil { //如果为nil
 		return errors.New("数组必须是*[]struct类型或者基础类型数组的指针")
@@ -323,16 +323,16 @@ func QueryStructList(session *Session, finder *Finder, rowsSlicePtr interface{},
 		return errors.New("数组必须是*[]struct类型或者基础类型数组的指针")
 	}
 
-	//自己构建的session
-	if session != nil && session.db == nil {
-		return errSession
+	//自己构建的dbConnection
+	if dbConnection != nil && dbConnection.db == nil {
+		return errDBConnection
 	}
 
 	var dbType string = ""
-	if session == nil { //session为nil,使用defaultDao
+	if dbConnection == nil { //dbConnection为nil,使用defaultDao
 		dbType = getDefaultDao().config.DBType
 	} else {
-		dbType = session.dbType
+		dbType = dbConnection.dbType
 	}
 
 	sqlstr, err := wrapQuerySQL(dbType, finder, nil)
@@ -342,15 +342,15 @@ func QueryStructList(session *Session, finder *Finder, rowsSlicePtr interface{},
 		return err
 	}
 
-	//检查session.有可能会创建session或者开启事务,所以要尽可能的接近执行时检查.
-	var sessionerr error
-	session, sessionerr = checkSession(session, false)
-	if sessionerr != nil {
-		return sessionerr
+	//检查dbConnection.有可能会创建dbConnection或者开启事务,所以要尽可能的接近执行时检查.
+	var dbConnectionerr error
+	dbConnection, dbConnectionerr = checkDBConnection(dbConnection, false)
+	if dbConnectionerr != nil {
+		return dbConnectionerr
 	}
 
 	//根据语句和参数查询
-	rows, e := session.query(sqlstr, finder.values...)
+	rows, e := dbConnection.query(sqlstr, finder.values...)
 	defer rows.Close()
 	if e != nil {
 		e = fmt.Errorf("查询rows异常:%w", e)
@@ -385,7 +385,7 @@ func QueryStructList(session *Session, finder *Finder, rowsSlicePtr interface{},
 
 		//查询总条数
 		if page != nil && finder.SelectTotalCount {
-			count, counterr := selectCount(session, finder)
+			count, counterr := selectCount(dbConnection, finder)
 			if counterr != nil {
 				counterr = fmt.Errorf("查询总条数错误:%w", counterr)
 				logger.Error(counterr)
@@ -439,7 +439,7 @@ func QueryStructList(session *Session, finder *Finder, rowsSlicePtr interface{},
 
 	//查询总条数
 	if page != nil && finder.SelectTotalCount {
-		count, counterr := selectCount(session, finder)
+		count, counterr := selectCount(dbConnection, finder)
 		if counterr != nil {
 			counterr = fmt.Errorf("查询总条数错误:%w", counterr)
 			logger.Error(counterr)
@@ -454,14 +454,14 @@ func QueryStructList(session *Session, finder *Finder, rowsSlicePtr interface{},
 
 //QueryMap 根据Finder查询,封装Map
 //bug(springrain)需要测试一下 in 数组, like ,还有查询一个基础类型(例如 string)的功能
-//如果没有事务,session传入nil,使用默认的BaseDao进行查询.如果有事务,参照使用orm.Transaction方法传入session.可以使用BaseDao.GetSession()方法,为多数据库预留的方法,正常不建议使用
-func QueryMap(session *Session, finder *Finder) (map[string]interface{}, error) {
+//如果没有事务,dbConnection传入nil,使用默认的BaseDao进行查询.如果有事务,参照使用orm.Transaction方法传入dbConnection.可以使用BaseDao.GetDBConnection()方法,为多数据库预留的方法,正常不建议使用
+func QueryMap(dbConnection *DBConnection, finder *Finder) (map[string]interface{}, error) {
 
 	if finder == nil {
 		return nil, errors.New("QueryMap的finder参数不能为nil")
 	}
 
-	resultMapList, listerr := QueryMapList(session, finder, nil)
+	resultMapList, listerr := QueryMapList(dbConnection, finder, nil)
 	if listerr != nil {
 		listerr = fmt.Errorf("QueryMapList查询错误:%w", listerr)
 		logger.Error(listerr)
@@ -478,22 +478,22 @@ func QueryMap(session *Session, finder *Finder) (map[string]interface{}, error) 
 
 //QueryMapList 根据Finder查询,封装Map数组
 //根据数据库字段的类型,完成从[]byte到golang类型的映射,理论上其他查询方法都可以调用此方法,但是需要处理sql.Nullxxx等驱动支持的类型
-//如果没有事务,session传入nil,使用默认的BaseDao进行查询.如果有事务,参照使用orm.Transaction方法传入session.可以使用BaseDao.GetSession()方法,为多数据库预留的方法,正常不建议使用
-func QueryMapList(session *Session, finder *Finder, page *Page) ([]map[string]interface{}, error) {
+//如果没有事务,dbConnection传入nil,使用默认的BaseDao进行查询.如果有事务,参照使用orm.Transaction方法传入dbConnection.可以使用BaseDao.GetDBConnection()方法,为多数据库预留的方法,正常不建议使用
+func QueryMapList(dbConnection *DBConnection, finder *Finder, page *Page) ([]map[string]interface{}, error) {
 
 	if finder == nil {
 		return nil, errors.New("QueryMap的finder参数不能为nil")
 	}
-	//自己构建的session
-	if session != nil && session.db == nil {
-		return nil, errSession
+	//自己构建的dbConnection
+	if dbConnection != nil && dbConnection.db == nil {
+		return nil, errDBConnection
 	}
 
 	var dbType string = ""
-	if session == nil { //session为nil,使用defaultDao
+	if dbConnection == nil { //dbConnection为nil,使用defaultDao
 		dbType = getDefaultDao().config.DBType
 	} else {
-		dbType = session.dbType
+		dbType = dbConnection.dbType
 	}
 
 	sqlstr, err := wrapQuerySQL(dbType, finder, nil)
@@ -503,15 +503,15 @@ func QueryMapList(session *Session, finder *Finder, page *Page) ([]map[string]in
 		return nil, err
 	}
 
-	//检查session.有可能会创建session或者开启事务,所以要尽可能的接近执行时检查.
-	var sessionerr error
-	session, sessionerr = checkSession(session, false)
-	if sessionerr != nil {
-		return nil, sessionerr
+	//检查dbConnection.有可能会创建dbConnection或者开启事务,所以要尽可能的接近执行时检查.
+	var dbConnectionerr error
+	dbConnection, dbConnectionerr = checkDBConnection(dbConnection, false)
+	if dbConnectionerr != nil {
+		return nil, dbConnectionerr
 	}
 
 	//根据语句和参数查询
-	rows, e := session.query(sqlstr, finder.values...)
+	rows, e := dbConnection.query(sqlstr, finder.values...)
 	defer rows.Close()
 	if e != nil {
 		e = fmt.Errorf("查询rows错误:%w", e)
@@ -566,7 +566,7 @@ func QueryMapList(session *Session, finder *Finder, page *Page) ([]map[string]in
 	//bug(springrain) 还缺少查询总条数的逻辑
 	//查询总条数
 	if page != nil && finder.SelectTotalCount {
-		count, counterr := selectCount(session, finder)
+		count, counterr := selectCount(dbConnection, finder)
 		if counterr != nil {
 			counterr = fmt.Errorf("查询总条数错误:%w", counterr)
 			logger.Error(counterr)
@@ -579,8 +579,8 @@ func QueryMapList(session *Session, finder *Finder, page *Page) ([]map[string]in
 }
 
 //UpdateFinder 更新Finder语句
-//session不能为nil,参照使用orm.Transaction方法传入session.请不要自己构建Session
-func UpdateFinder(session *Session, finder *Finder) error {
+//dbConnection不能为nil,参照使用orm.Transaction方法传入dbConnection.请不要自己构建DBConnection
+func UpdateFinder(dbConnection *DBConnection, finder *Finder) error {
 	if finder == nil {
 		return errors.New("finder不能为空")
 	}
@@ -591,16 +591,16 @@ func UpdateFinder(session *Session, finder *Finder) error {
 		return err
 	}
 
-	//自己构建的session
-	if session != nil && session.db == nil {
-		return errSession
+	//自己构建的dbConnection
+	if dbConnection != nil && dbConnection.db == nil {
+		return errDBConnection
 	}
 
 	var dbType string = ""
-	if session == nil { //session为nil,使用defaultDao
+	if dbConnection == nil { //dbConnection为nil,使用defaultDao
 		dbType = getDefaultDao().config.DBType
 	} else {
-		dbType = session.dbType
+		dbType = dbConnection.dbType
 	}
 
 	sqlstr, err = wrapSQL(dbType, sqlstr)
@@ -610,15 +610,15 @@ func UpdateFinder(session *Session, finder *Finder) error {
 		return err
 	}
 
-	//必须要有session和事务.有可能会创建session或者开启事务,所以要尽可能的接近执行时检查
-	var sessionerr error
-	session, sessionerr = checkSession(session, true)
-	if sessionerr != nil {
-		return sessionerr
+	//必须要有dbConnection和事务.有可能会创建dbConnection或者开启事务,所以要尽可能的接近执行时检查
+	var dbConnectionerr error
+	dbConnection, dbConnectionerr = checkDBConnection(dbConnection, true)
+	if dbConnectionerr != nil {
+		return dbConnectionerr
 	}
 
 	//流弊的...,把数组展开变成多个参数的形式
-	_, errexec := session.exec(sqlstr, finder.values...)
+	_, errexec := dbConnection.exec(sqlstr, finder.values...)
 
 	if errexec != nil {
 		errexec = fmt.Errorf("执行更新错误:%w", errexec)
@@ -630,8 +630,8 @@ func UpdateFinder(session *Session, finder *Finder) error {
 
 //SaveStruct 保存Struct对象,必须是*IEntityStruct类型
 //bug(chunanuyong) 如果是自增主键,需要返回.需要sql驱动支持
-//session不能为nil,参照使用orm.Transaction方法传入session.请不要自己构建Session
-func SaveStruct(session *Session, entity IEntityStruct) error {
+//dbConnection不能为nil,参照使用orm.Transaction方法传入dbConnection.请不要自己构建DBConnection
+func SaveStruct(dbConnection *DBConnection, entity IEntityStruct) error {
 
 	if entity == nil {
 		return errors.New("对象不能为空")
@@ -646,16 +646,16 @@ func SaveStruct(session *Session, entity IEntityStruct) error {
 		return errors.New("没有tag信息,请检查struct中 column 的tag")
 	}
 
-	//自己构建的session
-	if session != nil && session.db == nil {
-		return errSession
+	//自己构建的dbConnection
+	if dbConnection != nil && dbConnection.db == nil {
+		return errDBConnection
 	}
 
 	var dbType string = ""
-	if session == nil { //session为nil,使用defaultDao
+	if dbConnection == nil { //dbConnection为nil,使用defaultDao
 		dbType = getDefaultDao().config.DBType
 	} else {
-		dbType = session.dbType
+		dbType = dbConnection.dbType
 	}
 
 	//SQL语句
@@ -666,15 +666,15 @@ func SaveStruct(session *Session, entity IEntityStruct) error {
 		return err
 	}
 
-	//必须要有session和事务.有可能会创建session或者开启事务,所以要尽可能的接近执行时检查
-	var sessionerr error
-	session, sessionerr = checkSession(session, true)
-	if sessionerr != nil {
-		return sessionerr
+	//必须要有dbConnection和事务.有可能会创建dbConnection或者开启事务,所以要尽可能的接近执行时检查
+	var dbConnectionerr error
+	dbConnection, dbConnectionerr = checkDBConnection(dbConnection, true)
+	if dbConnectionerr != nil {
+		return dbConnectionerr
 	}
 
 	//流弊的...,把数组展开变成多个参数的形式
-	res, errexec := session.exec(sqlstr, values...)
+	res, errexec := dbConnection.exec(sqlstr, values...)
 
 	if errexec != nil {
 		errexec = fmt.Errorf("SaveStruct执行保存错误:%w", errexec)
@@ -708,9 +708,9 @@ func SaveStruct(session *Session, entity IEntityStruct) error {
 }
 
 //UpdateStruct 更新struct所有属性,必须是*IEntityStruct类型
-//session不能为nil,参照使用orm.Transaction方法传入session.请不要自己构建Session
-func UpdateStruct(session *Session, entity IEntityStruct) error {
-	err := updateStructFunc(session, entity, false)
+//dbConnection不能为nil,参照使用orm.Transaction方法传入dbConnection.请不要自己构建DBConnection
+func UpdateStruct(dbConnection *DBConnection, entity IEntityStruct) error {
+	err := updateStructFunc(dbConnection, entity, false)
 	if err != nil {
 		err = fmt.Errorf("UpdateStruct-->updateStructFunc更新错误:%w", err)
 		return err
@@ -719,9 +719,9 @@ func UpdateStruct(session *Session, entity IEntityStruct) error {
 }
 
 //UpdateStructNotNil 更新struct不为nil的属性,必须是*IEntityStruct类型
-//session不能为nil,参照使用orm.Transaction方法传入session.请不要自己构建Session
-func (baseDao *BaseDao) UpdateStructNotNil(session *Session, entity IEntityStruct) error {
-	err := updateStructFunc(session, entity, true)
+//dbConnection不能为nil,参照使用orm.Transaction方法传入dbConnection.请不要自己构建DBConnection
+func (baseDao *BaseDao) UpdateStructNotNil(dbConnection *DBConnection, entity IEntityStruct) error {
+	err := updateStructFunc(dbConnection, entity, true)
 	if err != nil {
 		err = fmt.Errorf("UpdateStructNotNil-->updateStructFunc更新错误:%w", err)
 		return err
@@ -730,8 +730,8 @@ func (baseDao *BaseDao) UpdateStructNotNil(session *Session, entity IEntityStruc
 }
 
 //DeleteStruct 根据主键删除一个对象.必须是*IEntityStruct类型
-//session不能为nil,参照使用orm.Transaction方法传入session.请不要自己构建Session
-func DeleteStruct(session *Session, entity IEntityStruct) error {
+//dbConnection不能为nil,参照使用orm.Transaction方法传入dbConnection.请不要自己构建DBConnection
+func DeleteStruct(dbConnection *DBConnection, entity IEntityStruct) error {
 
 	pkName, pkNameErr := entityPKFieldName(entity)
 	if pkNameErr != nil {
@@ -747,16 +747,16 @@ func DeleteStruct(session *Session, entity IEntityStruct) error {
 		return e
 	}
 
-	//自己构建的session
-	if session != nil && session.db == nil {
-		return errSession
+	//自己构建的dbConnection
+	if dbConnection != nil && dbConnection.db == nil {
+		return errDBConnection
 	}
 
 	var dbType string = ""
-	if session == nil { //session为nil,使用defaultDao
+	if dbConnection == nil { //dbConnection为nil,使用defaultDao
 		dbType = getDefaultDao().config.DBType
 	} else {
-		dbType = session.dbType
+		dbType = dbConnection.dbType
 	}
 
 	//SQL语句
@@ -767,14 +767,14 @@ func DeleteStruct(session *Session, entity IEntityStruct) error {
 		return err
 	}
 
-	//必须要有session和事务.有可能会创建session或者开启事务,所以要尽可能的接近执行时检查
-	var sessionerr error
-	session, sessionerr = checkSession(session, true)
-	if sessionerr != nil {
-		return sessionerr
+	//必须要有dbConnection和事务.有可能会创建dbConnection或者开启事务,所以要尽可能的接近执行时检查
+	var dbConnectionerr error
+	dbConnection, dbConnectionerr = checkDBConnection(dbConnection, true)
+	if dbConnectionerr != nil {
+		return dbConnectionerr
 	}
 
-	_, errexec := session.exec(sqlstr, value)
+	_, errexec := dbConnection.exec(sqlstr, value)
 
 	if errexec != nil {
 		errexec = fmt.Errorf("DeleteStruct执行删除错误:%w", errexec)
@@ -787,24 +787,24 @@ func DeleteStruct(session *Session, entity IEntityStruct) error {
 }
 
 //SaveEntityMap 保存*IEntityMap对象.使用Map保存数据,需要在数据中封装好包括Id在内的所有数据.不适用于复杂情况
-//session不能为nil,参照使用orm.Transaction方法传入session.请不要自己构建Session
-func SaveEntityMap(session *Session, entity IEntityMap) error {
+//dbConnection不能为nil,参照使用orm.Transaction方法传入dbConnection.请不要自己构建DBConnection
+func SaveEntityMap(dbConnection *DBConnection, entity IEntityMap) error {
 	//检查是否是指针对象
 	checkerr := checkEntityKind(entity)
 	if checkerr != nil {
 		return checkerr
 	}
 
-	//自己构建的session
-	if session != nil && session.db == nil {
-		return errSession
+	//自己构建的dbConnection
+	if dbConnection != nil && dbConnection.db == nil {
+		return errDBConnection
 	}
 
 	var dbType string = ""
-	if session == nil { //session为nil,使用defaultDao
+	if dbConnection == nil { //dbConnection为nil,使用defaultDao
 		dbType = getDefaultDao().config.DBType
 	} else {
-		dbType = session.dbType
+		dbType = dbConnection.dbType
 	}
 
 	//SQL语句
@@ -815,15 +815,15 @@ func SaveEntityMap(session *Session, entity IEntityMap) error {
 		return err
 	}
 
-	//必须要有session和事务.有可能会创建session或者开启事务,所以要尽可能的接近执行时检查
-	var sessionerr error
-	session, sessionerr = checkSession(session, true)
-	if sessionerr != nil {
-		return sessionerr
+	//必须要有dbConnection和事务.有可能会创建dbConnection或者开启事务,所以要尽可能的接近执行时检查
+	var dbConnectionerr error
+	dbConnection, dbConnectionerr = checkDBConnection(dbConnection, true)
+	if dbConnectionerr != nil {
+		return dbConnectionerr
 	}
 
 	//流弊的...,把数组展开变成多个参数的形式
-	_, errexec := session.exec(sqlstr, values...)
+	_, errexec := dbConnection.exec(sqlstr, values...)
 	if errexec != nil {
 		errexec = fmt.Errorf("SaveMap执行保存错误:%w", errexec)
 		logger.Error(errexec)
@@ -835,24 +835,24 @@ func SaveEntityMap(session *Session, entity IEntityMap) error {
 }
 
 //UpdateEntityMap 更新*IEntityMap对象.使用Map修改数据,需要在数据中封装好包括Id在内的所有数据.不适用于复杂情况
-//session不能为nil,参照使用orm.Transaction方法传入session.请不要自己构建Session
-func UpdateEntityMap(session *Session, entity IEntityMap) error {
+//dbConnection不能为nil,参照使用orm.Transaction方法传入dbConnection.请不要自己构建DBConnection
+func UpdateEntityMap(dbConnection *DBConnection, entity IEntityMap) error {
 	//检查是否是指针对象
 	checkerr := checkEntityKind(entity)
 	if checkerr != nil {
 		return checkerr
 	}
 
-	//自己构建的session
-	if session != nil && session.db == nil {
-		return errSession
+	//自己构建的dbConnection
+	if dbConnection != nil && dbConnection.db == nil {
+		return errDBConnection
 	}
 
 	var dbType string = ""
-	if session == nil { //session为nil,使用defaultDao
+	if dbConnection == nil { //dbConnection为nil,使用defaultDao
 		dbType = getDefaultDao().config.DBType
 	} else {
-		dbType = session.dbType
+		dbType = dbConnection.dbType
 	}
 
 	//SQL语句
@@ -863,15 +863,15 @@ func UpdateEntityMap(session *Session, entity IEntityMap) error {
 		return err
 	}
 
-	//必须要有session和事务.有可能会创建session或者开启事务,所以要尽可能的接近执行时检查
-	var sessionerr error
-	session, sessionerr = checkSession(session, true)
-	if sessionerr != nil {
-		return sessionerr
+	//必须要有dbConnection和事务.有可能会创建dbConnection或者开启事务,所以要尽可能的接近执行时检查
+	var dbConnectionerr error
+	dbConnection, dbConnectionerr = checkDBConnection(dbConnection, true)
+	if dbConnectionerr != nil {
+		return dbConnectionerr
 	}
 
 	//流弊的...,把数组展开变成多个参数的形式
-	_, errexec := session.exec(sqlstr, values...)
+	_, errexec := dbConnection.exec(sqlstr, values...)
 
 	if errexec != nil {
 		errexec = fmt.Errorf("UpdateMap执行更新错误:%w", errexec)
@@ -1032,23 +1032,23 @@ func wrapMap(columns []string, values []columnValue) (map[string]columnValue, er
 */
 
 //更新对象
-//session不能为nil,参照使用orm.Transaction方法传入session.请不要自己构建Session
-func updateStructFunc(session *Session, entity IEntityStruct, onlyupdatenotnull bool) error {
+//dbConnection不能为nil,参照使用orm.Transaction方法传入dbConnection.请不要自己构建DBConnection
+func updateStructFunc(dbConnection *DBConnection, entity IEntityStruct, onlyupdatenotnull bool) error {
 
 	if entity == nil {
 		return errors.New("对象不能为空")
 	}
 
-	//自己构建的session
-	if session != nil && session.db == nil {
-		return errSession
+	//自己构建的dbConnection
+	if dbConnection != nil && dbConnection.db == nil {
+		return errDBConnection
 	}
 
 	var dbType string = ""
-	if session == nil { //session为nil,使用defaultDao
+	if dbConnection == nil { //dbConnection为nil,使用defaultDao
 		dbType = getDefaultDao().config.DBType
 	} else {
-		dbType = session.dbType
+		dbType = dbConnection.dbType
 	}
 
 	columns, values, columnAndValueErr := columnAndValue(entity)
@@ -1062,15 +1062,15 @@ func updateStructFunc(session *Session, entity IEntityStruct, onlyupdatenotnull 
 		return err
 	}
 
-	//必须要有session和事务.有可能会创建session或者开启事务,所以要尽可能的接近执行时检查
-	var sessionerr error
-	session, sessionerr = checkSession(session, true)
-	if sessionerr != nil {
-		return sessionerr
+	//必须要有dbConnection和事务.有可能会创建dbConnection或者开启事务,所以要尽可能的接近执行时检查
+	var dbConnectionerr error
+	dbConnection, dbConnectionerr = checkDBConnection(dbConnection, true)
+	if dbConnectionerr != nil {
+		return dbConnectionerr
 	}
 
 	//流弊的...,把数组展开变成多个参数的形式
-	_, errexec := session.exec(sqlstr, values...)
+	_, errexec := dbConnection.exec(sqlstr, values...)
 
 	if errexec != nil {
 		return errexec
@@ -1082,8 +1082,8 @@ func updateStructFunc(session *Session, entity IEntityStruct, onlyupdatenotnull 
 }
 
 //根据finder查询总条数
-//如果没有事务,session传入nil,使用默认的BaseDao进行查询.如果有事务,参照使用orm.Transaction方法传入session.可以使用BaseDao.GetSession()方法,为多数据库预留的方法,正常不建议使用
-func selectCount(session *Session, finder *Finder) (int, error) {
+//如果没有事务,dbConnection传入nil,使用默认的BaseDao进行查询.如果有事务,参照使用orm.Transaction方法传入dbConnection.可以使用BaseDao.GetDBConnection()方法,为多数据库预留的方法,正常不建议使用
+func selectCount(dbConnection *DBConnection, finder *Finder) (int, error) {
 
 	if finder == nil {
 		return -1, errors.New("参数为nil")
@@ -1091,7 +1091,7 @@ func selectCount(session *Session, finder *Finder) (int, error) {
 	//自定义的查询总条数Finder,主要是为了在group by等复杂情况下,为了性能,手动编写总条数语句
 	if finder.CountFinder != nil {
 		count := -1
-		err := QueryStruct(session, finder.CountFinder, &count)
+		err := QueryStruct(dbConnection, finder.CountFinder, &count)
 		if err != nil {
 			return -1, err
 		}
@@ -1131,7 +1131,7 @@ func selectCount(session *Session, finder *Finder) (int, error) {
 	countFinder.values = finder.values
 
 	count := -1
-	cerr := QueryStruct(session, countFinder, &count)
+	cerr := QueryStruct(dbConnection, countFinder, &count)
 	if cerr != nil {
 		return -1, cerr
 	}
@@ -1140,33 +1140,33 @@ func selectCount(session *Session, finder *Finder) (int, error) {
 }
 
 //变量名建议errFoo这样的驼峰
-var errSession = errors.New("如果没有事务,session传入nil,使用默认的BaseDao.如果有事务,参照使用orm.Transaction方法传入session.手动获取BaseDao.GetSession()是为多数据库预留的方法,正常不建议使用")
+var errDBConnection = errors.New("如果没有事务,dbConnection传入nil,使用默认的BaseDao.如果有事务,参照使用orm.Transaction方法传入dbConnection.手动获取BaseDao.GetDBConnection()是为多数据库预留的方法,正常不建议使用")
 
-//检查session.有可能会创建session或者开启事务,所以要尽可能的接近执行时检查.
-//如果没有事务,session传入nil,使用默认的BaseDao进行查询.如果有事务,参照使用orm.Transaction方法传入session.可以使用BaseDao.GetSession()方法,为多数据库预留的方法,正常不建议使用
-func checkSession(session *Session, hastx bool) (*Session, error) {
+//检查dbConnection.有可能会创建dbConnection或者开启事务,所以要尽可能的接近执行时检查.
+//如果没有事务,dbConnection传入nil,使用默认的BaseDao进行查询.如果有事务,参照使用orm.Transaction方法传入dbConnection.可以使用BaseDao.GetDBConnection()方法,为多数据库预留的方法,正常不建议使用
+func checkDBConnection(dbConnection *DBConnection, hastx bool) (*DBConnection, error) {
 
-	if session == nil { //session为空
-		if !hastx { //如果要求没有事务,实例化一个默认的session
-			var errGetSession error
-			session, errGetSession = getDefaultDao().GetSession()
-			if errGetSession != nil {
-				return nil, errGetSession
+	if dbConnection == nil { //dbConnection为空
+		if !hastx { //如果要求没有事务,实例化一个默认的dbConnection
+			var errGetDBConnection error
+			dbConnection, errGetDBConnection = getDefaultDao().GetdbConnection()
+			if errGetDBConnection != nil {
+				return nil, errGetDBConnection
 			}
 		} else { //如果要求有事务,错误
-			return nil, errSession
+			return nil, errDBConnection
 		}
 
-	} else { //如果session存在
-		if session.db == nil { //禁止外部构建
-			return session, errSession
+	} else { //如果dbConnection存在
+		if dbConnection.db == nil { //禁止外部构建
+			return dbConnection, errDBConnection
 		}
-		tx := session.tx
+		tx := dbConnection.tx
 		if tx == nil && hastx { //如果要求有事务
-			return session, errSession
+			return dbConnection, errDBConnection
 		}
 	}
 
-	return session, nil
+	return dbConnection, nil
 
 }

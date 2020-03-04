@@ -63,8 +63,8 @@ func newDataSource(config *DataSourceConfig) (*dataSource, error) {
 
 //const beginStatus = 1
 
-// Session 数据库session会话,可以原生查询或者事务
-type Session struct {
+// DBConnection 数据库dbConnection会话,可以原生查询或者事务
+type DBConnection struct {
 	db *sql.DB // 原生db
 	tx *sql.Tx // 原生事务
 	//mysql,postgres,oci8,adodb
@@ -75,16 +75,16 @@ type Session struct {
 }
 
 // begin 开启事务
-func (s *Session) begin() error {
+func (dbConnection *DBConnection) begin() error {
 	//s.rollbackSign = true
-	if s.tx == nil {
-		tx, err := s.db.Begin()
+	if dbConnection.tx == nil {
+		tx, err := dbConnection.db.Begin()
 		if err != nil {
 			err = fmt.Errorf("事务开启失败:%w", err)
 			//logger.Error(err)
 			return err
 		}
-		s.tx = tx
+		dbConnection.tx = tx
 		//s.commitSign = beginStatus
 		return nil
 	}
@@ -93,68 +93,68 @@ func (s *Session) begin() error {
 }
 
 // rollback 回滚事务
-func (s *Session) rollback() error {
+func (dbConnection *DBConnection) rollback() error {
 	//if s.tx != nil && s.rollbackSign == true {
-	if s.tx != nil {
-		err := s.tx.Rollback()
+	if dbConnection.tx != nil {
+		err := dbConnection.tx.Rollback()
 		if err != nil {
 			err = fmt.Errorf("事务回滚失败:%w", err)
 			//logger.Error(err)
 			return err
 		}
-		s.tx = nil
+		dbConnection.tx = nil
 		return nil
 	}
 	return nil
 }
 
 // commit 提交事务
-func (s *Session) commit() error {
+func (dbConnection *DBConnection) commit() error {
 	//s.rollbackSign = false
-	if s.tx == nil {
+	if dbConnection.tx == nil {
 		return errors.New("事务为空")
 
 	}
-	err := s.tx.Commit()
+	err := dbConnection.tx.Commit()
 	if err != nil {
 		err = fmt.Errorf("事务提交失败:%w", err)
 		//logger.Error(err)
 		return err
 	}
-	s.tx = nil
+	dbConnection.tx = nil
 	return nil
 
 }
 
 // exec 执行sql语句，如果已经开启事务，就以事务方式执行，如果没有开启事务，就以非事务方式执行
-func (s *Session) exec(query string, args ...interface{}) (sql.Result, error) {
-	if s.tx != nil {
-		return s.tx.Exec(query, args...)
+func (dbConnection *DBConnection) exec(query string, args ...interface{}) (sql.Result, error) {
+	if dbConnection.tx != nil {
+		return dbConnection.tx.Exec(query, args...)
 	}
-	return s.db.Exec(query, args...)
+	return dbConnection.db.Exec(query, args...)
 }
 
 // queryRow 如果已经开启事务，就以事务方式执行，如果没有开启事务，就以非事务方式执行
-func (s *Session) queryRow(query string, args ...interface{}) *sql.Row {
-	if s.tx != nil {
-		return s.tx.QueryRow(query, args...)
+func (dbConnection *DBConnection) queryRow(query string, args ...interface{}) *sql.Row {
+	if dbConnection.tx != nil {
+		return dbConnection.tx.QueryRow(query, args...)
 	}
-	return s.db.QueryRow(query, args...)
+	return dbConnection.db.QueryRow(query, args...)
 }
 
 // query 查询数据，如果已经开启事务，就以事务方式执行，如果没有开启事务，就以非事务方式执行
-func (s *Session) query(query string, args ...interface{}) (*sql.Rows, error) {
-	if s.tx != nil {
-		return s.tx.Query(query, args...)
+func (dbConnection *DBConnection) query(query string, args ...interface{}) (*sql.Rows, error) {
+	if dbConnection.tx != nil {
+		return dbConnection.tx.Query(query, args...)
 	}
-	return s.db.Query(query, args...)
+	return dbConnection.db.Query(query, args...)
 }
 
 // prepare 预执行，如果已经开启事务，就以事务方式执行，如果没有开启事务，就以非事务方式执行
-func (s *Session) prepare(query string) (*sql.Stmt, error) {
-	if s.tx != nil {
-		return s.tx.Prepare(query)
+func (dbConnection *DBConnection) prepare(query string) (*sql.Stmt, error) {
+	if dbConnection.tx != nil {
+		return dbConnection.tx.Prepare(query)
 	}
 
-	return s.db.Prepare(query)
+	return dbConnection.db.Prepare(query)
 }

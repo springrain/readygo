@@ -67,8 +67,6 @@ func TestNull(t *testing.T) {
 
 	finder.Append("select * from t_user limit 1")
 
-
-
 	queryMap, err := zorm.QueryMap(nil, finder)
 
 	if err != nil {
@@ -98,7 +96,7 @@ func worker(id int, wg *sync.WaitGroup) {
 
 	fmt.Println(id)
 
-	zorm.Transaction(nil, func(session *zorm.Session) (interface{}, error) {
+	zorm.Transaction(nil, func(dbConnection *zorm.DBConnection) (interface{}, error) {
 
 		var u permstruct.UserStruct
 		//
@@ -107,7 +105,7 @@ func worker(id int, wg *sync.WaitGroup) {
 		//u.Sex = "男"+string(id)
 		////u.Active = 2/0
 		//
-		//e2 := zorm.SaveStruct(session, &u)
+		//e2 := zorm.SaveStruct(dbConnection, &u)
 		//if e2 != nil {
 		//	//标记测试失败
 		//	//t.Errorf("TestTrancSave错误:%v", e2)
@@ -116,14 +114,14 @@ func worker(id int, wg *sync.WaitGroup) {
 
 		finder := zorm.NewSelectFinder(permstruct.UserStructTableName).Append(" where id = ?", "1583077877688617000")
 
-		zorm.QueryStruct(session, finder, &u)
+		zorm.QueryStruct(dbConnection, finder, &u)
 
 		//u.UserName = u.UserName + "test" + string(id)
 		u.UserName = strconv.Itoa(id)
 
 		u.UserType = id
 
-		e3 := zorm.UpdateStruct(session, &u)
+		e3 := zorm.UpdateStruct(dbConnection, &u)
 		if e3 != nil {
 			//标记测试失败
 			//t.Errorf("TestTrancUpdate错误:%v", e3)

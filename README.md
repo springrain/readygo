@@ -39,10 +39,10 @@ golang开发脚手架
 5.  事务传播
     ```
     //匿名函数return的error如果不为nil,事务就会回滚
-	_, errSaveUserStruct := zorm.Transaction(session, func(session *zorm.Session) (interface{}, error) {
+	_, errSaveUserStruct := zorm.Transaction(dbConnection, func(dbConnection *zorm.DBConnection) (interface{}, error) {
 
 		//事务下的业务代码开始
-		errSaveUserStruct := zorm.SaveStruct(session, userStruct)
+		errSaveUserStruct := zorm.SaveStruct(dbConnection, userStruct)
 
 		if errSaveUserStruct != nil {
 			return nil, errSaveUserStruct
