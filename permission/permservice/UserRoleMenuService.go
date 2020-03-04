@@ -12,7 +12,7 @@ const (
 	qxCacheKey string = "qxCacheKey"
 )
 
-//FindRoleByUserId 根据用户Id查询用户的角色
+//FindRoleByUserId 根据用户Id查询用户的角色,按照 r.privateOrg,r.sortno desc 先处理强制部门权限的角色
 func FindRoleByUserId(dbConnection *zorm.DBConnection, userId string, page *zorm.Page) ([]permstruct.RoleStruct, error) {
 	if len(userId) < 1 {
 		return nil, errors.New("参数userId不能为空")
