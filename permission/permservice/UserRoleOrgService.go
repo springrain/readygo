@@ -113,6 +113,37 @@ func FindUserOrgByUserId(dbConnection *zorm.DBConnection, userId string, page *z
 
 }
 
+//FindManagerOrgIdByUserId 根据userId查找管理的部门ID
+func FindManagerOrgIdByUserId(dbConnection *zorm.DBConnection, userId string, page *zorm.Page) ([]string, error) {
+	if len(userId) < 1 {
+		return nil, errors.New("userId不能为空")
+	}
+
+	finder := zorm.NewFinder().Append("SELECT re.orgId FROM  ").Append(permstruct.UserOrgStructTableName)
+	finder.Append(" re  WHERE re.userId=?  and re.managerType=2  order by re.orgId desc   ", userId)
+
+	orgIds := make([]string, 0)
+	errQueryList := zorm.QueryStructList(dbConnection, finder, &orgIds, page)
+	if errQueryList != nil {
+		return nil, errQueryList
+	}
+
+	return orgIds, nil
+
+}
+
+//FindManagerOrgByUserId 根据userId查找管理的部门对象
+func FindManagerOrgByUserId(dbConnection *zorm.DBConnection, userId string, page *zorm.Page) ([]permstruct.OrgStruct, error) {
+
+	orgIds, errByUserId := FindManagerOrgIdByUserId(dbConnection, userId, page)
+
+	if errByUserId != nil {
+		return nil, errByUserId
+	}
+	return listOrgId2ListOrg(dbConnection, orgIds)
+
+}
+
 //listUserId2ListUser 根据 userIds 查询出 []permstruct.UserStruct
 func listUserId2ListUser(dbConnection *zorm.DBConnection, userIds []string) ([]permstruct.UserStruct, error) {
 
