@@ -118,6 +118,9 @@ func FindMenuByUserId(dbConnection *zorm.DBConnection, userId string) ([]permstr
 		return nil, nil
 	}
 
+	//去重map
+	menusMap := make(map[string]permstruct.MenuStruct)
+
 	//循环所有的角色
 	for _, role := range roles {
 		menusByRoleId, errFindMenuByRoleId := FindMenuByRoleId(dbConnection, role.Id, nil)
@@ -134,7 +137,11 @@ func FindMenuByUserId(dbConnection *zorm.DBConnection, userId string) ([]permstr
 		//遍历角色的菜单
 		for _, menu := range menusByRoleId {
 			//menus是否已经包含这个menu,如果包含continue
-
+			_, mok := menusMap[menu.Id]
+			if mok {
+				continue
+			}
+			menusMap[menu.Id] = menu
 			//设置roleId
 			menu.RoleId = role.Id
 			//添加菜单
