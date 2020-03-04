@@ -104,7 +104,7 @@ func FindOrgStructById(dbConnection *zorm.DBConnection, id string) (*permstruct.
 	}
 
 	//根据Id查询
-	finder := zorm.NewSelectFinder(" WHERE id=?", id)
+	finder := zorm.NewSelectFinder(permstruct.OrgStructTableName).Append(" WHERE id=?", id)
 	orgStruct := permstruct.OrgStruct{}
 	errFindOrgStructById := zorm.QueryStruct(dbConnection, finder, &orgStruct)
 

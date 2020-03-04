@@ -40,8 +40,8 @@ func (cacheManager *memeryCacheManager) getFromCache(cacheName string, key strin
 	jsonData, _ := cache.Load(key)
 	//转换成json的[]byte
 	jsonBytes, jsonOK := jsonData.([]byte)
-	if !jsonOK { //取值失败
-		return errors.New("缓存中的格式值错误")
+	if !jsonOK { //缓存中没有值
+		return nil
 	}
 	if len(jsonBytes) < 1 { //缓存中没有值
 		return nil

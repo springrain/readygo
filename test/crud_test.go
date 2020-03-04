@@ -2,6 +2,8 @@ package test
 
 import (
 	"fmt"
+	"readygo/cache"
+	"readygo/permission/permservice"
 	"readygo/permission/permstruct"
 	"readygo/zorm"
 	"strconv"
@@ -38,6 +40,8 @@ func init() {
 		DBType:   "mysql",
 	}
 	baseDao, _ = zorm.NewBaseDao(&dataSourceConfig)
+
+	cache.NewMemeryCacheManager()
 }
 
 func initDate() {
@@ -142,5 +146,14 @@ func TestTranc(t *testing.T) {
 	}
 
 	wg.Wait()
+
+}
+
+func TestPrem(t *testing.T) {
+	finder, err := permservice.WrapOrgIdFinderByUserId(nil, "u_10001")
+	if err != nil {
+		t.Error(err)
+	}
+	fmt.Println(finder.GetSQL())
 
 }
