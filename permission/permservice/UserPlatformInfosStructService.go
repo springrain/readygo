@@ -104,7 +104,7 @@ func FindUserPlatformInfosStructById(dbConnection *zorm.DBConnection, id string)
 	}
 
 	//根据Id查询
-	finder := zorm.NewSelectFinder(" WHERE id=?", id)
+	finder := zorm.NewSelectFinder(permstruct.UserPlatformInfosStructTableName).Append(" WHERE id=?", id)
 	userPlatformInfosStruct := permstruct.UserPlatformInfosStruct{}
 	errFindUserPlatformInfosStructById := zorm.QueryStruct(dbConnection, finder, &userPlatformInfosStruct)
 

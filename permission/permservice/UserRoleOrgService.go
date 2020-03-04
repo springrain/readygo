@@ -234,8 +234,11 @@ func WrapOrgIdFinderByPrivateOrgRoleId(dbConnection *zorm.DBConnection, roleId s
 		return nil, errors.New("roleId或userId不能为空")
 	}
 	role, errByRoleId := FindRoleStructById(dbConnection, roleId)
-	if role == nil || role.PrivateOrg == 0 || errByRoleId != nil { //只处理 私有部门 类型的角色.
+	if errByRoleId != nil {
 		return nil, errByRoleId
+	}
+	if role == nil || role.PrivateOrg == 0 { //只处理 私有部门 类型的角色.
+		return nil, errors.New("只处理私有部门类型的角色")
 	}
 
 	// 当前用户 如果是主管,所管理的所有部门,如果是私有权限,就严格执行,不处理用户为主管的部门,部门主管可能没有部门权限.

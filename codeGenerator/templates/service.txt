@@ -104,7 +104,7 @@ func Find{{.structName}}ById(dbConnection *zorm.DBConnection, id string) (*{{.pa
 	}
 
 	//根据Id查询
-	finder := zorm.NewSelectFinder(" WHERE id=?", id)
+	finder := zorm.NewSelectFinder({{.packageName}}.{{.structName}}TableName).Append(" WHERE id=?", id)
 	{{.pname}} := {{.packageName}}.{{.structName}}{}
 	errFind{{.structName}}ById := zorm.QueryStruct(dbConnection, finder, &{{.pname}})
 

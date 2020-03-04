@@ -6,8 +6,6 @@ import (
 	"testing"
 )
 
-
-
 func init() {
 
 	dataSourceConfig := zorm.DataSourceConfig{

@@ -150,7 +150,7 @@ func TestTranc(t *testing.T) {
 }
 
 func TestPrem(t *testing.T) {
-	finder, err := permservice.WrapOrgIdFinderByUserId(nil, "u_10001")
+	finder, err := permservice.WrapOrgIdFinderByPrivateOrgRoleId(nil, "r_10001", "u_10001")
 	if err != nil {
 		t.Error(err)
 	}

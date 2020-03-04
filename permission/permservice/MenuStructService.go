@@ -105,7 +105,7 @@ func FindMenuStructById(dbConnection *zorm.DBConnection, id string) (*permstruct
 	}
 
 	//根据Id查询
-	finder := zorm.NewSelectFinder(" WHERE id=?", id)
+	finder := zorm.NewSelectFinder(permstruct.MenuStructTableName).Append(" WHERE id=?", id)
 	menuStruct := permstruct.MenuStruct{}
 	errFindMenuStructById := zorm.QueryStruct(dbConnection, finder, &menuStruct)
 
