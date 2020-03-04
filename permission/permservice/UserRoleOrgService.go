@@ -523,3 +523,79 @@ func listOrgId2ListOrg(dbConnection *zorm.DBConnection, orgIds []string) ([]perm
 	return orgs, nil
 
 }
+
+/**
+
+
+ @Override
+   public String updateUserOrg( UserOrg userOrg) throws Exception {
+        Integer managerType = userOrg.getManagerType();
+
+        if (userOrg==null||StringUtils.isBlank(userOrg.getOrgId())||managerType==null){
+                return  "数据不能为空";
+            }
+
+        Finder finder=Finder.getDeleteFinder(UserOrg.class).append(" WHERE userId=:userId and orgId=:orgId ");
+        finder.setParam("userId",userOrg.getUserId()).setParam("orgId",userOrg.getOrgId());
+        super.update(finder);
+
+        if(managerType<0){// 删除关系
+           return null;
+        }
+
+        Date now=new Date();
+        userOrg.setId(SecUtils.getUUID());
+        userOrg.setCreateTime(now);
+        userOrg.setUpdateTime(now);
+        userOrg.setCreateUserId(SessionUser.getUserId());
+        userOrg.setUpdateUserId(SessionUser.getUserId());
+
+        super.save(userOrg);
+
+        return null;
+    }
+
+
+
+    @Override
+    public String updateRoleOrg(RoleOrg roleOrg) throws Exception {
+
+        if(roleOrg==null||StringUtils.isBlank(roleOrg.getOrgId())||StringUtils.isBlank(roleOrg.getRoleId())||roleOrg.getCheck()==null){
+            return  "数据不能为空";
+        }
+
+        Finder finder=Finder.getDeleteFinder(RoleOrg.class).append(" WHERE roleId=:roleId and orgId=:orgId ");
+        finder.setParam("roleId",roleOrg.getRoleId()).setParam("orgId",roleOrg.getOrgId());
+        super.update(finder);
+
+        if(roleOrg.getCheck()==false){// 删除关系
+            return null;
+        }
+
+        Date now=new Date();
+        roleOrg.setId(SecUtils.getUUID());
+        roleOrg.setCreateTime(now);
+        roleOrg.setUpdateTime(now);
+        roleOrg.setCreateUserId(SessionUser.getUserId());
+        roleOrg.setUpdateUserId(SessionUser.getUserId());
+        super.save(roleOrg);
+        return null;
+    }
+
+    @Override
+    public boolean isUserInOrg(String userId, String orgId) throws Exception {
+
+        if (StringUtils.isBlank(userId) || StringUtils.isBlank(orgId)) {
+            return false;
+        }
+        Finder finder = Finder.getSelectFinder(UserOrg.class, " 1 ").append(" WHERE userId=:userId and orgId=:orgId ");
+        finder.setParam("userId", userId).setParam("orgId", orgId);
+        Integer isUserInOrg = super.queryForObject(finder, Integer.class);
+
+        if (isUserInOrg == null) {
+            return false;
+        }
+        return true;
+    }
+
+	**/
