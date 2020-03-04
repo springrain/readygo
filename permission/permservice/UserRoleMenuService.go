@@ -173,6 +173,8 @@ func UpdateUserRoles(dbConnection *zorm.DBConnection, userId string, roleIds []s
 	if errQueryList != nil {
 		return errQueryList
 	}
+
+	//清理老角色缓存
 	for _, roleId := range listOld {
 		cache.EvictKey(qxCacheKey, "FindUserByRoleId_"+roleId)
 	}
@@ -186,16 +188,11 @@ func UpdateUserRoles(dbConnection *zorm.DBConnection, userId string, roleIds []s
 		if errUpdateFinder != nil {
 			return nil, errUpdateFinder
 		}
-		//清理用户的缓存
-		cache.EvictKey(qxCacheKey, "FindRoleByUserId_"+userId)
-		cache.EvictKey(qxCacheKey, "FindMenuByUserId_"+userId)
 
 		if len(roleIds) < 1 {
 			return nil, nil
 		}
 		for _, roleId := range roleIds {
-			//清理缓存
-			cache.EvictKey(qxCacheKey, "FindUserByRoleId_"+roleId)
 			ur := permstruct.UserRoleStruct{}
 			//ur.Id = ""
 			ur.UserId = userId
@@ -208,6 +205,16 @@ func UpdateUserRoles(dbConnection *zorm.DBConnection, userId string, roleIds []s
 
 		return nil, nil
 	})
+
+	//清理用户的缓存
+	cache.EvictKey(qxCacheKey, "FindRoleByUserId_"+userId)
+	cache.EvictKey(qxCacheKey, "FindMenuByUserId_"+userId)
+
+	//清理新角色缓存
+	for _, roleId := range roleIds {
+		//清理缓存
+		cache.EvictKey(qxCacheKey, "FindUserByRoleId_"+roleId)
+	}
 
 	return errTransaction
 
