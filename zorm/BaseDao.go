@@ -73,9 +73,9 @@ func getDefaultDao() *BaseDao {
 	return defaultDao
 }
 
-// GetdbConnection 获取一个dbConnection
-//如果参数dbConnection为nil,使用默认的datasource进行获取dbConnection.如果是多库,就需要使用Dao手动调用GetdbConnection(),获得dbConnection,传给需要的方法
-func (baseDao *BaseDao) GetdbConnection() (*DBConnection, error) {
+// GetDBConnection 获取一个dbConnection
+//如果参数dbConnection为nil,使用默认的datasource进行获取dbConnection.如果是多库,就需要使用Dao手动调用GetDBConnection(),获得dbConnection,传给需要的方法
+func (baseDao *BaseDao) GetDBConnection() (*DBConnection, error) {
 	if baseDao == nil || baseDao.dataSource == nil {
 		return nil, errors.New("请不要自己创建baseDao,使用NewBaseDao方法进行创建")
 	}
@@ -173,7 +173,7 @@ func Transaction(dbConnection *DBConnection, doTransaction func(dbConnection *DB
 
 //QueryStruct 不要偷懒调用QueryStructList返回第一条,1.需要构建一个selice,2.调用方传递的对象其他值会被抛弃或者覆盖.
 //根据Finder和封装为指定的entity类型,entity必须是*struct类型或者基础类型的指针.把查询的数据赋值给entity,所以要求指针类型
-//如果没有事务,dbConnection传入nil,使用默认的BaseDao进行查询.如果有事务,参照使用orm.Transaction方法传入dbConnection.可以使用BaseDao.GetDBConnection()方法,为多数据库预留的方法,正常不建议使用
+//如果有dbConnection就传入,不考虑从哪获得的.如果在上下文中找不到dbConnection,就传入nil,会新建dbConnection,传nil要谨慎啊
 func QueryStruct(dbConnection *DBConnection, finder *Finder, entity interface{}) error {
 
 	checkerr := checkEntityKind(entity)
@@ -296,7 +296,7 @@ func QueryStruct(dbConnection *DBConnection, finder *Finder, entity interface{})
 
 //QueryStructList 不要偷懒调用QueryMapList,需要处理sql驱动支持的sql.Nullxxx的数据类型,也挺麻烦的
 //根据Finder和封装为指定的entity类型,entity必须是*[]struct类型,已经初始化好的数组,此方法只Append元素,这样调用方就不需要强制类型转换了
-//如果没有事务,dbConnection传入nil,使用默认的BaseDao进行查询.如果有事务,参照使用orm.Transaction方法传入dbConnection.可以使用BaseDao.GetDBConnection()方法,为多数据库预留的方法,正常不建议使用
+//如果有dbConnection就传入,不考虑从哪获得的.如果在上下文中找不到dbConnection,就传入nil,会新建dbConnection,传nil要谨慎啊
 func QueryStructList(dbConnection *DBConnection, finder *Finder, rowsSlicePtr interface{}, page *Page) error {
 
 	if rowsSlicePtr == nil { //如果为nil
@@ -454,7 +454,7 @@ func QueryStructList(dbConnection *DBConnection, finder *Finder, rowsSlicePtr in
 
 //QueryMap 根据Finder查询,封装Map
 //bug(springrain)需要测试一下 in 数组, like ,还有查询一个基础类型(例如 string)的功能
-//如果没有事务,dbConnection传入nil,使用默认的BaseDao进行查询.如果有事务,参照使用orm.Transaction方法传入dbConnection.可以使用BaseDao.GetDBConnection()方法,为多数据库预留的方法,正常不建议使用
+//如果有dbConnection就传入,不考虑从哪获得的.如果在上下文中找不到dbConnection,就传入nil,会新建dbConnection,传nil要谨慎啊
 func QueryMap(dbConnection *DBConnection, finder *Finder) (map[string]interface{}, error) {
 
 	if finder == nil {
@@ -478,7 +478,7 @@ func QueryMap(dbConnection *DBConnection, finder *Finder) (map[string]interface{
 
 //QueryMapList 根据Finder查询,封装Map数组
 //根据数据库字段的类型,完成从[]byte到golang类型的映射,理论上其他查询方法都可以调用此方法,但是需要处理sql.Nullxxx等驱动支持的类型
-//如果没有事务,dbConnection传入nil,使用默认的BaseDao进行查询.如果有事务,参照使用orm.Transaction方法传入dbConnection.可以使用BaseDao.GetDBConnection()方法,为多数据库预留的方法,正常不建议使用
+//如果有dbConnection就传入,不考虑从哪获得的.如果在上下文中找不到dbConnection,就传入nil,会新建dbConnection,传nil要谨慎啊
 func QueryMapList(dbConnection *DBConnection, finder *Finder, page *Page) ([]map[string]interface{}, error) {
 
 	if finder == nil {
@@ -1082,7 +1082,7 @@ func updateStructFunc(dbConnection *DBConnection, entity IEntityStruct, onlyupda
 }
 
 //根据finder查询总条数
-//如果没有事务,dbConnection传入nil,使用默认的BaseDao进行查询.如果有事务,参照使用orm.Transaction方法传入dbConnection.可以使用BaseDao.GetDBConnection()方法,为多数据库预留的方法,正常不建议使用
+//如果有dbConnection就传入,不考虑从哪获得的.如果在上下文中找不到dbConnection,就传入nil,会新建dbConnection,传nil要谨慎啊
 func selectCount(dbConnection *DBConnection, finder *Finder) (int, error) {
 
 	if finder == nil {
@@ -1143,13 +1143,13 @@ func selectCount(dbConnection *DBConnection, finder *Finder) (int, error) {
 var errDBConnection = errors.New("如果没有事务,dbConnection传入nil,使用默认的BaseDao.如果有事务,参照使用orm.Transaction方法传入dbConnection.手动获取BaseDao.GetDBConnection()是为多数据库预留的方法,正常不建议使用")
 
 //检查dbConnection.有可能会创建dbConnection或者开启事务,所以要尽可能的接近执行时检查.
-//如果没有事务,dbConnection传入nil,使用默认的BaseDao进行查询.如果有事务,参照使用orm.Transaction方法传入dbConnection.可以使用BaseDao.GetDBConnection()方法,为多数据库预留的方法,正常不建议使用
+//如果有dbConnection就传入,不考虑从哪获得的.如果在上下文中找不到dbConnection,就传入nil,会新建dbConnection,传nil要谨慎啊
 func checkDBConnection(dbConnection *DBConnection, hastx bool) (*DBConnection, error) {
 
 	if dbConnection == nil { //dbConnection为空
 		if !hastx { //如果要求没有事务,实例化一个默认的dbConnection
 			var errGetDBConnection error
-			dbConnection, errGetDBConnection = getDefaultDao().GetdbConnection()
+			dbConnection, errGetDBConnection = getDefaultDao().GetDBConnection()
 			if errGetDBConnection != nil {
 				return nil, errGetDBConnection
 			}

@@ -63,7 +63,8 @@ func newDataSource(config *DataSourceConfig) (*dataSource, error) {
 
 //const beginStatus = 1
 
-// DBConnection 数据库dbConnection会话,可以原生查询或者事务
+//DBConnection 数据库dbConnection会话,可以原生查询或者事务
+//方法都应包含 dbConnection DBConnection这样的入参,如果有dbConnection就传入,不考虑从哪获得的.如果在上下文中找不到dbConnection,就传入nil,会新建dbConnection,传nil要谨慎啊
 type DBConnection struct {
 	db *sql.DB // 原生db
 	tx *sql.Tx // 原生事务
