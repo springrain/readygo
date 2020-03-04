@@ -215,20 +215,20 @@ func FindRoleOrgByRoleId(dbConnection *zorm.DBConnection, roleId string, page *z
 }
 
 //WrapOrgIdFinderByUserId 查询用户有权限管理的所有部门,包括角色关联分配产生的部门权限.分装成Finder的形式用于关联查询的finder实体类
-// 1.获取用户所有的 []permstruct.UserRoleStruct,包含主管的部门和角色分配的部门
+// 1.获取用户所有的 []permstruct.UserRoleStruct,包含主管的部门和角色分配的部门,不包括角色私有部门
 // 2.wrapOrgIdFinderByUserRole(list) 生成完整的Finder对象.
 func WrapOrgIdFinderByUserId(dbConnection *zorm.DBConnection, userId string) (*zorm.Finder, error) {
-	// 获取用户所有的 []permstruct.UserRoleStruct,包含主管的部门和角色分配的部门
-	userRoles, errByUserId := findManagerOrgAndRoleOrgByUserId(dbConnection, userId)
+	// 获取用户所有的 []permstruct.UserRoleStruct,包含主管的部门和角色分配的部门,不包括角色私有部门
+	roleOrgs, errByUserId := findManagerOrgAndRoleOrgByUserId(dbConnection, userId)
 	if errByUserId != nil {
 		return nil, errByUserId
 	}
-
 	// 生成 Finder 方法.
-	return wrapOrgIdFinderByUserRole(dbConnection, userRoles)
+	return wrapOrgIdFinderByRoleOrg(dbConnection, roleOrgs)
 }
 
-// 查询私有部门角色的部门范围,构造成Finder,用于权限范围限制.
+//WrapOrgIdFinderByPrivateOrgRoleId 查询私有部门角色的部门范围,构造成Finder,用于权限范围限制
+//在请求的时候,通过url查询出menuId和对应的roleId,根据RoleId可以知晓是私有还是公共权限,分开调用Finder
 func WrapOrgIdFinderByPrivateOrgRoleId(dbConnection *zorm.DBConnection, roleId string, userId string) (*zorm.Finder, error) {
 	if len(roleId) < 1 || len(userId) < 1 {
 		return nil, errors.New("roleId或userId不能为空")
@@ -250,14 +250,15 @@ func WrapOrgIdFinderByPrivateOrgRoleId(dbConnection *zorm.DBConnection, roleId s
 	if len(findRoleOrgIdByRole) > 0 {
 		roleOrgs = append(roleOrgs, findRoleOrgIdByRole...)
 	}
-	return wrapOrgIdFinderByUserRole(dbConnection, roleOrgs)
+	// 生成 Finder 方法.
+	return wrapOrgIdFinderByRoleOrg(dbConnection, roleOrgs)
 }
 
 // 查询用户有权限管理的所有部门,包括角色关联分配产生的部门权限.分装成Finder的形式用于关联查询的finder实体类
 //这个是基础的Finder 封装方法,其他的方式也在转化为List<UserRole> list,调用此方法
 // 1.基于 List<UserRole> list 拼装WHERE条件
 // 2.完善 前面的查询语句,构造完整的Finder 查询语句
-func wrapOrgIdFinderByUserRole(dbConnection *zorm.DBConnection, list []permstruct.RoleOrgStruct) (*zorm.Finder, error) {
+func wrapOrgIdFinderByRoleOrg(dbConnection *zorm.DBConnection, list []permstruct.RoleOrgStruct) (*zorm.Finder, error) {
 
 	// 基于 list []permstruct.RoleOrgStruct 拼装WHERE条件
 	finder, errSQL := wrapOrgIdWheresSQLFinder(dbConnection, list)
@@ -355,6 +356,24 @@ func findRoleOrgIdByRole(dbConnection *zorm.DBConnection, role *permstruct.RoleS
 	return nil, nil
 }
 
+//findOrgByRoleId 根据roleId,查询role下管理的部门,用于角色自定的部门范围,查询 t_role_org 中间表
+func findOrgByRoleId(dbConnection *zorm.DBConnection, roleId string, page *zorm.Page) ([]permstruct.RoleOrgStruct, error) {
+	if len(roleId) < 1 {
+		return nil, errors.New("roleId不能为空")
+	}
+
+	finder := zorm.NewFinder().Append("SELECT re.* FROM ").Append(permstruct.RoleOrgStructTableName)
+	finder.Append(" re WHERE re.roleId=? order by re.id desc ", roleId)
+
+	roleOrgs := make([]permstruct.RoleOrgStruct, 0)
+	errQueryList := zorm.QueryStructList(dbConnection, finder, &roleOrgs, page)
+	if errQueryList != nil {
+		return nil, errQueryList
+	}
+
+	return roleOrgs, nil
+}
+
 //  查询用户作为主管时所有的管理部门,封装成 []permstruct.RoleOrgStruct 格式
 func wrapManagerRoleOrgByUserId(dbConnection *zorm.DBConnection, userId string) ([]permstruct.RoleOrgStruct, error) {
 	list := make([]permstruct.RoleOrgStruct, 0)
@@ -378,26 +397,39 @@ func wrapManagerRoleOrgByUserId(dbConnection *zorm.DBConnection, userId string) 
 	return list, nil
 }
 
-//根据roleId,查询role下管理的部门,用于角色自定的部门范围,查询 t_role_org 中间表
-func findOrgByRoleId(dbConnection *zorm.DBConnection, roleId string, page *zorm.Page) ([]permstruct.RoleOrgStruct, error) {
-	if len(roleId) < 1 {
-		return nil, errors.New("roleId不能为空")
+//wrapOrgIdFinder 构造完整的finder,基于 wrapOrgIdWheresSQLFinder 产生的 WHERE 条件,完善Finder的查询部分.
+func wrapOrgIdFinder(dbConnection *zorm.DBConnection, whereFinder *zorm.Finder) (*zorm.Finder, error) {
+	if whereFinder == nil {
+		return nil, errors.New("whereFinder不能为空")
 	}
 
-	finder := zorm.NewFinder().Append("SELECT re.* FROM ").Append(permstruct.RoleOrgStructTableName)
-	finder.Append(" re WHERE re.roleId=? order by re.id desc ", roleId)
-
-	roleOrgs := make([]permstruct.RoleOrgStruct, 0)
-	errQueryList := zorm.QueryStructList(dbConnection, finder, &roleOrgs, page)
-	if errQueryList != nil {
-		return nil, errQueryList
+	wheresql, errWhereSQL := whereFinder.GetSQL()
+	if errWhereSQL != nil {
+		return nil, errWhereSQL
+	}
+	if len(wheresql) < 1 {
+		return nil, errors.New("whereFinder的SQL语句不能为空")
 	}
 
-	return roleOrgs, nil
+	/*
+	   // 查找人员
+	   Finder finder = new Finder("SELECT  _system_temp_user_org.userId FROM ");
+	   finder.append(Finder.getTableName(UserOrg.class)).append(" _system_temp_user_org,")
+	           .append(Finder.getTableName(Org.class)).append(" _system_temp_org ");
+	   finder.append(" WHERE _system_temp_user_org.orgId=_system_temp_org.id  ");
+	*/
+
+	// 查找部门
+	finder := zorm.NewFinder().Append(" SELECT _system_temp_org.id  FROM ").Append(permstruct.OrgStructTableName)
+	finder.Append(" _system_temp_org WHERE 1=1 ")
+
+	// 增加 WHERE 条件
+	finder.AppendFinder(whereFinder)
+
+	return finder, nil
 }
 
-// 基于 list []permstruct.RoleOrgStruct 生成 Finder 对象,并不是完整的语句,只是 WHERE 后面的部门条件语句 类似 and ( 1=2 or ....
-
+//wrapOrgIdWheresSQLFinder 基于 list []permstruct.RoleOrgStruct 生成 Finder 对象,并不是完整的语句,只是 WHERE 后面的部门条件语句 类似 and ( 1=2 or ....
 func wrapOrgIdWheresSQLFinder(dbConnection *zorm.DBConnection, list []permstruct.RoleOrgStruct) (*zorm.Finder, error) {
 	if len(list) < 1 {
 		return nil, nil
@@ -447,39 +479,6 @@ func wrapOrgIdWheresSQLFinder(dbConnection *zorm.DBConnection, list []permstruct
 	hasChildrenFinder.Append(") ")
 
 	return hasChildrenFinder, nil
-}
-
-// 构造完整的finder,基于 wrapOrgIdWheresSQLFinder 产生的 WHERE 条件,完善Finder的查询部分.
-
-func wrapOrgIdFinder(dbConnection *zorm.DBConnection, whereFinder *zorm.Finder) (*zorm.Finder, error) {
-	if whereFinder == nil {
-		return nil, errors.New("whereFinder不能为空")
-	}
-
-	wheresql, errWhereSQL := whereFinder.GetSQL()
-	if errWhereSQL != nil {
-		return nil, errWhereSQL
-	}
-	if len(wheresql) < 1 {
-		return nil, errors.New("whereFinder的SQL语句不能为空")
-	}
-
-	/*
-	   // 查找人员
-	   Finder finder = new Finder("SELECT  _system_temp_user_org.userId FROM ");
-	   finder.append(Finder.getTableName(UserOrg.class)).append(" _system_temp_user_org,")
-	           .append(Finder.getTableName(Org.class)).append(" _system_temp_org ");
-	   finder.append(" WHERE _system_temp_user_org.orgId=_system_temp_org.id  ");
-	*/
-
-	// 查找部门
-	finder := zorm.NewFinder().Append(" SELECT _system_temp_org.id  FROM ").Append(permstruct.OrgStructTableName)
-	finder.Append(" _system_temp_org WHERE 1=1 ")
-
-	// 增加 WHERE 条件
-	finder.AppendFinder(whereFinder)
-
-	return finder, nil
 }
 
 //listUserId2ListUser 根据 userIds 查询出 []permstruct.UserStruct
