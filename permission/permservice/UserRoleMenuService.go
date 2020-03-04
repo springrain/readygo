@@ -12,7 +12,7 @@ const (
 	qxCacheKey string = "qxCacheKey"
 )
 
-//FindRoleByUserId 根据用户Id查询用户的角色,按照 r.privateOrg,r.sortno desc 先处理角色私有部门权限的角色
+//FindRoleByUserId 根据用户Id查询用户的角色,按照 r.privateOrg,r.sortno desc 先处理角色私有部门的权限
 func FindRoleByUserId(dbConnection *zorm.DBConnection, userId string, page *zorm.Page) ([]permstruct.RoleStruct, error) {
 	if len(userId) < 1 {
 		return nil, errors.New("参数userId不能为空")
@@ -30,7 +30,7 @@ func FindRoleByUserId(dbConnection *zorm.DBConnection, userId string, page *zorm
 	if len(roles) > 0 { //缓存中有数据
 		return roles, nil
 	}
-	//按照 r.privateOrg,r.sortno desc 先处理强制部门权限的角色
+	//按照 r.privateOrg,r.sortno desc  先处理角色私有部门的权限
 	finder := zorm.NewFinder()
 	finder.Append("SELECT r.* from ").Append(permstruct.RoleStructTableName).Append(" r,")
 	finder.Append(permstruct.UserRoleStructTableName).Append("  re where re.userId=? and re.roleId=r.id and r.active=1 order by r.privateOrg,r.sortno desc", userId)
@@ -89,7 +89,7 @@ func FindMenuByRoleId(dbConnection *zorm.DBConnection, roleId string, page *zorm
 
 }
 
-//FindMenuByUserId 查询用户有权限的菜单
+//FindMenuByUserId 查询用户有权限的菜单,按照privateOrg和sortno倒叙,先处理角色私有部门的权限
 func FindMenuByUserId(dbConnection *zorm.DBConnection, userId string) ([]permstruct.MenuStruct, error) {
 
 	if len(userId) < 1 {
