@@ -209,11 +209,6 @@ func UpdateUserRoles(dbConnection *zorm.DBConnection, userId string, roleIds []s
 		return nil, nil
 	})
 
-	//判断事务日志
-	if errTransaction != nil {
-		return errTransaction
-	}
-
-	return nil
+	return errTransaction
 
 }
