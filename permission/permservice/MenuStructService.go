@@ -3,6 +3,7 @@ package permservice
 import (
 	"errors"
 	"fmt"
+	"readygo/cache"
 	"readygo/logger"
 	"readygo/permission/permstruct"
 	"readygo/zorm"
@@ -161,3 +162,112 @@ func FindMenuByPid(dbConnection *zorm.DBConnection, pid string, page *zorm.Page)
 
 	return menuIds, nil
 }
+
+//FindAllMenuTree 查询所有的菜单树形结构
+func FindAllMenuTree(dbConnection *zorm.DBConnection) ([]permstruct.MenuStruct, error) {
+	cacheKey := "FindAllMenuTree"
+	menus := make([]permstruct.MenuStruct, 0)
+
+	//从缓存中取数据
+	errFromCache := cache.GetFromCache(qxCacheKey, cacheKey, &menus)
+	if errFromCache != nil {
+		return nil, errFromCache
+	}
+	if len(menus) > 0 { //缓存中有数据
+		return menus, nil
+	}
+
+	finder := zorm.NewSelectFinder(permstruct.MenuStructTableName).Append(" WHERE active=1 order by sortno desc ")
+
+	errQueryList := zorm.QueryStructList(dbConnection, finder, menus, nil)
+	if errQueryList != nil {
+		return nil, errQueryList
+	}
+
+	//菜单变成树形结构
+	menus = menuList2Tree(menus)
+
+	//放入缓存
+	errPutCache := cache.PutToCache(qxCacheKey, cacheKey, menus)
+	if errPutCache != nil {
+		return nil, errPutCache
+	}
+
+	return menus, nil
+}
+
+// 将平行的List,变成树形结构
+func menuList2Tree(menuList []permstruct.MenuStruct) []permstruct.MenuStruct {
+
+	if len(menuList) < 1 {
+		return menuList
+	}
+	// 先把数据放到map里,方便取值
+	menuMap := make(map[string]permstruct.MenuStruct)
+
+	//map赋值
+	for _, menu := range menuList {
+		menuMap[menu.Id] = menu
+	}
+	// 循环遍历menuList
+	list := make([]permstruct.MenuStruct, 0)
+	for _, menu := range menuList {
+		pid := menu.Pid
+		parent, pidOk := menuMap[pid]
+		// 没有父节点
+		if !pidOk {
+			list = append(list, menu)
+			continue
+		}
+
+		//如果有父节点
+		children := parent.Children
+		if children == nil {
+			children = make([]permstruct.MenuStruct, 0)
+			parent.Children = children
+		}
+		children = append(children, menu)
+	}
+
+	return list
+}
+
+/**
+  @Override
+  public void wrapVueMenu(List<Menu> listMenu, List<Map<String, Object>> listMap) {
+      if (CollectionUtils.isEmpty(listMenu)) {
+          return;
+      }
+      for (Menu menu : listMenu) {
+          Map<String, Object> map = new HashMap<>();
+          listMap.add(map);
+          map.put("path", menu.getPath());
+          map.put("redirect", menu.getRedirect());
+          map.put("component", menu.getComponent());
+          map.put("name", menu.getName());
+          map.put("menuType", menu.getMenuType());
+          map.put("roleId", menu.getRoleId());
+          map.put("menuId", menu.getId());
+          map.put("pageurl",menu.getPageurl());
+
+          // meta
+          Map<String, Object> meta = new HashMap<>();
+          map.put("meta", meta);
+          meta.put("title", menu.getTitle());
+          meta.put("permission", menu.getPermission());
+          meta.put("keepAlive", menu.getKeepAlive());
+          //meta.put("target",menu.getTarget());
+
+
+          List<Menu> listChildren = menu.getChildren();
+          if (CollectionUtils.isNotEmpty(listChildren)) {
+              // children
+              List<Map<String, Object>> children = new ArrayList<>();
+              map.put("children", children);
+              wrapVueMenu(listChildren, children);
+          }
+
+      }
+
+  }
+*/

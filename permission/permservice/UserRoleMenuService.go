@@ -219,3 +219,51 @@ func UpdateUserRoles(dbConnection *zorm.DBConnection, userId string, roleIds []s
 	return errTransaction
 
 }
+
+/**
+
+
+    @Override
+    public String updateRoleMenu(RoleMenu roleMenu) throws Exception {
+
+        if(roleMenu==null||StringUtils.isBlank(roleMenu.getRoleId())||StringUtils.isBlank(roleMenu.getMenuId())||roleMenu.getCheck()==null){
+            return "数据不完整";
+        }
+
+       List<String> menuIds= menuService.findMenuBypid(roleMenu.getMenuId());
+
+        Finder f_delete=Finder.getDeleteFinder(RoleMenu.class).append(" WHERE roleId=:roleId and menuId in (:menuId) ");
+        f_delete.setParam("roleId",roleMenu.getRoleId()).setParam("menuId",menuIds);
+        super.update(f_delete);
+
+        String cacheKey = "findMenuByRoleId_" + roleMenu.getRoleId();
+        super.evictByKey(GlobalStatic.qxCacheKey, cacheKey);
+
+        if(!roleMenu.getCheck()){ //  清理关系
+            return null;
+        }
+
+        List<RoleMenu> rmList=new ArrayList<>();
+        Date now=new Date();
+        String userId=SessionUser.getUserId();
+        for (String menuId:menuIds){
+            RoleMenu rm=new RoleMenu();
+            rm.setId(SecUtils.getUUID());
+            rm.setRoleId(roleMenu.getRoleId());
+            rm.setMenuId(menuId);
+            rm.setUpdateUserId(userId);
+            rm.setCreateTime(now);
+            rm.setUpdateTime(now);
+            rm.setCreateUserId(userId);
+            rmList.add(rm);
+        }
+
+        if(CollectionUtils.isNotEmpty(rmList)){
+            super.save(rmList);
+        }
+
+        return null;
+    }
+
+
+**/
