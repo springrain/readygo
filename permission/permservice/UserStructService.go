@@ -97,10 +97,10 @@ func DeleteUserStruct(dbConnection *zorm.DBConnection, userStruct *permstruct.Us
 
 //FindUserStructById 根据Id查询用户信息
 //dbConnection如果为nil,则会使用默认的datasource进行无事务查询
-func FindUserStructById(dbConnection *zorm.DBConnection, id string) (permstruct.UserStruct, error) {
+func FindUserStructById(dbConnection *zorm.DBConnection, id string) (*permstruct.UserStruct, error) {
 	//如果Id为空
 	if len(id) < 1 {
-		return permstruct.UserStruct{}, errors.New("id为空")
+		return nil, errors.New("id为空")
 	}
 
 	//根据Id查询
@@ -112,10 +112,10 @@ func FindUserStructById(dbConnection *zorm.DBConnection, id string) (permstruct.
 	if errFindUserStructById != nil {
 		errFindUserStructById := fmt.Errorf("permservice.FindUserStructById错误:%w", errFindUserStructById)
 		logger.Error(errFindUserStructById)
-		return permstruct.UserStruct{}, errFindUserStructById
+		return nil, errFindUserStructById
 	}
 
-	return userStruct, nil
+	return &userStruct, nil
 
 }
 

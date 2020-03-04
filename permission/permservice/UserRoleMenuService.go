@@ -42,7 +42,7 @@ func FindRoleByUserId(dbConnection *zorm.DBConnection, userId string, page *zorm
 	}
 
 	//放入缓存
-	errPutCache := cache.PutToCache(qxCacheKey, cacheKey, &roles)
+	errPutCache := cache.PutToCache(qxCacheKey, cacheKey, roles)
 	if errPutCache != nil {
 		return nil, errPutCache
 	}
@@ -80,7 +80,7 @@ func FindMenuByRoleId(dbConnection *zorm.DBConnection, roleId string, page *zorm
 	}
 
 	//放入缓存
-	errPutCache := cache.PutToCache(qxCacheKey, cacheKey, &menus)
+	errPutCache := cache.PutToCache(qxCacheKey, cacheKey, menus)
 	if errPutCache != nil {
 		return nil, errPutCache
 	}
@@ -151,7 +151,7 @@ func FindMenuByUserId(dbConnection *zorm.DBConnection, userId string) ([]permstr
 	}
 
 	//放入缓存
-	errPutCache := cache.PutToCache(qxCacheKey, cacheKey, &menus)
+	errPutCache := cache.PutToCache(qxCacheKey, cacheKey, menus)
 	if errPutCache != nil {
 		return nil, errPutCache
 	}
