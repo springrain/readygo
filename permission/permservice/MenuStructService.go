@@ -166,11 +166,26 @@ func DeleteMenuStructById(dbConnection *zorm.DBConnection, id string) error {
 	_, errDeleteMenuStruct := zorm.Transaction(dbConnection, func(dbConnection *zorm.DBConnection) (interface{}, error) {
 
 		//事务下的业务代码开始
-		finder := zorm.NewDeleteFinder(permstruct.MenuStructTableName).Append(" WHERE id=?", id)
-		errDeleteMenuStruct := zorm.UpdateFinder(dbConnection, finder)
 
-		if errDeleteMenuStruct != nil {
-			return nil, errDeleteMenuStruct
+		menuIds, errMenuIds := FindMenuByPid(dbConnection, id, nil)
+		if errMenuIds != nil {
+			return nil, errMenuIds
+		}
+		if len(menuIds) < 1 {
+			return nil, errors.New("数据库中不存在,id:" + id)
+		}
+
+		//删除中间表
+		f_delete_re := zorm.NewDeleteFinder(permstruct.RoleMenuStructTableName).Append(" WHERE menuId in (?)", menuIds)
+		errDeleteRE := zorm.UpdateFinder(dbConnection, f_delete_re)
+		if errDeleteRE != nil {
+			return nil, errDeleteRE
+		}
+
+		f_delete := zorm.NewDeleteFinder(permstruct.MenuStructTableName).Append(" WHERE id in (?)", menuIds)
+		errDelete := zorm.UpdateFinder(dbConnection, f_delete)
+		if errDelete != nil {
+			return nil, errDelete
 		}
 
 		return nil, nil
@@ -184,6 +199,9 @@ func DeleteMenuStructById(dbConnection *zorm.DBConnection, id string) error {
 		logger.Error(errDeleteMenuStruct)
 		return errDeleteMenuStruct
 	}
+
+	//清除缓存
+	cache.ClearCache(qxCacheKey)
 
 	return nil
 }

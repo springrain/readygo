@@ -65,7 +65,8 @@ func NewDeleteFinder(tableName string) *Finder {
 	finder := NewFinder()
 	finder.sqlBuilder.WriteString("DELETE FROM ")
 	finder.sqlBuilder.WriteString(tableName)
-	finder.sqlBuilder.WriteString(" WHERE ")
+	//所有的 WHERE 都不加,规则统一,好记
+	//finder.sqlBuilder.WriteString(" WHERE ")
 	return finder
 }
 
