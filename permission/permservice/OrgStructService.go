@@ -3,6 +3,7 @@ package permservice
 import (
 	"errors"
 	"fmt"
+	"readygo/cache"
 	"readygo/logger"
 	"readygo/permission/permstruct"
 	"readygo/zorm"
@@ -25,6 +26,14 @@ func SaveOrgStruct(dbConnection *zorm.DBConnection, orgStruct *permstruct.OrgStr
 		if len(orgStruct.Id) < 1 {
 			orgStruct.Id = zorm.GenerateStringID()
 		}
+
+		//获取新的comcode
+		comcode, errComcode := findOrgNewComcode(dbConnection, orgStruct.Id, orgStruct.Pid)
+		if errComcode != nil {
+			return nil, errComcode
+		}
+		orgStruct.Comcode = comcode
+		orgStruct.Active = 1
 
 		errSaveOrgStruct := zorm.SaveStruct(dbConnection, orgStruct)
 
@@ -123,10 +132,20 @@ func FindOrgStructById(dbConnection *zorm.DBConnection, id string) (*permstruct.
 	if len(id) < 1 {
 		return nil, errors.New("id不能为空")
 	}
+	orgStruct := permstruct.OrgStruct{}
+	cacheKey := "FindOrgStructById_" + id
+	errCacheOrg := cache.GetFromCache(qxCacheKey, cacheKey, &orgStruct)
+	if errCacheOrg != nil {
+		return nil, errCacheOrg
+	}
+
+	if len(orgStruct.Id) > 0 { //缓存中有值
+		return &orgStruct, nil
+	}
 
 	//根据Id查询
 	finder := zorm.NewSelectFinder(permstruct.OrgStructTableName).Append(" WHERE id=?", id)
-	orgStruct := permstruct.OrgStruct{}
+
 	errFindOrgStructById := zorm.QueryStruct(dbConnection, finder, &orgStruct)
 
 	//记录错误
@@ -135,6 +154,8 @@ func FindOrgStructById(dbConnection *zorm.DBConnection, id string) (*permstruct.
 		logger.Error(errFindOrgStructById)
 		return nil, errFindOrgStructById
 	}
+
+	cache.PutToCache(qxCacheKey, cacheKey, orgStruct)
 
 	return &orgStruct, nil
 
@@ -160,4 +181,34 @@ func FindOrgStructList(dbConnection *zorm.DBConnection, finder *zorm.Finder, pag
 	}
 
 	return orgStructList, nil
+}
+
+// findOrgNewComcode 根据id和pid生成部门的Comcode
+func findOrgNewComcode(dbConnection *zorm.DBConnection, id string, pid string) (string, error) {
+
+	//id不能为空
+	if len(id) < 1 {
+		return "", errors.New("id不能为空")
+	}
+
+	//没有上级
+	if len(pid) < 1 {
+		return "," + id + ",", nil
+	}
+
+	comcode := ""
+	finder := zorm.NewSelectFinder(permstruct.OrgStructTableName, "comcode").Append(" WHERE id=? ", pid)
+	errComcode := zorm.QueryStruct(dbConnection, finder, &comcode)
+	if errComcode != nil {
+		return "", errComcode
+	}
+
+	//没有上级
+	if len(comcode) < 1 {
+		return "," + id + ",", nil
+	}
+
+	comcode = comcode + id + ","
+
+	return comcode, nil
 }

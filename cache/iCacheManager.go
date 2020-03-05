@@ -13,7 +13,7 @@ type iCacheManage interface {
 	//putToCache 设置指定cache中的key
 	//缓存的结构是map[cacheName string]map[key string]valu interface{}
 	//小写的属性json无法转化,struct需要实现MarshalJSON和UnmarshalJSON的接口方法
-	putToCache(cacheName string, key string, valuePtr interface{}) error
+	putToCache(cacheName string, key string, value interface{}) error
 
 	//clearCache 清理cache
 	//缓存的结构是map[cacheName string]map[key string]valu interface{}
