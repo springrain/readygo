@@ -248,6 +248,110 @@ func FindOrgStructList(dbConnection *zorm.DBConnection, finder *zorm.Finder, pag
 	return orgStructList, nil
 }
 
+//FindOrgTreeByPid 根据pid查询组织树形的组织结构
+func FindOrgTreeByPid(dbConnection *zorm.DBConnection, pid string) ([]permstruct.OrgStruct, error) {
+
+	finder := zorm.NewSelectFinder(permstruct.OrgStructTableName).Append("WHERE active=1 ")
+	if len(pid) > 0 { //不是根目录
+		org, errById := FindOrgStructById(dbConnection, pid)
+		if errById != nil {
+			return nil, errById
+		}
+		if org == nil {
+			return nil, errors.New("数据库不存在对象,id:" + pid)
+		}
+
+		finder.Append(" and comcode like ? ", org.Comcode)
+
+	}
+	finder.Append(" order by sortno asc ")
+
+	orgs := make([]permstruct.OrgStruct, 0)
+	errQueryList := zorm.QueryStructList(dbConnection, finder, &orgs, nil)
+	if errQueryList != nil {
+		return nil, errQueryList
+	}
+
+	//菜单变成树形结构
+	orgs = orgList2Tree(orgs)
+
+	return orgs, nil
+
+}
+
+// UpdateOrgManagerUserId 更新部门主管
+func UpdateOrgManagerUserId(dbConnection *zorm.DBConnection, orgId string, managerUserId string) error {
+
+	if len(orgId) < 1 || len(managerUserId) < 1 {
+		return errors.New("orgId或者managerUserId不能为空")
+	}
+	//匿名函数return的error如果不为nil,事务就会回滚
+	_, errUpdateOrgManagerUserId := zorm.Transaction(dbConnection, func(dbConnection *zorm.DBConnection) (interface{}, error) {
+		finder := zorm.NewDeleteFinder(permstruct.UserOrgStructTableName).Append(" WHERE orgId=? and managerType=2 ", orgId)
+		errUpdateFinder := zorm.UpdateFinder(dbConnection, finder)
+		if errUpdateFinder != nil {
+			return nil, errUpdateFinder
+		}
+		userOrg := permstruct.UserOrgStruct{}
+		userOrg.Id = zorm.GenerateStringID()
+		userOrg.OrgId = orgId
+		userOrg.UserId = managerUserId
+		userOrg.ManagerType = 2
+
+		errSave := zorm.SaveStruct(dbConnection, &userOrg)
+		if errSave != nil {
+			return nil, errSave
+		}
+		return nil, nil
+	})
+
+	//记录错误
+	if errUpdateOrgManagerUserId != nil {
+		errUpdateOrgStruct := fmt.Errorf("permservice.DeleteOrgStruct错误:%w", errUpdateOrgManagerUserId)
+		logger.Error(errUpdateOrgStruct)
+		return errUpdateOrgStruct
+	}
+
+	return nil
+
+}
+
+// 将平行的List,变成树形结构
+func orgList2Tree(orgList []permstruct.OrgStruct) []permstruct.OrgStruct {
+
+	if len(orgList) < 1 {
+		return orgList
+	}
+	// 先把数据放到map里,方便取值
+	orgMap := make(map[string]permstruct.OrgStruct)
+
+	//map赋值
+	for _, org := range orgList {
+		orgMap[org.Id] = org
+	}
+	// 循环遍历OrgList
+	list := make([]permstruct.OrgStruct, 0)
+	for _, org := range orgList {
+		pid := org.Pid
+		parent, pidOk := orgMap[pid]
+		// 没有父节点
+		if !pidOk {
+			list = append(list, org)
+			continue
+		}
+
+		//如果有父节点
+		children := parent.Children
+		if children == nil {
+			children = make([]permstruct.OrgStruct, 0)
+			parent.Children = children
+		}
+		children = append(children, org)
+	}
+
+	return list
+}
+
 // findOrgNewComcode 根据id和pid生成部门的Comcode
 func findOrgNewComcode(dbConnection *zorm.DBConnection, id string, pid string) (string, error) {
 

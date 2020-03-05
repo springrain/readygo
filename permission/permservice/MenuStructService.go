@@ -295,7 +295,7 @@ func FindAllMenuTree(dbConnection *zorm.DBConnection) ([]permstruct.MenuStruct, 
 
 	finder := zorm.NewSelectFinder(permstruct.MenuStructTableName).Append(" WHERE active=1 order by sortno desc ")
 
-	errQueryList := zorm.QueryStructList(dbConnection, finder, menus, nil)
+	errQueryList := zorm.QueryStructList(dbConnection, finder, &menus, nil)
 	if errQueryList != nil {
 		return nil, errQueryList
 	}
