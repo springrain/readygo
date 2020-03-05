@@ -23,10 +23,7 @@ func FindRoleByUserId(dbConnection *zorm.DBConnection, userId string, page *zorm
 	roles := make([]permstruct.RoleStruct, 0)
 
 	//从缓存中取数据
-	errFromCache := cache.GetFromCache(qxCacheKey, cacheKey, &roles)
-	if errFromCache != nil {
-		return nil, errFromCache
-	}
+	cache.GetFromCache(qxCacheKey, cacheKey, &roles)
 	if len(roles) > 0 { //缓存中有数据
 		return roles, nil
 	}
@@ -61,10 +58,7 @@ func FindMenuByRoleId(dbConnection *zorm.DBConnection, roleId string, page *zorm
 	menus := make([]permstruct.MenuStruct, 0)
 
 	//从缓存中取数据
-	errFromCache := cache.GetFromCache(qxCacheKey, cacheKey, &menus)
-	if errFromCache != nil {
-		return nil, errFromCache
-	}
+	cache.GetFromCache(qxCacheKey, cacheKey, &menus)
 	if len(menus) > 0 { //缓存中有数据
 		return menus, nil
 	}
@@ -99,10 +93,7 @@ func FindMenuByUserId(dbConnection *zorm.DBConnection, userId string) ([]permstr
 	menus := make([]permstruct.MenuStruct, 0)
 
 	//从缓存中取数据
-	errFromCache := cache.GetFromCache(qxCacheKey, cacheKey, &menus)
-	if errFromCache != nil {
-		return nil, errFromCache
-	}
+	cache.GetFromCache(qxCacheKey, cacheKey, &menus)
 	if len(menus) > 0 { //缓存中有数据
 		return menus, nil
 	}
