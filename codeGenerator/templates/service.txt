@@ -11,7 +11,7 @@ func Save{{.structName}}(dbConnection *zorm.DBConnection, {{.pname}} *{{.package
 
     // {{.pname}}对象指针不能为空
 	if  {{.pname}} == nil {
-		return errors.New(" {{.pname}}对象指针不能为空")
+		return errors.New("{{.pname}}对象指针不能为空")
 	}
     //匿名函数return的error如果不为nil,事务就会回滚
 	_, errSave{{.structName}} := zorm.Transaction(dbConnection,func(dbConnection *zorm.DBConnection) (interface{}, error) {

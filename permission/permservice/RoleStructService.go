@@ -12,10 +12,20 @@ import (
 //如果入参dbConnection为nil,使用defaultDao开启事务并最后提交.如果入参dbConnection没有事务,调用dbConnection.begin()开启事务并最后提交.如果入参dbConnection有事务,只使用不提交,有开启方提交事务.但是如果遇到错误或者异常,虽然不是事务的开启方,也会回滚事务,让事务尽早回滚
 func SaveRoleStruct(dbConnection *zorm.DBConnection, roleStruct *permstruct.RoleStruct) error {
 
+	// roleStruct对象指针不能为空
+	if roleStruct == nil {
+		return errors.New("roleStruct对象指针不能为空")
+	}
 	//匿名函数return的error如果不为nil,事务就会回滚
 	_, errSaveRoleStruct := zorm.Transaction(dbConnection, func(dbConnection *zorm.DBConnection) (interface{}, error) {
 
 		//事务下的业务代码开始
+
+		//赋值主键Id
+		if len(roleStruct.Id) < 1 {
+			roleStruct.Id = zorm.GenerateStringID()
+		}
+
 		errSaveRoleStruct := zorm.SaveStruct(dbConnection, roleStruct)
 
 		if errSaveRoleStruct != nil {
@@ -40,6 +50,11 @@ func SaveRoleStruct(dbConnection *zorm.DBConnection, roleStruct *permstruct.Role
 //UpdateRoleStruct 更新角色
 //如果入参dbConnection为nil,使用defaultDao开启事务并最后提交.如果入参dbConnection没有事务,调用dbConnection.begin()开启事务并最后提交.如果入参dbConnection有事务,只使用不提交,有开启方提交事务.但是如果遇到错误或者异常,虽然不是事务的开启方,也会回滚事务,让事务尽早回滚
 func UpdateRoleStruct(dbConnection *zorm.DBConnection, roleStruct *permstruct.RoleStruct) error {
+
+	// roleStruct对象指针或主键Id不能为空
+	if roleStruct == nil || len(roleStruct.Id) < 1 {
+		return errors.New("roleStruct对象指针或主键Id不能为空")
+	}
 
 	//匿名函数return的error如果不为nil,事务就会回滚
 	_, errUpdateRoleStruct := zorm.Transaction(dbConnection, func(dbConnection *zorm.DBConnection) (interface{}, error) {
@@ -66,15 +81,21 @@ func UpdateRoleStruct(dbConnection *zorm.DBConnection, roleStruct *permstruct.Ro
 	return nil
 }
 
-//DeleteRoleStruct 删除角色
+//DeleteRoleStructById 根据Id删除角色
 //如果入参dbConnection为nil,使用defaultDao开启事务并最后提交.如果入参dbConnection没有事务,调用dbConnection.begin()开启事务并最后提交.如果入参dbConnection有事务,只使用不提交,有开启方提交事务.但是如果遇到错误或者异常,虽然不是事务的开启方,也会回滚事务,让事务尽早回滚
-func DeleteRoleStruct(dbConnection *zorm.DBConnection, roleStruct *permstruct.RoleStruct) error {
+func DeleteRoleStructById(dbConnection *zorm.DBConnection, id string) error {
+
+	//id不能为空
+	if len(id) < 1 {
+		return errors.New("id不能为空")
+	}
 
 	//匿名函数return的error如果不为nil,事务就会回滚
 	_, errDeleteRoleStruct := zorm.Transaction(dbConnection, func(dbConnection *zorm.DBConnection) (interface{}, error) {
 
 		//事务下的业务代码开始
-		errDeleteRoleStruct := zorm.DeleteStruct(dbConnection, roleStruct)
+		finder := zorm.NewDeleteFinder(permstruct.RoleStructTableName).Append(" WHERE id=?", id)
+		errDeleteRoleStruct := zorm.UpdateFinder(dbConnection, finder)
 
 		if errDeleteRoleStruct != nil {
 			return nil, errDeleteRoleStruct
@@ -98,9 +119,9 @@ func DeleteRoleStruct(dbConnection *zorm.DBConnection, roleStruct *permstruct.Ro
 //FindRoleStructById 根据Id查询角色信息
 //dbConnection如果为nil,则会使用默认的datasource进行无事务查询
 func FindRoleStructById(dbConnection *zorm.DBConnection, id string) (*permstruct.RoleStruct, error) {
-	//如果Id为空
+	//id不能为空
 	if len(id) < 1 {
-		return nil, errors.New("id为空")
+		return nil, errors.New("id不能为空")
 	}
 
 	//根据Id查询
@@ -122,6 +143,12 @@ func FindRoleStructById(dbConnection *zorm.DBConnection, id string) (*permstruct
 //FindRoleStructList 根据Finder查询角色列表
 //dbConnection如果为nil,则会使用默认的datasource进行无事务查询
 func FindRoleStructList(dbConnection *zorm.DBConnection, finder *zorm.Finder, page *zorm.Page) ([]permstruct.RoleStruct, error) {
+
+	//finder不能为空
+	if finder == nil {
+		return nil, errors.New("finder不能为空")
+	}
+
 	roleStructList := make([]permstruct.RoleStruct, 0)
 	errFindRoleStructList := zorm.QueryStructList(dbConnection, finder, &roleStructList, page)
 

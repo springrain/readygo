@@ -12,10 +12,20 @@ import (
 //如果入参dbConnection为nil,使用defaultDao开启事务并最后提交.如果入参dbConnection没有事务,调用dbConnection.begin()开启事务并最后提交.如果入参dbConnection有事务,只使用不提交,有开启方提交事务.但是如果遇到错误或者异常,虽然不是事务的开启方,也会回滚事务,让事务尽早回滚
 func SaveUserStruct(dbConnection *zorm.DBConnection, userStruct *permstruct.UserStruct) error {
 
+	// userStruct对象指针不能为空
+	if userStruct == nil {
+		return errors.New("userStruct对象指针不能为空")
+	}
 	//匿名函数return的error如果不为nil,事务就会回滚
 	_, errSaveUserStruct := zorm.Transaction(dbConnection, func(dbConnection *zorm.DBConnection) (interface{}, error) {
 
 		//事务下的业务代码开始
+
+		//赋值主键Id
+		if len(userStruct.Id) < 1 {
+			userStruct.Id = zorm.GenerateStringID()
+		}
+
 		errSaveUserStruct := zorm.SaveStruct(dbConnection, userStruct)
 
 		if errSaveUserStruct != nil {
@@ -40,6 +50,11 @@ func SaveUserStruct(dbConnection *zorm.DBConnection, userStruct *permstruct.User
 //UpdateUserStruct 更新用户
 //如果入参dbConnection为nil,使用defaultDao开启事务并最后提交.如果入参dbConnection没有事务,调用dbConnection.begin()开启事务并最后提交.如果入参dbConnection有事务,只使用不提交,有开启方提交事务.但是如果遇到错误或者异常,虽然不是事务的开启方,也会回滚事务,让事务尽早回滚
 func UpdateUserStruct(dbConnection *zorm.DBConnection, userStruct *permstruct.UserStruct) error {
+
+	// userStruct对象指针或主键Id不能为空
+	if userStruct == nil || len(userStruct.Id) < 1 {
+		return errors.New("userStruct对象指针或主键Id不能为空")
+	}
 
 	//匿名函数return的error如果不为nil,事务就会回滚
 	_, errUpdateUserStruct := zorm.Transaction(dbConnection, func(dbConnection *zorm.DBConnection) (interface{}, error) {
@@ -66,15 +81,21 @@ func UpdateUserStruct(dbConnection *zorm.DBConnection, userStruct *permstruct.Us
 	return nil
 }
 
-//DeleteUserStruct 删除用户
+//DeleteUserStructById 根据Id删除用户
 //如果入参dbConnection为nil,使用defaultDao开启事务并最后提交.如果入参dbConnection没有事务,调用dbConnection.begin()开启事务并最后提交.如果入参dbConnection有事务,只使用不提交,有开启方提交事务.但是如果遇到错误或者异常,虽然不是事务的开启方,也会回滚事务,让事务尽早回滚
-func DeleteUserStruct(dbConnection *zorm.DBConnection, userStruct *permstruct.UserStruct) error {
+func DeleteUserStructById(dbConnection *zorm.DBConnection, id string) error {
+
+	//id不能为空
+	if len(id) < 1 {
+		return errors.New("id不能为空")
+	}
 
 	//匿名函数return的error如果不为nil,事务就会回滚
 	_, errDeleteUserStruct := zorm.Transaction(dbConnection, func(dbConnection *zorm.DBConnection) (interface{}, error) {
 
 		//事务下的业务代码开始
-		errDeleteUserStruct := zorm.DeleteStruct(dbConnection, userStruct)
+		finder := zorm.NewDeleteFinder(permstruct.UserStructTableName).Append(" WHERE id=?", id)
+		errDeleteUserStruct := zorm.UpdateFinder(dbConnection, finder)
 
 		if errDeleteUserStruct != nil {
 			return nil, errDeleteUserStruct
@@ -98,9 +119,9 @@ func DeleteUserStruct(dbConnection *zorm.DBConnection, userStruct *permstruct.Us
 //FindUserStructById 根据Id查询用户信息
 //dbConnection如果为nil,则会使用默认的datasource进行无事务查询
 func FindUserStructById(dbConnection *zorm.DBConnection, id string) (*permstruct.UserStruct, error) {
-	//如果Id为空
+	//id不能为空
 	if len(id) < 1 {
-		return nil, errors.New("id为空")
+		return nil, errors.New("id不能为空")
 	}
 
 	//根据Id查询
@@ -122,6 +143,12 @@ func FindUserStructById(dbConnection *zorm.DBConnection, id string) (*permstruct
 //FindUserStructList 根据Finder查询用户列表
 //dbConnection如果为nil,则会使用默认的datasource进行无事务查询
 func FindUserStructList(dbConnection *zorm.DBConnection, finder *zorm.Finder, page *zorm.Page) ([]permstruct.UserStruct, error) {
+
+	//finder不能为空
+	if finder == nil {
+		return nil, errors.New("finder不能为空")
+	}
+
 	userStructList := make([]permstruct.UserStruct, 0)
 	errFindUserStructList := zorm.QueryStructList(dbConnection, finder, &userStructList, page)
 

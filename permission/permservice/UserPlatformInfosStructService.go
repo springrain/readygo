@@ -12,10 +12,20 @@ import (
 //如果入参dbConnection为nil,使用defaultDao开启事务并最后提交.如果入参dbConnection没有事务,调用dbConnection.begin()开启事务并最后提交.如果入参dbConnection有事务,只使用不提交,有开启方提交事务.但是如果遇到错误或者异常,虽然不是事务的开启方,也会回滚事务,让事务尽早回滚
 func SaveUserPlatformInfosStruct(dbConnection *zorm.DBConnection, userPlatformInfosStruct *permstruct.UserPlatformInfosStruct) error {
 
+	// userPlatformInfosStruct对象指针不能为空
+	if userPlatformInfosStruct == nil {
+		return errors.New("userPlatformInfosStruct对象指针不能为空")
+	}
 	//匿名函数return的error如果不为nil,事务就会回滚
 	_, errSaveUserPlatformInfosStruct := zorm.Transaction(dbConnection, func(dbConnection *zorm.DBConnection) (interface{}, error) {
 
 		//事务下的业务代码开始
+
+		//赋值主键Id
+		if len(userPlatformInfosStruct.Id) < 1 {
+			userPlatformInfosStruct.Id = zorm.GenerateStringID()
+		}
+
 		errSaveUserPlatformInfosStruct := zorm.SaveStruct(dbConnection, userPlatformInfosStruct)
 
 		if errSaveUserPlatformInfosStruct != nil {
@@ -40,6 +50,11 @@ func SaveUserPlatformInfosStruct(dbConnection *zorm.DBConnection, userPlatformIn
 //UpdateUserPlatformInfosStruct 更新用户平台信息表
 //如果入参dbConnection为nil,使用defaultDao开启事务并最后提交.如果入参dbConnection没有事务,调用dbConnection.begin()开启事务并最后提交.如果入参dbConnection有事务,只使用不提交,有开启方提交事务.但是如果遇到错误或者异常,虽然不是事务的开启方,也会回滚事务,让事务尽早回滚
 func UpdateUserPlatformInfosStruct(dbConnection *zorm.DBConnection, userPlatformInfosStruct *permstruct.UserPlatformInfosStruct) error {
+
+	// userPlatformInfosStruct对象指针或主键Id不能为空
+	if userPlatformInfosStruct == nil || len(userPlatformInfosStruct.Id) < 1 {
+		return errors.New("userPlatformInfosStruct对象指针或主键Id不能为空")
+	}
 
 	//匿名函数return的error如果不为nil,事务就会回滚
 	_, errUpdateUserPlatformInfosStruct := zorm.Transaction(dbConnection, func(dbConnection *zorm.DBConnection) (interface{}, error) {
@@ -66,15 +81,21 @@ func UpdateUserPlatformInfosStruct(dbConnection *zorm.DBConnection, userPlatform
 	return nil
 }
 
-//DeleteUserPlatformInfosStruct 删除用户平台信息表
+//DeleteUserPlatformInfosStructById 根据Id删除用户平台信息表
 //如果入参dbConnection为nil,使用defaultDao开启事务并最后提交.如果入参dbConnection没有事务,调用dbConnection.begin()开启事务并最后提交.如果入参dbConnection有事务,只使用不提交,有开启方提交事务.但是如果遇到错误或者异常,虽然不是事务的开启方,也会回滚事务,让事务尽早回滚
-func DeleteUserPlatformInfosStruct(dbConnection *zorm.DBConnection, userPlatformInfosStruct *permstruct.UserPlatformInfosStruct) error {
+func DeleteUserPlatformInfosStructById(dbConnection *zorm.DBConnection, id string) error {
+
+	//id不能为空
+	if len(id) < 1 {
+		return errors.New("id不能为空")
+	}
 
 	//匿名函数return的error如果不为nil,事务就会回滚
 	_, errDeleteUserPlatformInfosStruct := zorm.Transaction(dbConnection, func(dbConnection *zorm.DBConnection) (interface{}, error) {
 
 		//事务下的业务代码开始
-		errDeleteUserPlatformInfosStruct := zorm.DeleteStruct(dbConnection, userPlatformInfosStruct)
+		finder := zorm.NewDeleteFinder(permstruct.UserPlatformInfosStructTableName).Append(" WHERE id=?", id)
+		errDeleteUserPlatformInfosStruct := zorm.UpdateFinder(dbConnection, finder)
 
 		if errDeleteUserPlatformInfosStruct != nil {
 			return nil, errDeleteUserPlatformInfosStruct
@@ -98,9 +119,9 @@ func DeleteUserPlatformInfosStruct(dbConnection *zorm.DBConnection, userPlatform
 //FindUserPlatformInfosStructById 根据Id查询用户平台信息表信息
 //dbConnection如果为nil,则会使用默认的datasource进行无事务查询
 func FindUserPlatformInfosStructById(dbConnection *zorm.DBConnection, id string) (*permstruct.UserPlatformInfosStruct, error) {
-	//如果Id为空
+	//id不能为空
 	if len(id) < 1 {
-		return nil, errors.New("id为空")
+		return nil, errors.New("id不能为空")
 	}
 
 	//根据Id查询
@@ -122,6 +143,12 @@ func FindUserPlatformInfosStructById(dbConnection *zorm.DBConnection, id string)
 //FindUserPlatformInfosStructList 根据Finder查询用户平台信息表列表
 //dbConnection如果为nil,则会使用默认的datasource进行无事务查询
 func FindUserPlatformInfosStructList(dbConnection *zorm.DBConnection, finder *zorm.Finder, page *zorm.Page) ([]permstruct.UserPlatformInfosStruct, error) {
+
+	//finder不能为空
+	if finder == nil {
+		return nil, errors.New("finder不能为空")
+	}
+
 	userPlatformInfosStructList := make([]permstruct.UserPlatformInfosStruct, 0)
 	errFindUserPlatformInfosStructList := zorm.QueryStructList(dbConnection, finder, &userPlatformInfosStructList, page)
 
