@@ -68,12 +68,68 @@ func UpdateOrgStruct(dbConnection *zorm.DBConnection, orgStruct *permstruct.OrgS
 	//匿名函数return的error如果不为nil,事务就会回滚
 	_, errUpdateOrgStruct := zorm.Transaction(dbConnection, func(dbConnection *zorm.DBConnection) (interface{}, error) {
 
-		//事务下的业务代码开始
+		oldOrg, errById := FindOrgStructById(dbConnection, orgStruct.Id)
+		if errById != nil {
+			return nil, errById
+		}
+		if oldOrg == nil {
+			return nil, errors.New("数据库不存在要更新的对象")
+		}
+
+		oldComcode := oldOrg.Comcode
+		newComcode, errComcode := findOrgNewComcode(dbConnection, orgStruct.Id, orgStruct.Pid)
+		if errComcode != nil {
+			return nil, errComcode
+		}
+		orgStruct.Comcode = newComcode
 		errUpdateOrgStruct := zorm.UpdateStruct(dbConnection, orgStruct)
 
 		if errUpdateOrgStruct != nil {
 			return nil, errUpdateOrgStruct
 		}
+
+		if newComcode == oldComcode { // 编码没有改变
+			return nil, nil
+		}
+
+		// 编码改变,级联更新所有的子菜单
+		childrenFinder := zorm.NewSelectFinder(permstruct.OrgStructTableName, "id")
+		childrenFinder.Append(" WHERE comcode like ? ", oldComcode+"%")
+
+		childrenIds := make([]string, 0)
+		errChildrenIds := zorm.QueryStructList(dbConnection, childrenFinder, &childrenIds, nil)
+		if errChildrenIds != nil {
+			return nil, errChildrenIds
+		}
+
+		//没有子菜单
+		if len(childrenIds) < 1 {
+			return nil, nil
+		}
+
+		for _, orgId := range childrenIds {
+
+			if orgId == orgStruct.Id {
+				continue
+			}
+
+			updateComcode, errComcode := findOrgNewComcode(dbConnection, orgId, orgStruct.Id)
+			if errComcode != nil {
+				return nil, errComcode
+			}
+			// 清理缓存
+			cache.EvictKey(qxCacheKey, "FindOrgStructById_"+orgId)
+
+			//更新 comCode
+			comcodeFinder := zorm.NewUpdateFinder(permstruct.OrgStructTableName).Append(" comcode=? WHERE id=? ", updateComcode, orgId)
+			errComcodeFinder := zorm.UpdateFinder(dbConnection, comcodeFinder)
+			if errComcodeFinder != nil {
+				return nil, errComcodeFinder
+			}
+		}
+
+		// 清除缓存
+		cache.EvictKey(qxCacheKey, "FindOrgStructById_"+orgStruct.Id)
 
 		return nil, nil
 		//事务下的业务代码结束
@@ -99,11 +155,20 @@ func DeleteOrgStructById(dbConnection *zorm.DBConnection, id string) error {
 		return errors.New("id不能为空")
 	}
 
+	org, errById := FindOrgStructById(dbConnection, id)
+	if errById != nil {
+		return errById
+	}
+	if org == nil {
+		return errors.New("数据库不存在要删除的对象")
+	}
+
 	//匿名函数return的error如果不为nil,事务就会回滚
 	_, errDeleteOrgStruct := zorm.Transaction(dbConnection, func(dbConnection *zorm.DBConnection) (interface{}, error) {
 
 		//事务下的业务代码开始
-		finder := zorm.NewDeleteFinder(permstruct.OrgStructTableName).Append(" WHERE id=?", id)
+
+		finder := zorm.NewUpdateFinder(permstruct.OrgStructTableName).Append("  active=0  WHERE comcode like ? ", org.Comcode+"%")
 		errDeleteOrgStruct := zorm.UpdateFinder(dbConnection, finder)
 
 		if errDeleteOrgStruct != nil {
