@@ -3,6 +3,7 @@ package permservice
 import (
 	"errors"
 	"fmt"
+	"readygo/cache"
 	"readygo/logger"
 	"readygo/permission/permstruct"
 	"readygo/zorm"
@@ -123,10 +124,15 @@ func FindUserStructById(dbConnection *zorm.DBConnection, id string) (*permstruct
 	if len(id) < 1 {
 		return nil, errors.New("id不能为空")
 	}
+	userStruct := permstruct.UserStruct{}
+	cacheKey := "FindUserStructById_" + id
+	cache.GetFromCache(qxCacheKey, cacheKey, &userStruct)
+	if len(userStruct.Id) > 0 { //缓存存在
+		return &userStruct, nil
+	}
 
 	//根据Id查询
 	finder := zorm.NewSelectFinder(permstruct.UserStructTableName).Append(" WHERE id=?", id)
-	userStruct := permstruct.UserStruct{}
 	errFindUserStructById := zorm.QueryStruct(dbConnection, finder, &userStruct)
 
 	//记录错误
@@ -135,6 +141,9 @@ func FindUserStructById(dbConnection *zorm.DBConnection, id string) (*permstruct
 		logger.Error(errFindUserStructById)
 		return nil, errFindUserStructById
 	}
+
+	//放入缓存
+	cache.PutToCache(qxCacheKey, cacheKey, userStruct)
 
 	return &userStruct, nil
 

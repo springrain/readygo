@@ -199,11 +199,7 @@ func FindOrgStructById(dbConnection *zorm.DBConnection, id string) (*permstruct.
 	}
 	orgStruct := permstruct.OrgStruct{}
 	cacheKey := "FindOrgStructById_" + id
-	errCacheOrg := cache.GetFromCache(qxCacheKey, cacheKey, &orgStruct)
-	if errCacheOrg != nil {
-		return nil, errCacheOrg
-	}
-
+	cache.GetFromCache(qxCacheKey, cacheKey, &orgStruct)
 	if len(orgStruct.Id) > 0 { //缓存中有值
 		return &orgStruct, nil
 	}
@@ -220,6 +216,7 @@ func FindOrgStructById(dbConnection *zorm.DBConnection, id string) (*permstruct.
 		return nil, errFindOrgStructById
 	}
 
+	//放入缓存
 	cache.PutToCache(qxCacheKey, cacheKey, orgStruct)
 
 	return &orgStruct, nil

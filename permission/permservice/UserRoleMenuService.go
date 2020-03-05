@@ -8,7 +8,6 @@ import (
 )
 
 const (
-	//	userOrgRoleMenuCacheKey string = "userOrgRoleMenuCacheKey"
 	qxCacheKey string = "qxCacheKey"
 )
 

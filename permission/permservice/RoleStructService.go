@@ -3,6 +3,7 @@ package permservice
 import (
 	"errors"
 	"fmt"
+	"readygo/cache"
 	"readygo/logger"
 	"readygo/permission/permstruct"
 	"readygo/zorm"
@@ -124,9 +125,16 @@ func FindRoleStructById(dbConnection *zorm.DBConnection, id string) (*permstruct
 		return nil, errors.New("id不能为空")
 	}
 
+	roleStruct := permstruct.RoleStruct{}
+
+	cacheKey := "FindRoleStructById_" + id
+	cache.GetFromCache(qxCacheKey, cacheKey, &roleStruct)
+	if len(roleStruct.Id) > 0 { //如果缓存中存在
+		return &roleStruct, nil
+	}
 	//根据Id查询
 	finder := zorm.NewSelectFinder(permstruct.RoleStructTableName).Append(" WHERE id=?", id)
-	roleStruct := permstruct.RoleStruct{}
+
 	errFindRoleStructById := zorm.QueryStruct(dbConnection, finder, &roleStruct)
 
 	//记录错误
@@ -136,6 +144,8 @@ func FindRoleStructById(dbConnection *zorm.DBConnection, id string) (*permstruct
 		return nil, errFindRoleStructById
 	}
 
+	//放入缓存
+	cache.PutToCache(qxCacheKey, cacheKey, roleStruct)
 	return &roleStruct, nil
 
 }
