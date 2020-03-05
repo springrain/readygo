@@ -79,6 +79,9 @@ func UpdateRoleStruct(dbConnection *zorm.DBConnection, roleStruct *permstruct.Ro
 		return errUpdateRoleStruct
 	}
 
+	//清除缓存
+	cache.EvictKey(qxCacheKey, "FindRoleStructById_"+roleStruct.Id)
+
 	return nil
 }
 
@@ -113,6 +116,9 @@ func DeleteRoleStructById(dbConnection *zorm.DBConnection, id string) error {
 		logger.Error(errDeleteRoleStruct)
 		return errDeleteRoleStruct
 	}
+
+	//清除缓存
+	cache.EvictKey(qxCacheKey, "FindRoleStructById_"+id)
 
 	return nil
 }

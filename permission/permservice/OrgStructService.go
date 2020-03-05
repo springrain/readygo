@@ -128,9 +128,6 @@ func UpdateOrgStruct(dbConnection *zorm.DBConnection, orgStruct *permstruct.OrgS
 			}
 		}
 
-		// 清除缓存
-		cache.EvictKey(qxCacheKey, "FindOrgStructById_"+orgStruct.Id)
-
 		return nil, nil
 		//事务下的业务代码结束
 
@@ -142,7 +139,8 @@ func UpdateOrgStruct(dbConnection *zorm.DBConnection, orgStruct *permstruct.OrgS
 		logger.Error(errUpdateOrgStruct)
 		return errUpdateOrgStruct
 	}
-
+	// 清除缓存
+	cache.EvictKey(qxCacheKey, "FindOrgStructById_"+orgStruct.Id)
 	return nil
 }
 
@@ -186,6 +184,8 @@ func DeleteOrgStructById(dbConnection *zorm.DBConnection, id string) error {
 		logger.Error(errDeleteOrgStruct)
 		return errDeleteOrgStruct
 	}
+	//清理缓存
+	cache.EvictKey(qxCacheKey, "FindOrgStructById_"+id)
 
 	return nil
 }

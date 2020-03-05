@@ -78,7 +78,8 @@ func UpdateUserStruct(dbConnection *zorm.DBConnection, userStruct *permstruct.Us
 		logger.Error(errUpdateUserStruct)
 		return errUpdateUserStruct
 	}
-
+	//清理缓存
+	cache.EvictKey(qxCacheKey, "FindUserStructById_"+userStruct.Id)
 	return nil
 }
 
@@ -113,6 +114,9 @@ func DeleteUserStructById(dbConnection *zorm.DBConnection, id string) error {
 		logger.Error(errDeleteUserStruct)
 		return errDeleteUserStruct
 	}
+
+	//清理缓存
+	cache.EvictKey(qxCacheKey, "FindUserStructById_"+id)
 
 	return nil
 }
