@@ -64,15 +64,79 @@ func SaveMenuStruct(dbConnection *zorm.DBConnection, menuStruct *permstruct.Menu
 //如果入参dbConnection为nil,使用defaultDao开启事务并最后提交.如果入参dbConnection没有事务,调用dbConnection.begin()开启事务并最后提交.如果入参dbConnection有事务,只使用不提交,有开启方提交事务.但是如果遇到错误或者异常,虽然不是事务的开启方,也会回滚事务,让事务尽早回滚
 func UpdateMenuStruct(dbConnection *zorm.DBConnection, menuStruct *permstruct.MenuStruct) error {
 
+	//menuStruct对象指针或主键Id不能为空
+	if menuStruct == nil || len(menuStruct.Id) < 1 {
+		return errors.New("menuStruct对象指针或主键Id不能为空")
+	}
+
 	//匿名函数return的error如果不为nil,事务就会回滚
 	_, errUpdateMenuStruct := zorm.Transaction(dbConnection, func(dbConnection *zorm.DBConnection) (interface{}, error) {
 
 		//事务下的业务代码开始
+
+		oldMenu, errById := FindMenuStructById(dbConnection, menuStruct.Id)
+		if errById != nil {
+			return nil, errById
+		}
+		if oldMenu == nil {
+			return nil, errors.New("数据库不存在要更新的对象")
+		}
+
+		oldComcode := oldMenu.Comcode
+		newComcode, errComcode := findMenuNewComcode(dbConnection, menuStruct.Id, menuStruct.Pid)
+		if errComcode != nil {
+			return nil, errComcode
+		}
+		menuStruct.Comcode = newComcode
 		errUpdateMenuStruct := zorm.UpdateStruct(dbConnection, menuStruct)
 
 		if errUpdateMenuStruct != nil {
 			return nil, errUpdateMenuStruct
 		}
+
+		if newComcode == oldComcode { // 编码没有改变
+			return nil, nil
+		}
+
+		// 编码改变,级联更新所有的子菜单
+		childrenFinder := zorm.NewSelectFinder(permstruct.MenuStructTableName, "id")
+		childrenFinder.Append(" WHERE comcode like ? ", oldComcode+"%")
+
+		childrenIds := make([]string, 0)
+		errChildrenIds := zorm.QueryStructList(dbConnection, childrenFinder, &childrenIds, nil)
+		if errChildrenIds != nil {
+			return nil, errChildrenIds
+		}
+
+		//没有子菜单
+		if len(childrenIds) < 1 {
+			return nil, nil
+		}
+
+		for _, menuId := range childrenIds {
+
+			if menuId == menuStruct.Id {
+				continue
+			}
+
+			updateComcode, errComcode := findMenuNewComcode(dbConnection, menuId, menuStruct.Id)
+			if errComcode != nil {
+				return nil, errComcode
+			}
+			// 清理缓存
+			cache.EvictKey(qxCacheKey, "findMenuById_"+menuId)
+
+			//更新 comCode
+			comcodeFinder := zorm.NewUpdateFinder(permstruct.MenuStructTableName).Append(" comcode=? WHERE id=? ", updateComcode, menuId)
+			errComcodeFinder := zorm.UpdateFinder(dbConnection, comcodeFinder)
+			if errComcodeFinder != nil {
+				return nil, errComcodeFinder
+			}
+		}
+
+		// 清除缓存
+		cache.EvictKey(qxCacheKey, "findMenuById_"+menuStruct.Id)
+		cache.EvictKey(qxCacheKey, "findAllMenuTree")
 
 		return nil, nil
 		//事务下的业务代码结束
@@ -89,15 +153,21 @@ func UpdateMenuStruct(dbConnection *zorm.DBConnection, menuStruct *permstruct.Me
 	return nil
 }
 
-//DeleteMenuStruct 删除菜单
+//DeleteMenuStructById 根据Id删除菜单
 //如果入参dbConnection为nil,使用defaultDao开启事务并最后提交.如果入参dbConnection没有事务,调用dbConnection.begin()开启事务并最后提交.如果入参dbConnection有事务,只使用不提交,有开启方提交事务.但是如果遇到错误或者异常,虽然不是事务的开启方,也会回滚事务,让事务尽早回滚
-func DeleteMenuStruct(dbConnection *zorm.DBConnection, menuStruct *permstruct.MenuStruct) error {
+func DeleteMenuStructById(dbConnection *zorm.DBConnection, id string) error {
+
+	//id不能为空
+	if len(id) < 1 {
+		return errors.New("id不能为空")
+	}
 
 	//匿名函数return的error如果不为nil,事务就会回滚
 	_, errDeleteMenuStruct := zorm.Transaction(dbConnection, func(dbConnection *zorm.DBConnection) (interface{}, error) {
 
 		//事务下的业务代码开始
-		errDeleteMenuStruct := zorm.DeleteStruct(dbConnection, menuStruct)
+		finder := zorm.NewDeleteFinder(permstruct.MenuStructTableName).Append(" WHERE id=?", id)
+		errDeleteMenuStruct := zorm.UpdateFinder(dbConnection, finder)
 
 		if errDeleteMenuStruct != nil {
 			return nil, errDeleteMenuStruct
