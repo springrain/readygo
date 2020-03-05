@@ -194,7 +194,7 @@ func UpdateUserRoles(dbConnection *zorm.DBConnection, userId string, roleIds []s
 		}
 		for _, roleId := range roleIds {
 			ur := permstruct.UserRoleStruct{}
-			//ur.Id = ""
+			ur.Id = zorm.GenerateStringID()
 			ur.UserId = userId
 			ur.RoleId = roleId
 			errSaveStruct := zorm.SaveStruct(dbConnection, &ur)

@@ -119,7 +119,7 @@ func wrapSaveStructSQL(dbType string, entity IEntityStruct, columns *[]reflect.S
 
 			} else if (pkKind == reflect.String) && (pkValue.(string) == "") { //主键是字符串类型,并且值为"",赋值id
 				//生成主键字符串
-				id := generateStringID()
+				id := GenerateStringID()
 				(*values)[i] = id
 				//给对象主键赋值
 				v := reflect.ValueOf(entity).Elem()
@@ -392,8 +392,8 @@ func findFromIndex(strsql string) []int {
 	return loc
 }
 
-//生成主键字符串
-func generateStringID() string {
+//GenerateStringID 生成主键字符串
+func GenerateStringID() string {
 	pk := strconv.FormatInt(time.Now().UnixNano(), 10)
 	return pk
 }
