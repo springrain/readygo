@@ -8,7 +8,8 @@ import (
 )
 
 const (
-	qxCacheKey string = "qxCacheKey"
+	qxCacheKey       string = "qxCacheKey"
+	baseInfoCacheKey string = "baseInfoCacheKey"
 )
 
 //FindRoleByUserId 根据用户Id查询用户的角色,按照 r.privateOrg,r.sortno desc 先处理角色私有部门的权限

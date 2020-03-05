@@ -79,7 +79,7 @@ func UpdateUserStruct(dbConnection *zorm.DBConnection, userStruct *permstruct.Us
 		return errUpdateUserStruct
 	}
 	//清理缓存
-	cache.EvictKey(qxCacheKey, "FindUserStructById_"+userStruct.Id)
+	cache.EvictKey(baseInfoCacheKey, "FindUserStructById_"+userStruct.Id)
 	return nil
 }
 
@@ -116,7 +116,7 @@ func DeleteUserStructById(dbConnection *zorm.DBConnection, id string) error {
 	}
 
 	//清理缓存
-	cache.EvictKey(qxCacheKey, "FindUserStructById_"+id)
+	cache.EvictKey(baseInfoCacheKey, "FindUserStructById_"+id)
 
 	return nil
 }
@@ -130,7 +130,7 @@ func FindUserStructById(dbConnection *zorm.DBConnection, id string) (*permstruct
 	}
 	userStruct := permstruct.UserStruct{}
 	cacheKey := "FindUserStructById_" + id
-	cache.GetFromCache(qxCacheKey, cacheKey, &userStruct)
+	cache.GetFromCache(baseInfoCacheKey, cacheKey, &userStruct)
 	if len(userStruct.Id) > 0 { //缓存存在
 		return &userStruct, nil
 	}
@@ -147,7 +147,7 @@ func FindUserStructById(dbConnection *zorm.DBConnection, id string) (*permstruct
 	}
 
 	//放入缓存
-	cache.PutToCache(qxCacheKey, cacheKey, userStruct)
+	cache.PutToCache(baseInfoCacheKey, cacheKey, userStruct)
 
 	return &userStruct, nil
 

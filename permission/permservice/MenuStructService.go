@@ -54,8 +54,8 @@ func SaveMenuStruct(dbConnection *zorm.DBConnection, menuStruct *permstruct.Menu
 		return errSaveMenuStruct
 	}
 
-	// 清除缓存
-	cache.EvictKey(qxCacheKey, "findAllMenuTree")
+	// 清理缓存
+	cache.EvictKey(baseInfoCacheKey, "findAllMenuTree")
 
 	return nil
 }
@@ -123,8 +123,9 @@ func UpdateMenuStruct(dbConnection *zorm.DBConnection, menuStruct *permstruct.Me
 			if errComcode != nil {
 				return nil, errComcode
 			}
+
 			// 清理缓存
-			cache.EvictKey(qxCacheKey, "findMenuById_"+menuId)
+			cache.EvictKey(baseInfoCacheKey, "FindMenuStructById_"+menuId)
 
 			//更新 comCode
 			comcodeFinder := zorm.NewUpdateFinder(permstruct.MenuStructTableName).Append(" comcode=? WHERE id=? ", updateComcode, menuId)
@@ -133,10 +134,6 @@ func UpdateMenuStruct(dbConnection *zorm.DBConnection, menuStruct *permstruct.Me
 				return nil, errComcodeFinder
 			}
 		}
-
-		// 清除缓存
-		cache.EvictKey(qxCacheKey, "findMenuById_"+menuStruct.Id)
-		cache.EvictKey(qxCacheKey, "findAllMenuTree")
 
 		return nil, nil
 		//事务下的业务代码结束
@@ -149,6 +146,10 @@ func UpdateMenuStruct(dbConnection *zorm.DBConnection, menuStruct *permstruct.Me
 		logger.Error(errUpdateMenuStruct)
 		return errUpdateMenuStruct
 	}
+
+	// 清理缓存
+	cache.EvictKey(baseInfoCacheKey, "FindMenuStructById_"+menuStruct.Id)
+	cache.EvictKey(baseInfoCacheKey, "FindAllMenuTree")
 
 	return nil
 }
@@ -167,12 +168,17 @@ func DeleteMenuStructById(dbConnection *zorm.DBConnection, id string) error {
 
 		//事务下的业务代码开始
 
-		menuIds, errMenuIds := FindMenuByPid(dbConnection, id, nil)
+		menuIds, errMenuIds := FindMenuIdByPid(dbConnection, id, nil)
 		if errMenuIds != nil {
 			return nil, errMenuIds
 		}
 		if len(menuIds) < 1 {
 			return nil, errors.New("数据库中不存在,id:" + id)
+		}
+
+		//清理缓存
+		for _, menuId := range menuIds {
+			cache.EvictKey(baseInfoCacheKey, "FindMenuStructById_"+menuId)
 		}
 
 		//删除中间表
@@ -200,8 +206,9 @@ func DeleteMenuStructById(dbConnection *zorm.DBConnection, id string) error {
 		return errDeleteMenuStruct
 	}
 
-	//清除缓存
+	// 清理缓存
 	cache.ClearCache(qxCacheKey)
+	cache.EvictKey(baseInfoCacheKey, "FindAllMenuTree")
 
 	return nil
 }
@@ -214,9 +221,16 @@ func FindMenuStructById(dbConnection *zorm.DBConnection, id string) (*permstruct
 		return nil, errors.New("id为空")
 	}
 
+	menuStruct := permstruct.MenuStruct{}
+	cacheKey := "FindMenuStructById_" + id
+	cache.GetFromCache(baseInfoCacheKey, cacheKey, &menuStruct)
+	if len(menuStruct.Id) > 0 { //如果缓存中存在
+		return &menuStruct, nil
+	}
+
 	//根据Id查询
 	finder := zorm.NewSelectFinder(permstruct.MenuStructTableName).Append(" WHERE id=?", id)
-	menuStruct := permstruct.MenuStruct{}
+
 	errFindMenuStructById := zorm.QueryStruct(dbConnection, finder, &menuStruct)
 
 	//记录错误
@@ -225,7 +239,8 @@ func FindMenuStructById(dbConnection *zorm.DBConnection, id string) (*permstruct
 		logger.Error(errFindMenuStructById)
 		return nil, errFindMenuStructById
 	}
-
+	//放入缓存
+	cache.PutToCache(baseInfoCacheKey, cacheKey, menuStruct)
 	return &menuStruct, nil
 
 }
@@ -252,10 +267,10 @@ func FindMenuStructList(dbConnection *zorm.DBConnection, finder *zorm.Finder, pa
 	return menuStructList, nil
 }
 
-//FindMenuByPid 根据pid查询所有的子菜单
-func FindMenuByPid(dbConnection *zorm.DBConnection, pid string, page *zorm.Page) ([]string, error) {
+//FindMenuIdByPid 根据pid查询所有的子菜单
+func FindMenuIdByPid(dbConnection *zorm.DBConnection, pid string, page *zorm.Page) ([]string, error) {
 
-	f_select := zorm.NewSelectFinder(permstruct.AliPayconfigStructTableName, "id").Append(" WHERE active=1 ")
+	f_select := zorm.NewSelectFinder(permstruct.MenuStructTableName, "id").Append(" WHERE active=1 ")
 
 	if len(pid) > 0 { // pid不是根节点
 		menu, errById := FindMenuStructById(dbConnection, pid)
@@ -285,7 +300,7 @@ func FindAllMenuTree(dbConnection *zorm.DBConnection) ([]permstruct.MenuStruct, 
 	menus := make([]permstruct.MenuStruct, 0)
 
 	//从缓存中取数据
-	errFromCache := cache.GetFromCache(qxCacheKey, cacheKey, &menus)
+	errFromCache := cache.GetFromCache(baseInfoCacheKey, cacheKey, &menus)
 	if errFromCache != nil {
 		return nil, errFromCache
 	}
@@ -304,7 +319,7 @@ func FindAllMenuTree(dbConnection *zorm.DBConnection) ([]permstruct.MenuStruct, 
 	menus = menuList2Tree(menus)
 
 	//放入缓存
-	errPutCache := cache.PutToCache(qxCacheKey, cacheKey, menus)
+	errPutCache := cache.PutToCache(baseInfoCacheKey, cacheKey, menus)
 	if errPutCache != nil {
 		return nil, errPutCache
 	}

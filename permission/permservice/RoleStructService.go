@@ -80,7 +80,7 @@ func UpdateRoleStruct(dbConnection *zorm.DBConnection, roleStruct *permstruct.Ro
 	}
 
 	//清除缓存
-	cache.EvictKey(qxCacheKey, "FindRoleStructById_"+roleStruct.Id)
+	cache.EvictKey(baseInfoCacheKey, "FindRoleStructById_"+roleStruct.Id)
 
 	return nil
 }
@@ -118,7 +118,7 @@ func DeleteRoleStructById(dbConnection *zorm.DBConnection, id string) error {
 	}
 
 	//清除缓存
-	cache.EvictKey(qxCacheKey, "FindRoleStructById_"+id)
+	cache.EvictKey(baseInfoCacheKey, "FindRoleStructById_"+id)
 
 	return nil
 }
@@ -134,7 +134,7 @@ func FindRoleStructById(dbConnection *zorm.DBConnection, id string) (*permstruct
 	roleStruct := permstruct.RoleStruct{}
 
 	cacheKey := "FindRoleStructById_" + id
-	cache.GetFromCache(qxCacheKey, cacheKey, &roleStruct)
+	cache.GetFromCache(baseInfoCacheKey, cacheKey, &roleStruct)
 	if len(roleStruct.Id) > 0 { //如果缓存中存在
 		return &roleStruct, nil
 	}
@@ -151,7 +151,7 @@ func FindRoleStructById(dbConnection *zorm.DBConnection, id string) (*permstruct
 	}
 
 	//放入缓存
-	cache.PutToCache(qxCacheKey, cacheKey, roleStruct)
+	cache.PutToCache(baseInfoCacheKey, cacheKey, roleStruct)
 	return &roleStruct, nil
 
 }

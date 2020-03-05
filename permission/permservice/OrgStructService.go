@@ -118,7 +118,7 @@ func UpdateOrgStruct(dbConnection *zorm.DBConnection, orgStruct *permstruct.OrgS
 				return nil, errComcode
 			}
 			// 清理缓存
-			cache.EvictKey(qxCacheKey, "FindOrgStructById_"+orgId)
+			cache.EvictKey(baseInfoCacheKey, "FindOrgStructById_"+orgId)
 
 			//更新 comCode
 			comcodeFinder := zorm.NewUpdateFinder(permstruct.OrgStructTableName).Append(" comcode=? WHERE id=? ", updateComcode, orgId)
@@ -140,7 +140,7 @@ func UpdateOrgStruct(dbConnection *zorm.DBConnection, orgStruct *permstruct.OrgS
 		return errUpdateOrgStruct
 	}
 	// 清除缓存
-	cache.EvictKey(qxCacheKey, "FindOrgStructById_"+orgStruct.Id)
+	cache.EvictKey(baseInfoCacheKey, "FindOrgStructById_"+orgStruct.Id)
 	return nil
 }
 
@@ -159,6 +159,16 @@ func DeleteOrgStructById(dbConnection *zorm.DBConnection, id string) error {
 	}
 	if org == nil {
 		return errors.New("数据库不存在要删除的对象")
+	}
+
+	orgIds, errByPid := FindOrgIdByPid(dbConnection, id)
+	if errByPid != nil {
+		return errByPid
+	}
+
+	for _, orgId := range orgIds {
+		//清理缓存
+		cache.EvictKey(baseInfoCacheKey, "FindOrgStructById_"+orgId)
 	}
 
 	//匿名函数return的error如果不为nil,事务就会回滚
@@ -185,8 +195,8 @@ func DeleteOrgStructById(dbConnection *zorm.DBConnection, id string) error {
 		return errDeleteOrgStruct
 	}
 	//清理缓存
-	cache.EvictKey(qxCacheKey, "FindOrgStructById_"+id)
-
+	//cache.EvictKey(baseInfoCacheKey, "FindOrgStructById_"+id)
+	cache.ClearCache(qxCacheKey)
 	return nil
 }
 
@@ -199,7 +209,7 @@ func FindOrgStructById(dbConnection *zorm.DBConnection, id string) (*permstruct.
 	}
 	orgStruct := permstruct.OrgStruct{}
 	cacheKey := "FindOrgStructById_" + id
-	cache.GetFromCache(qxCacheKey, cacheKey, &orgStruct)
+	cache.GetFromCache(baseInfoCacheKey, cacheKey, &orgStruct)
 	if len(orgStruct.Id) > 0 { //缓存中有值
 		return &orgStruct, nil
 	}
@@ -217,7 +227,7 @@ func FindOrgStructById(dbConnection *zorm.DBConnection, id string) (*permstruct.
 	}
 
 	//放入缓存
-	cache.PutToCache(qxCacheKey, cacheKey, orgStruct)
+	cache.PutToCache(baseInfoCacheKey, cacheKey, orgStruct)
 
 	return &orgStruct, nil
 
@@ -273,6 +283,33 @@ func FindOrgTreeByPid(dbConnection *zorm.DBConnection, pid string) ([]permstruct
 	orgs = orgList2Tree(orgs)
 
 	return orgs, nil
+
+}
+
+//FindOrgIdByPid 根据pid查询子部门的Id
+func FindOrgIdByPid(dbConnection *zorm.DBConnection, pid string) ([]string, error) {
+
+	finder := zorm.NewSelectFinder(permstruct.OrgStructTableName, "id").Append("WHERE active=1 ")
+	if len(pid) > 0 { //不是根目录
+		org, errById := FindOrgStructById(dbConnection, pid)
+		if errById != nil {
+			return nil, errById
+		}
+		if org == nil {
+			return nil, errors.New("数据库不存在对象,id:" + pid)
+		}
+
+		finder.Append(" and comcode like ? ", org.Comcode)
+
+	}
+	finder.Append(" order by sortno asc ")
+
+	orgIds := make([]string, 0)
+	errQueryList := zorm.QueryStructList(dbConnection, finder, &orgIds, nil)
+	if errQueryList != nil {
+		return nil, errQueryList
+	}
+	return orgIds, nil
 
 }
 
