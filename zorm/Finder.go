@@ -60,7 +60,7 @@ func NewUpdateFinder(tableName string) *Finder {
 	return finder
 }
 
-//NewDeleteFinder 根据表名初始化删除的Finder,  DELETE FROM tableName WHERE
+//NewDeleteFinder 根据表名初始化删除的Finder,  DELETE FROM tableName
 func NewDeleteFinder(tableName string) *Finder {
 	finder := NewFinder()
 	finder.sqlBuilder.WriteString("DELETE FROM ")
