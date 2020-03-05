@@ -80,10 +80,19 @@ func selectAllTable() []string {
 
 //根据表名查询字段信息和主键名称
 func selectTableColumn(tableName string) map[string]interface{} {
+
+	info := make(map[string]interface{})
+
 	tableComment := ""
 	finder := zorm.NewFinder()
 	finder.Append("select table_comment from information_schema.TABLES where  TABLE_SCHEMA =? and TABLE_Name=? ", dbName, tableName)
 	zorm.QueryStruct(nil, finder, &tableComment)
+
+	//查找主键
+	finderPK := zorm.NewFinder()
+	finderPK.Append("SELECT column_name FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE WHERE TABLE_SCHEMA=? and  table_name=? AND constraint_name=?", dbName, tableName, "PRIMARY")
+	pkName := ""
+	zorm.QueryStruct(nil, finderPK, &pkName)
 
 	finder2 := zorm.NewFinder()
 	// select * from information_schema.COLUMNS where table_schema ='readygo' and table_name='t_user';
@@ -142,14 +151,16 @@ func selectTableColumn(tableName string) map[string]interface{} {
 
 		}
 		m["DATA_TYPE"] = dataType
-		m["field"] = camelCaseName(m["COLUMN_NAME"].(string))
+		fieldName := camelCaseName(m["COLUMN_NAME"].(string))
+		m["field"] = fieldName
+
+		//设置主键的struct属性名称
+		if m["COLUMN_NAME"].(string) == pkName {
+			info["pkField"] = fieldName
+		}
+
 	}
 
-	finderPK := zorm.NewFinder()
-	finderPK.Append("SELECT column_name FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE WHERE TABLE_SCHEMA=? and  table_name=? AND constraint_name=?", dbName, tableName, "PRIMARY")
-	pkName := ""
-	zorm.QueryStruct(nil, finderPK, &pkName)
-	info := make(map[string]interface{})
 	info["columns"] = maps
 	info["pkName"] = pkName
 	info["tableName"] = tableName
