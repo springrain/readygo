@@ -29,7 +29,7 @@ func SaveMenuStruct(dbConnection *zorm.DBConnection, menuStruct *permstruct.Menu
 		}
 
 		//获取新的comcode
-		comcode, errComcode := findMenuNewComcode(dbConnection, menuStruct.Id, menuStruct.Pid)
+		comcode, errComcode := newMenuComcode(dbConnection, menuStruct.Id, menuStruct.Pid)
 		if errComcode != nil {
 			return nil, errComcode
 		}
@@ -83,7 +83,7 @@ func UpdateMenuStruct(dbConnection *zorm.DBConnection, menuStruct *permstruct.Me
 		}
 
 		oldComcode := oldMenu.Comcode
-		newComcode, errComcode := findMenuNewComcode(dbConnection, menuStruct.Id, menuStruct.Pid)
+		newComcode, errComcode := newMenuComcode(dbConnection, menuStruct.Id, menuStruct.Pid)
 		if errComcode != nil {
 			return nil, errComcode
 		}
@@ -119,7 +119,7 @@ func UpdateMenuStruct(dbConnection *zorm.DBConnection, menuStruct *permstruct.Me
 				continue
 			}
 
-			updateComcode, errComcode := findMenuNewComcode(dbConnection, menuId, menuStruct.Id)
+			updateComcode, errComcode := newMenuComcode(dbConnection, menuId, menuStruct.Id)
 			if errComcode != nil {
 				return nil, errComcode
 			}
@@ -403,8 +403,8 @@ func menuList2Tree(menuList []permstruct.MenuStruct) []permstruct.MenuStruct {
   }
 */
 
-// findMenuNewComcode 根据id和pid生成菜单的Comcode
-func findMenuNewComcode(dbConnection *zorm.DBConnection, id string, pid string) (string, error) {
+// newMenuComcode 根据id和pid生成菜单的Comcode
+func newMenuComcode(dbConnection *zorm.DBConnection, id string, pid string) (string, error) {
 
 	//id不能为空
 	if len(id) < 1 {

@@ -28,7 +28,7 @@ func SaveOrgStruct(dbConnection *zorm.DBConnection, orgStruct *permstruct.OrgStr
 		}
 
 		//获取新的comcode
-		comcode, errComcode := findOrgNewComcode(dbConnection, orgStruct.Id, orgStruct.Pid)
+		comcode, errComcode := newOrgComcode(dbConnection, orgStruct.Id, orgStruct.Pid)
 		if errComcode != nil {
 			return nil, errComcode
 		}
@@ -77,7 +77,7 @@ func UpdateOrgStruct(dbConnection *zorm.DBConnection, orgStruct *permstruct.OrgS
 		}
 
 		oldComcode := oldOrg.Comcode
-		newComcode, errComcode := findOrgNewComcode(dbConnection, orgStruct.Id, orgStruct.Pid)
+		newComcode, errComcode := newOrgComcode(dbConnection, orgStruct.Id, orgStruct.Pid)
 		if errComcode != nil {
 			return nil, errComcode
 		}
@@ -113,7 +113,7 @@ func UpdateOrgStruct(dbConnection *zorm.DBConnection, orgStruct *permstruct.OrgS
 				continue
 			}
 
-			updateComcode, errComcode := findOrgNewComcode(dbConnection, orgId, orgStruct.Id)
+			updateComcode, errComcode := newOrgComcode(dbConnection, orgId, orgStruct.Id)
 			if errComcode != nil {
 				return nil, errComcode
 			}
@@ -386,8 +386,8 @@ func orgList2Tree(orgList []permstruct.OrgStruct) []permstruct.OrgStruct {
 	return list
 }
 
-// findOrgNewComcode 根据id和pid生成部门的Comcode
-func findOrgNewComcode(dbConnection *zorm.DBConnection, id string, pid string) (string, error) {
+// newOrgComcode 根据id和pid生成部门的Comcode
+func newOrgComcode(dbConnection *zorm.DBConnection, id string, pid string) (string, error) {
 
 	//id不能为空
 	if len(id) < 1 {
