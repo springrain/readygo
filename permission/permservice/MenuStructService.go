@@ -149,7 +149,7 @@ func UpdateMenuStruct(dbConnection *zorm.DBConnection, menuStruct *permstruct.Me
 	for _, menuId := range childrenIds {
 		go cache.EvictKey(baseInfoCacheKey, "FindMenuStructById_"+menuId)
 	}
-	go cache.EvictKey(baseInfoCacheKey, "FindMenuStructById_"+menuStruct.Id)
+	//go cache.EvictKey(baseInfoCacheKey, "FindMenuStructById_"+menuStruct.Id)
 	go cache.EvictKey(baseInfoCacheKey, "FindAllMenuTree")
 
 	return nil
