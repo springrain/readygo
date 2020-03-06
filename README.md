@@ -68,7 +68,7 @@ dataSourceConfig := zorm.DataSourceConfig{
 6.  查询示例
     ```  
     //FindUserOrgByUserId 根据userId查找部门UserOrg中间表对象
-func FindUserOrgByUserId(dbConnection *zorm.DBConnection, userId string, page *zorm.Page) ([]permstruct.UserOrgStruct, error) {
+    func FindUserOrgByUserId(dbConnection *zorm.DBConnection, userId string, page *zorm.Page) ([]permstruct.UserOrgStruct, error) {
 	if len(userId) < 1 {
 		return nil, errors.New("userId不能为空")
 	}
@@ -82,8 +82,7 @@ func FindUserOrgByUserId(dbConnection *zorm.DBConnection, userId string, page *z
 	}
 
 	return userOrgs, nil
-
-}
+    }
     ```  
 
 7.  [测试](https://www.jianshu.com/p/1adc69468b6f)
