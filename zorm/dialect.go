@@ -3,12 +3,13 @@ package zorm
 import (
 	"database/sql"
 	"errors"
-	"readygo/convert"
 	"reflect"
 	"regexp"
 	"strconv"
 	"strings"
 	"time"
+
+	"readygo/zorm/convert"
 )
 
 /**
