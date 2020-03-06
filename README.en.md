@@ -13,6 +13,18 @@ golang开发脚手架
 #### 例子
 具体可以参照 [UserStructService.go](https://gitee.com/chunanyong/readygo/tree/master/permission/permservice)
 
+0. 初始化zorm
+    ```
+dataSourceConfig := zorm.DataSourceConfig{
+		Host:     "127.0.0.1",
+		Port:     3306,
+		DBName:   "readygo",
+		UserName: "root",
+		PassWord: "root",
+		DBType:   "mysql",
+	}
+	zorm.NewBaseDao(&dataSourceConfig)
+    ```
 1.  增
     ```
     var user permstruct.UserStruct
@@ -52,5 +64,13 @@ golang开发脚手架
 		//事务下的业务代码结束
 
 	})
+    ```
+6.  [测试](https://www.jianshu.com/p/1adc69468b6f)
+    ```
+    //函数测试
+    go test -run TestAdd2
+    //性能测试
+    go test -bench=.
+    go test -v -bench=. -cpu=8 -benchtime="3s" -timeout="5s" -benchmem
     ```
 
