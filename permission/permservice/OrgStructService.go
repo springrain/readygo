@@ -65,22 +65,28 @@ func UpdateOrgStruct(dbConnection *zorm.DBConnection, orgStruct *permstruct.OrgS
 		return errors.New("orgStruct对象指针或主键Id不能为空")
 	}
 
+	oldOrg, errById := FindOrgStructById(dbConnection, orgStruct.Id)
+	if errById != nil {
+		return errById
+	}
+	if oldOrg == nil {
+		return errors.New("数据库不存在要更新的对象")
+	}
+
+	oldComcode := oldOrg.Comcode
+	newComcode, errComcode := newOrgComcode(dbConnection, orgStruct.Id, orgStruct.Pid)
+	if errComcode != nil {
+		return errComcode
+	}
+
+	childrenIds, errChildrenIds := FindOrgIdByPid(dbConnection, orgStruct.Id)
+	if errChildrenIds != nil {
+		return errChildrenIds
+	}
+
 	//匿名函数return的error如果不为nil,事务就会回滚
 	_, errUpdateOrgStruct := zorm.Transaction(dbConnection, func(dbConnection *zorm.DBConnection) (interface{}, error) {
 
-		oldOrg, errById := FindOrgStructById(dbConnection, orgStruct.Id)
-		if errById != nil {
-			return nil, errById
-		}
-		if oldOrg == nil {
-			return nil, errors.New("数据库不存在要更新的对象")
-		}
-
-		oldComcode := oldOrg.Comcode
-		newComcode, errComcode := newOrgComcode(dbConnection, orgStruct.Id, orgStruct.Pid)
-		if errComcode != nil {
-			return nil, errComcode
-		}
 		orgStruct.Comcode = newComcode
 		errUpdateOrgStruct := zorm.UpdateStruct(dbConnection, orgStruct)
 
@@ -90,16 +96,6 @@ func UpdateOrgStruct(dbConnection *zorm.DBConnection, orgStruct *permstruct.OrgS
 
 		if newComcode == oldComcode { // 编码没有改变
 			return nil, nil
-		}
-
-		// 编码改变,级联更新所有的子菜单
-		childrenFinder := zorm.NewSelectFinder(permstruct.OrgStructTableName, "id")
-		childrenFinder.Append(" WHERE comcode like ? ", oldComcode+"%")
-
-		childrenIds := make([]string, 0)
-		errChildrenIds := zorm.QueryStructList(dbConnection, childrenFinder, &childrenIds, nil)
-		if errChildrenIds != nil {
-			return nil, errChildrenIds
 		}
 
 		//没有子菜单
@@ -125,8 +121,6 @@ func UpdateOrgStruct(dbConnection *zorm.DBConnection, orgStruct *permstruct.OrgS
 				return nil, errComcodeFinder
 			}
 
-			// 清理缓存
-			go cache.EvictKey(baseInfoCacheKey, "FindOrgStructById_"+orgId)
 		}
 
 		return nil, nil
@@ -141,7 +135,10 @@ func UpdateOrgStruct(dbConnection *zorm.DBConnection, orgStruct *permstruct.OrgS
 		return errUpdateOrgStruct
 	}
 	// 清除缓存
-	go cache.EvictKey(baseInfoCacheKey, "FindOrgStructById_"+orgStruct.Id)
+	for _, orgId := range childrenIds {
+		go cache.EvictKey(baseInfoCacheKey, "FindOrgStructById_"+orgId)
+	}
+	//go cache.EvictKey(baseInfoCacheKey, "FindOrgStructById_"+orgStruct.Id)
 	return nil
 }
 
