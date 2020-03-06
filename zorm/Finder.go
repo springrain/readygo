@@ -17,7 +17,7 @@ type Finder struct {
 	InjectionCheck bool
 	//CountFinder 自定义的查询总条数Finder,使用指针默认为nil.主要是为了在group by等复杂情况下,为了性能,手动编写总条数语句
 	CountFinder *Finder
-	//是否自动查询总条数,默认true.同时需要Page不为nil,查询总条数
+	//是否自动查询总条数,默认true.同时需要Page不为nil,才查询总条数
 	SelectTotalCount bool
 	//SQL语句
 	sqlstr string
