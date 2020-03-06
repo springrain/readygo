@@ -69,24 +69,32 @@ func UpdateMenuStruct(dbConnection *zorm.DBConnection, menuStruct *permstruct.Me
 		return errors.New("menuStruct对象指针或主键Id不能为空")
 	}
 
+	oldMenu, errById := FindMenuStructById(dbConnection, menuStruct.Id)
+	if errById != nil {
+		return errById
+	}
+	if oldMenu == nil {
+		return errors.New("数据库不存在要更新的对象")
+	}
+
+	oldComcode := oldMenu.Comcode
+	newComcode, errComcode := newMenuComcode(dbConnection, menuStruct.Id, menuStruct.Pid)
+
+	if errComcode != nil {
+		return errComcode
+	}
+
+	// 编码改变,级联更新所有的子菜单
+	childrenIds, errChildrenIds := FindMenuIdByPid(dbConnection, menuStruct.Id, nil)
+	if errChildrenIds != nil {
+		return errChildrenIds
+	}
+
 	//匿名函数return的error如果不为nil,事务就会回滚
 	_, errUpdateMenuStruct := zorm.Transaction(dbConnection, func(dbConnection *zorm.DBConnection) (interface{}, error) {
 
 		//事务下的业务代码开始
 
-		oldMenu, errById := FindMenuStructById(dbConnection, menuStruct.Id)
-		if errById != nil {
-			return nil, errById
-		}
-		if oldMenu == nil {
-			return nil, errors.New("数据库不存在要更新的对象")
-		}
-
-		oldComcode := oldMenu.Comcode
-		newComcode, errComcode := newMenuComcode(dbConnection, menuStruct.Id, menuStruct.Pid)
-		if errComcode != nil {
-			return nil, errComcode
-		}
 		menuStruct.Comcode = newComcode
 		errUpdateMenuStruct := zorm.UpdateStruct(dbConnection, menuStruct)
 
@@ -99,14 +107,6 @@ func UpdateMenuStruct(dbConnection *zorm.DBConnection, menuStruct *permstruct.Me
 		}
 
 		// 编码改变,级联更新所有的子菜单
-		childrenFinder := zorm.NewSelectFinder(permstruct.MenuStructTableName, "id")
-		childrenFinder.Append(" WHERE comcode like ? ", oldComcode+"%")
-
-		childrenIds := make([]string, 0)
-		errChildrenIds := zorm.QueryStructList(dbConnection, childrenFinder, &childrenIds, nil)
-		if errChildrenIds != nil {
-			return nil, errChildrenIds
-		}
 
 		//没有子菜单
 		if len(childrenIds) < 1 {
@@ -131,9 +131,6 @@ func UpdateMenuStruct(dbConnection *zorm.DBConnection, menuStruct *permstruct.Me
 				return nil, errComcodeFinder
 			}
 
-			// 清理缓存
-			go cache.EvictKey(baseInfoCacheKey, "FindMenuStructById_"+menuId)
-
 		}
 
 		return nil, nil
@@ -149,6 +146,9 @@ func UpdateMenuStruct(dbConnection *zorm.DBConnection, menuStruct *permstruct.Me
 	}
 
 	// 清理缓存
+	for _, menuId := range childrenIds {
+		go cache.EvictKey(baseInfoCacheKey, "FindMenuStructById_"+menuId)
+	}
 	go cache.EvictKey(baseInfoCacheKey, "FindMenuStructById_"+menuStruct.Id)
 	go cache.EvictKey(baseInfoCacheKey, "FindAllMenuTree")
 
