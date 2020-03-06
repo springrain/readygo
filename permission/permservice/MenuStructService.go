@@ -55,7 +55,7 @@ func SaveMenuStruct(dbConnection *zorm.DBConnection, menuStruct *permstruct.Menu
 	}
 
 	// 清理缓存
-	cache.EvictKey(baseInfoCacheKey, "findAllMenuTree")
+	go cache.EvictKey(baseInfoCacheKey, "findAllMenuTree")
 
 	return nil
 }
@@ -124,15 +124,16 @@ func UpdateMenuStruct(dbConnection *zorm.DBConnection, menuStruct *permstruct.Me
 				return nil, errComcode
 			}
 
-			// 清理缓存
-			cache.EvictKey(baseInfoCacheKey, "FindMenuStructById_"+menuId)
-
 			//更新 comCode
 			comcodeFinder := zorm.NewUpdateFinder(permstruct.MenuStructTableName).Append(" comcode=? WHERE id=? ", updateComcode, menuId)
 			errComcodeFinder := zorm.UpdateFinder(dbConnection, comcodeFinder)
 			if errComcodeFinder != nil {
 				return nil, errComcodeFinder
 			}
+
+			// 清理缓存
+			go cache.EvictKey(baseInfoCacheKey, "FindMenuStructById_"+menuId)
+
 		}
 
 		return nil, nil
@@ -148,8 +149,8 @@ func UpdateMenuStruct(dbConnection *zorm.DBConnection, menuStruct *permstruct.Me
 	}
 
 	// 清理缓存
-	cache.EvictKey(baseInfoCacheKey, "FindMenuStructById_"+menuStruct.Id)
-	cache.EvictKey(baseInfoCacheKey, "FindAllMenuTree")
+	go cache.EvictKey(baseInfoCacheKey, "FindMenuStructById_"+menuStruct.Id)
+	go cache.EvictKey(baseInfoCacheKey, "FindAllMenuTree")
 
 	return nil
 }
@@ -176,11 +177,6 @@ func DeleteMenuStructById(dbConnection *zorm.DBConnection, id string) error {
 			return nil, errors.New("数据库中不存在,id:" + id)
 		}
 
-		//清理缓存
-		for _, menuId := range menuIds {
-			cache.EvictKey(baseInfoCacheKey, "FindMenuStructById_"+menuId)
-		}
-
 		//删除中间表
 		f_delete_re := zorm.NewDeleteFinder(permstruct.RoleMenuStructTableName).Append(" WHERE menuId in (?)", menuIds)
 		errDeleteRE := zorm.UpdateFinder(dbConnection, f_delete_re)
@@ -192,6 +188,11 @@ func DeleteMenuStructById(dbConnection *zorm.DBConnection, id string) error {
 		errDelete := zorm.UpdateFinder(dbConnection, f_delete)
 		if errDelete != nil {
 			return nil, errDelete
+		}
+
+		//清理缓存
+		for _, menuId := range menuIds {
+			go cache.EvictKey(baseInfoCacheKey, "FindMenuStructById_"+menuId)
 		}
 
 		return nil, nil
@@ -207,8 +208,8 @@ func DeleteMenuStructById(dbConnection *zorm.DBConnection, id string) error {
 	}
 
 	// 清理缓存
-	cache.ClearCache(qxCacheKey)
-	cache.EvictKey(baseInfoCacheKey, "FindAllMenuTree")
+	go cache.ClearCache(qxCacheKey)
+	go cache.EvictKey(baseInfoCacheKey, "FindAllMenuTree")
 
 	return nil
 }

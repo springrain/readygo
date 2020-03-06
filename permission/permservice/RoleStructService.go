@@ -80,7 +80,7 @@ func UpdateRoleStruct(dbConnection *zorm.DBConnection, roleStruct *permstruct.Ro
 	}
 
 	//清除缓存
-	cache.EvictKey(baseInfoCacheKey, "FindRoleStructById_"+roleStruct.Id)
+	go cache.EvictKey(baseInfoCacheKey, "FindRoleStructById_"+roleStruct.Id)
 
 	return nil
 }
@@ -118,7 +118,7 @@ func DeleteRoleStructById(dbConnection *zorm.DBConnection, id string) error {
 	}
 
 	//清除缓存
-	cache.EvictKey(baseInfoCacheKey, "FindRoleStructById_"+id)
+	go cache.EvictKey(baseInfoCacheKey, "FindRoleStructById_"+id)
 
 	return nil
 }
