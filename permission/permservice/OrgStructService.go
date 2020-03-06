@@ -98,11 +98,11 @@ func UpdateOrgStruct(dbConnection *zorm.DBConnection, orgStruct *permstruct.OrgS
 			return nil, nil
 		}
 
-		//没有子菜单
+		// 编码改变,级联更新所有的子部门
+		//没有子部门
 		if len(childrenIds) < 1 {
 			return nil, nil
 		}
-
 		for _, orgId := range childrenIds {
 
 			if orgId == orgStruct.Id {
