@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"readygo/zorm/convert"
+	"readygo/zorm/typeconvert"
 )
 
 /**
@@ -419,17 +419,17 @@ func converValueColumnType(v interface{}, columnType *sql.ColumnType) interface{
 	databaseTypeName := strings.ToUpper(columnType.DatabaseTypeName())
 	//如果是字符串
 	if databaseTypeName == "VARCHAR" || databaseTypeName == "NVARCHAR" || databaseTypeName == "TEXT" {
-		return convert.String(v)
+		return typeconvert.String(v)
 	} else if databaseTypeName == "INT" { //如果是INT
-		return convert.Int(v)
+		return typeconvert.Int(v)
 	} else if databaseTypeName == "BIGINT" { //如果是BIGINT
-		return convert.Int64(v)
+		return typeconvert.Int64(v)
 	} else if databaseTypeName == "FLOAT" { //如果是FLOAT
-		return convert.Float32(v)
+		return typeconvert.Float32(v)
 	} else if databaseTypeName == "DOUBLE" { //如果是DOUBLE
-		return convert.Float64(v)
+		return typeconvert.Float64(v)
 	} else if databaseTypeName == "DATETIME" || databaseTypeName == "TIMESTAMP" { //如果是DATETIME
-		return convert.Time(v, "2006-01-02 15:04:05", time.Local)
+		return typeconvert.Time(v, "2006-01-02 15:04:05", time.Local)
 	}
 	//其他类型以后再写.....
 
