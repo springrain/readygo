@@ -174,3 +174,4 @@ func FindUserStructList(dbConnection *zorm.DBConnection, finder *zorm.Finder, pa
 
 	return userStructList, nil
 }
+
