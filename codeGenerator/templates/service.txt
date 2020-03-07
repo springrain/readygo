@@ -2,7 +2,7 @@ package {{.servicePackageName}}
 
 import (
 	"errors"
-	"readygo/zorm"
+	"gitee.com/chunanyong/zorm"
 )
 
 //Save{{.structName}} 保存{{.tableComment}}

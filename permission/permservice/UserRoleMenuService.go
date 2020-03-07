@@ -4,7 +4,8 @@ import (
 	"errors"
 	"readygo/cache"
 	"readygo/permission/permstruct"
-	"readygo/zorm"
+
+	"gitee.com/chunanyong/zorm"
 )
 
 const (

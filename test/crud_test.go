@@ -5,10 +5,11 @@ import (
 	"readygo/cache"
 	"readygo/permission/permservice"
 	"readygo/permission/permstruct"
-	"readygo/zorm"
 	"strconv"
 	"sync"
 	"testing"
+
+	"gitee.com/chunanyong/zorm"
 )
 
 var baseDao *zorm.BaseDao

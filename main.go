@@ -13,7 +13,8 @@ import (
 	"readygo/ginext"
 	"readygo/permission/permhandler"
 	"readygo/utility/jwe"
-	"readygo/zorm"
+
+	"gitee.com/chunanyong/zorm"
 
 	"github.com/gin-gonic/gin"
 )

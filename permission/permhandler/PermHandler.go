@@ -17,7 +17,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"gopkg.in/square/go-jose.v2"
 
-	"readygo/logger"
+	"gitee.com/chunanyong/logger"
 )
 
 //权限过滤器

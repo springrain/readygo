@@ -15,8 +15,9 @@ import (
 	"errors"
 	"io/ioutil"
 	"os"
-	"readygo/logger"
 	"time"
+
+	"gitee.com/chunanyong/logger"
 
 	"github.com/joho/godotenv"
 	"gopkg.in/square/go-jose.v2"
@@ -128,7 +129,6 @@ func CreateToken(id string, extInfo interface{}) (raw string, err error) {
 
 //根据token获取用户id 和 扩展信息  扩展信息extInfo传结构体的指针
 func GetInfoFromToken(token string, extInfo interface{}) (id string, err error) {
-
 
 	defer errorRecover(&err)
 

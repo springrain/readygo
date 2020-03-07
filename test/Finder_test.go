@@ -2,8 +2,9 @@ package test
 
 import (
 	"fmt"
-	"readygo/zorm"
 	"testing"
+
+	"gitee.com/chunanyong/zorm"
 )
 
 func init() {

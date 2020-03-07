@@ -2,7 +2,7 @@ package {{.packageName}}
 import (
 	"time"
 
-	"readygo/zorm"
+	"gitee.com/chunanyong/zorm"
 )
 
 //{{.structName}}TableName 表名常量,方便直接调用

@@ -2,7 +2,8 @@ package main
 
 import (
 	"readygo/permission/permroute"
-	"readygo/zorm"
+
+	"gitee.com/chunanyong/zorm"
 )
 
 //初始化BaseDao
@@ -19,11 +20,9 @@ func init() {
 	_, _ = zorm.NewBaseDao(&baseDaoConfig)
 }
 
-
 func main() {
 
 	r := permroute.NewRouter()
 	r.Run(":3001")
-
 
 }

@@ -14,7 +14,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"readygo/logger"
+	"gitee.com/chunanyong/logger"
 )
 
 const (

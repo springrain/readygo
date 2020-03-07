@@ -2,10 +2,10 @@ package profile
 
 import (
 	"fmt"
-	"readygo/zorm"
 	"testing"
-)
 
+	"gitee.com/chunanyong/zorm"
+)
 
 var baseDao *zorm.BaseDao
 
@@ -22,14 +22,13 @@ func init() {
 	baseDao, _ = zorm.NewBaseDao(&dataSourceConfig)
 }
 
-
 func TestQuery(t *testing.T) {
 
 	finder := zorm.NewFinder()
 
 	finder.Append("select * from t_user limit 1")
 
-	for i := 0; i< 10000; i++{
+	for i := 0; i < 10000; i++ {
 
 		queryMap, err := zorm.QueryMap(nil, finder)
 
@@ -40,10 +39,6 @@ func TestQuery(t *testing.T) {
 		fmt.Println(queryMap)
 	}
 
-
 	//ok      readygo/test/profile    5.735s
 
-
 }
-
-

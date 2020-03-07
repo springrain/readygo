@@ -1,6 +1,6 @@
 package permstruct
 
-import "readygo/zorm"
+import "gitee.com/chunanyong/zorm"
 
 //UserRoleStructTableName 表名常量,方便直接调用
 const UserRoleStructTableName = "t_user_role"

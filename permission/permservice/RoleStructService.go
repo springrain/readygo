@@ -4,9 +4,11 @@ import (
 	"errors"
 	"fmt"
 	"readygo/cache"
-	"readygo/logger"
 	"readygo/permission/permstruct"
-	"readygo/zorm"
+
+	"gitee.com/chunanyong/logger"
+
+	"gitee.com/chunanyong/zorm"
 )
 
 //SaveRoleStruct 保存角色

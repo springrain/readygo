@@ -4,9 +4,11 @@ import (
 	"errors"
 	"fmt"
 	"readygo/cache"
-	"readygo/logger"
 	"readygo/permission/permstruct"
-	"readygo/zorm"
+
+	"gitee.com/chunanyong/logger"
+
+	"gitee.com/chunanyong/zorm"
 )
 
 //SaveUserStruct 保存用户
@@ -174,4 +176,3 @@ func FindUserStructList(dbConnection *zorm.DBConnection, finder *zorm.Finder, pa
 
 	return userStructList, nil
 }
-

@@ -2,8 +2,9 @@ package permstruct
 
 import (
 	"database/sql"
-	"readygo/zorm"
 	"time"
+
+	"gitee.com/chunanyong/zorm"
 )
 
 //RoleStructTableName 表名常量,方便直接调用

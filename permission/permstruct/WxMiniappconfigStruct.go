@@ -1,8 +1,9 @@
 package permstruct
 
 import (
-	"readygo/zorm"
 	"time"
+
+	"gitee.com/chunanyong/zorm"
 )
 
 //WxMiniappconfigStructTableName 表名常量,方便直接调用

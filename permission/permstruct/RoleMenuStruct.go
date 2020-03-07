@@ -1,6 +1,6 @@
 package permstruct
 
-import "readygo/zorm"
+import "gitee.com/chunanyong/zorm"
 
 //RoleMenuStructTableName 表名常量,方便直接调用
 const RoleMenuStructTableName = "t_role_menu"

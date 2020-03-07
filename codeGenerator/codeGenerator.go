@@ -3,9 +3,10 @@ package main
 import (
 	"fmt"
 	"os"
-	"readygo/zorm"
 	"strings"
 	"text/template"
+
+	"gitee.com/chunanyong/zorm"
 )
 
 var baseDao *zorm.BaseDao
@@ -149,7 +150,10 @@ func selectTableColumn(tableName string) map[string]interface{} {
 				dataType = "float64"
 			}
 
+		} else if dataType == "DECIMAL" {
+			dataType = "decimal.Decimal"
 		}
+
 		m["DATA_TYPE"] = dataType
 		fieldName := camelCaseName(m["COLUMN_NAME"].(string))
 		m["field"] = fieldName

@@ -3,9 +3,11 @@ package permservice
 import (
 	"errors"
 	"fmt"
-	"readygo/logger"
 	"readygo/permission/permstruct"
-	"readygo/zorm"
+
+	"gitee.com/chunanyong/logger"
+
+	"gitee.com/chunanyong/zorm"
 )
 
 //SaveDicDataStruct 保存公共字典
