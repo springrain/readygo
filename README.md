@@ -4,11 +4,11 @@
 golang开发脚手架
 
 #### 软件架构
-基于[gin](https://github.com/gin-gonic/gin)和[zorm](ttps://gitee.com/chunanyong/zorm)
-[自带代码生成器](https://gitee.com/chunanyong/readygo/tree/master/codeGenerator)  
-zorm基于原生sql语句编写,是springrain的精简和优化
-zorm代码简单,总计2000行左右,注释详细,方便定制修改.
-zorm支持事务传播,这是zorm诞生的主要原因
+基于[gin](https://github.com/gin-gonic/gin)和[zorm](ttps://gitee.com/chunanyong/zorm)  
+[自带代码生成器](https://gitee.com/chunanyong/readygo/tree/master/codeGenerator)    
+zorm基于原生sql语句编写,是springrain的精简和优化  
+zorm代码简单,总计2000行左右,注释详细,方便定制修改.  
+zorm支持事务传播,这是zorm诞生的主要原因  
 
 
 #### 例子
