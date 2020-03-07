@@ -1,7 +1,7 @@
 /*
  * @Author: your name
  * @Date: 2020-02-25 23:00:00
- * @LastEditTime: 2020-02-27 17:13:53
+ * @LastEditTime: 2020-03-07 11:55:08
  * @LastEditors: Please set LastEditors
  * @Description: In User Settings Edit
  * @FilePath: \readygo\main.go
@@ -12,7 +12,7 @@ import (
 	"net/http"
 	"readygo/ginext"
 	"readygo/permission/permhandler"
-	"readygo/utility/jwe"
+	"readygo/permission/permutility/jwe"
 
 	"gitee.com/chunanyong/zorm"
 
