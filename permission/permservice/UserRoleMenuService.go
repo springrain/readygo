@@ -1,6 +1,7 @@
 package permservice
 
 import (
+	"context"
 	"errors"
 	"readygo/cache"
 	"readygo/permission/permstruct"
@@ -14,7 +15,7 @@ const (
 )
 
 //FindRoleByUserId 根据用户Id查询用户的角色,按照 r.privateOrg,r.sortno desc 先处理角色私有部门的权限
-func FindRoleByUserId(dbConnection *zorm.DBConnection, userId string, page *zorm.Page) ([]permstruct.RoleStruct, error) {
+func FindRoleByUserId(ctx context.Context, userId string, page *zorm.Page) ([]permstruct.RoleStruct, error) {
 	if len(userId) < 1 {
 		return nil, errors.New("参数userId不能为空")
 	}
@@ -34,7 +35,7 @@ func FindRoleByUserId(dbConnection *zorm.DBConnection, userId string, page *zorm
 	finder.Append(permstruct.UserRoleStructTableName).Append("  re where re.userId=? and re.roleId=r.id and r.active=1 order by r.privateOrg,r.sortno desc", userId)
 
 	//查询列表
-	errQueryList := zorm.QueryStructList(dbConnection, finder, &roles, page)
+	errQueryList := zorm.QueryStructList(ctx, finder, &roles, page)
 	if errQueryList != nil {
 		return nil, errQueryList
 	}
@@ -50,7 +51,7 @@ func FindRoleByUserId(dbConnection *zorm.DBConnection, userId string, page *zorm
 }
 
 //FindMenuByRoleId 根据角色Id,查询这个角色有权限的菜单
-func FindMenuByRoleId(dbConnection *zorm.DBConnection, roleId string, page *zorm.Page) ([]permstruct.MenuStruct, error) {
+func FindMenuByRoleId(ctx context.Context, roleId string, page *zorm.Page) ([]permstruct.MenuStruct, error) {
 
 	if len(roleId) < 1 {
 		return nil, errors.New("roleId的值不能为空")
@@ -69,7 +70,7 @@ func FindMenuByRoleId(dbConnection *zorm.DBConnection, roleId string, page *zorm
 	finder.Append(permstruct.RoleMenuStructTableName).Append("  re where re.roleId=? and re.menuId=m.id and m.active=1 order by m.sortno desc ", roleId)
 
 	//查询列表
-	errQueryList := zorm.QueryStructList(dbConnection, finder, &menus, page)
+	errQueryList := zorm.QueryStructList(ctx, finder, &menus, page)
 	if errQueryList != nil {
 		return nil, errQueryList
 	}
@@ -85,7 +86,7 @@ func FindMenuByRoleId(dbConnection *zorm.DBConnection, roleId string, page *zorm
 }
 
 //FindMenuByUserId 查询用户有权限的菜单,按照privateOrg和sortno倒叙,先处理角色私有部门的权限
-func FindMenuByUserId(dbConnection *zorm.DBConnection, userId string) ([]permstruct.MenuStruct, error) {
+func FindMenuByUserId(ctx context.Context, userId string) ([]permstruct.MenuStruct, error) {
 
 	if len(userId) < 1 {
 		return nil, errors.New("roleId的值不能为空")
@@ -100,7 +101,7 @@ func FindMenuByUserId(dbConnection *zorm.DBConnection, userId string) ([]permstr
 	}
 
 	//查询用户所有的角色
-	roles, errFindRoleByUserId := FindRoleByUserId(dbConnection, userId, nil)
+	roles, errFindRoleByUserId := FindRoleByUserId(ctx, userId, nil)
 	if errFindRoleByUserId != nil {
 		return nil, errFindRoleByUserId
 	}
@@ -115,7 +116,7 @@ func FindMenuByUserId(dbConnection *zorm.DBConnection, userId string) ([]permstr
 
 	//循环所有的角色
 	for _, role := range roles {
-		menusByRoleId, errFindMenuByRoleId := FindMenuByRoleId(dbConnection, role.Id, nil)
+		menusByRoleId, errFindMenuByRoleId := FindMenuByRoleId(ctx, role.Id, nil)
 		//出现错误
 		if errFindMenuByRoleId != nil {
 			return nil, errFindMenuByRoleId
@@ -153,7 +154,7 @@ func FindMenuByUserId(dbConnection *zorm.DBConnection, userId string) ([]permstr
 }
 
 //UpdateUserRoles 更新用户的角色信息
-func UpdateUserRoles(dbConnection *zorm.DBConnection, userId string, roleIds []string) error {
+func UpdateUserRoles(ctx context.Context, userId string, roleIds []string) error {
 
 	if len(userId) < 1 {
 		return errors.New("userId不能为空")
@@ -161,17 +162,17 @@ func UpdateUserRoles(dbConnection *zorm.DBConnection, userId string, roleIds []s
 	//查询用户的现有的角色,清理缓存
 	f_select_old := zorm.NewSelectFinder(permstruct.UserRoleStructTableName, "roleId").Append(" WHERE userId=? ", userId)
 	listOld := make([]string, 0)
-	errQueryList := zorm.QueryStructList(dbConnection, f_select_old, listOld, nil)
+	errQueryList := zorm.QueryStructList(ctx, f_select_old, listOld, nil)
 	if errQueryList != nil {
 		return errQueryList
 	}
 
 	//开启事务,批量保存
-	_, errTransaction := zorm.Transaction(dbConnection, func(dbConnection *zorm.DBConnection) (interface{}, error) {
+	_, errTransaction := zorm.Transaction(ctx, func(ctx context.Context) (interface{}, error) {
 
 		//删除用户现有的角色
 		f_del := zorm.NewDeleteFinder(permstruct.UserRoleStructTableName).Append(" WHERE userId=? ", userId)
-		errUpdateFinder := zorm.UpdateFinder(dbConnection, f_del)
+		errUpdateFinder := zorm.UpdateFinder(ctx, f_del)
 		if errUpdateFinder != nil {
 			return nil, errUpdateFinder
 		}
@@ -184,7 +185,7 @@ func UpdateUserRoles(dbConnection *zorm.DBConnection, userId string, roleIds []s
 			ur.Id = zorm.GenerateStringID()
 			ur.UserId = userId
 			ur.RoleId = roleId
-			errSaveStruct := zorm.SaveStruct(dbConnection, &ur)
+			errSaveStruct := zorm.SaveStruct(ctx, &ur)
 			if errSaveStruct != nil {
 				return nil, errSaveStruct
 			}

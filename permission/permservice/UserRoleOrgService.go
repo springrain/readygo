@@ -1,6 +1,7 @@
 package permservice
 
 import (
+	"context"
 	"errors"
 	"readygo/permission/permstruct"
 	"strconv"
@@ -9,14 +10,14 @@ import (
 )
 
 //FindUserIdByOrgId 根据orgId,查找归属的UserId,不包括子部门,不包括会员
-func FindUserIdByOrgId(dbConnection *zorm.DBConnection, orgId string, page *zorm.Page) ([]string, error) {
+func FindUserIdByOrgId(ctx context.Context, orgId string, page *zorm.Page) ([]string, error) {
 	if len(orgId) < 1 {
 		return nil, errors.New("orgId不能为空")
 	}
 	finder := zorm.NewFinder().Append("SELECT re.userId FROM ").Append(permstruct.UserOrgStructTableName)
 	finder.Append(" re where  re.orgId=? and re.managerType>0 order by re.managerType desc ", orgId)
 	userIds := make([]string, 0)
-	errQueryList := zorm.QueryStructList(dbConnection, finder, &userIds, page)
+	errQueryList := zorm.QueryStructList(ctx, finder, &userIds, page)
 	if errQueryList != nil {
 		return nil, errQueryList
 	}
@@ -25,20 +26,20 @@ func FindUserIdByOrgId(dbConnection *zorm.DBConnection, orgId string, page *zorm
 }
 
 //FindUserByOrgId 根据orgId,查找归属的User,不包括子部门,不包括会员
-func FindUserByOrgId(dbConnection *zorm.DBConnection, orgId string, page *zorm.Page) ([]permstruct.UserStruct, error) {
-	userIds, errUserIds := FindUserIdByOrgId(dbConnection, orgId, page)
+func FindUserByOrgId(ctx context.Context, orgId string, page *zorm.Page) ([]permstruct.UserStruct, error) {
+	userIds, errUserIds := FindUserIdByOrgId(ctx, orgId, page)
 	if errUserIds != nil {
 		return nil, errUserIds
 	}
-	return listUserId2ListUser(dbConnection, userIds)
+	return listUserId2ListUser(ctx, userIds)
 }
 
 //FindAllUserIdByOrgId 查询部门下所有的UserId,包括子部门,不包括会员
-func FindAllUserIdByOrgId(dbConnection *zorm.DBConnection, orgId string, page *zorm.Page) ([]string, error) {
+func FindAllUserIdByOrgId(ctx context.Context, orgId string, page *zorm.Page) ([]string, error) {
 	if len(orgId) < 1 {
 		return nil, errors.New("orgId不能为空")
 	}
-	orgStructPtr, errFindById := FindOrgStructById(dbConnection, orgId)
+	orgStructPtr, errFindById := FindOrgStructById(ctx, orgId)
 	if errFindById != nil || orgStructPtr == nil {
 		return nil, errFindById
 	}
@@ -48,7 +49,7 @@ func FindAllUserIdByOrgId(dbConnection *zorm.DBConnection, orgId string, page *z
 	finder.Append(" org WHERE org.id=re.orgId and org.comcode like ? and re.managerType>0   order by re.userId asc ", comcode+"%")
 
 	userIds := make([]string, 0)
-	errQueryList := zorm.QueryStructList(dbConnection, finder, &userIds, page)
+	errQueryList := zorm.QueryStructList(ctx, finder, &userIds, page)
 	if errQueryList != nil {
 		return nil, errQueryList
 	}
@@ -58,18 +59,18 @@ func FindAllUserIdByOrgId(dbConnection *zorm.DBConnection, orgId string, page *z
 }
 
 //FindAllUserByOrgId 查询部门下所有的UserStruct,包括子部门,不包括会员
-func FindAllUserByOrgId(dbConnection *zorm.DBConnection, orgId string, page *zorm.Page) ([]permstruct.UserStruct, error) {
+func FindAllUserByOrgId(ctx context.Context, orgId string, page *zorm.Page) ([]permstruct.UserStruct, error) {
 
-	userIds, errUserIds := FindAllUserIdByOrgId(dbConnection, orgId, page)
+	userIds, errUserIds := FindAllUserIdByOrgId(ctx, orgId, page)
 	if errUserIds != nil {
 		return nil, errUserIds
 	}
-	return listUserId2ListUser(dbConnection, userIds)
+	return listUserId2ListUser(ctx, userIds)
 
 }
 
 //FindOrgIdByUserId 根据userId查找所在的部门
-func FindOrgIdByUserId(dbConnection *zorm.DBConnection, userId string, page *zorm.Page) ([]string, error) {
+func FindOrgIdByUserId(ctx context.Context, userId string, page *zorm.Page) ([]string, error) {
 	if len(userId) < 1 {
 		return nil, errors.New("userId不能为空")
 	}
@@ -77,7 +78,7 @@ func FindOrgIdByUserId(dbConnection *zorm.DBConnection, userId string, page *zor
 	finder.Append("   WHERE re.userId=?    order by re.managerType desc   ", userId)
 
 	orgIds := make([]string, 0)
-	errQueryList := zorm.QueryStructList(dbConnection, finder, &orgIds, page)
+	errQueryList := zorm.QueryStructList(ctx, finder, &orgIds, page)
 	if errQueryList != nil {
 		return nil, errQueryList
 	}
@@ -87,18 +88,18 @@ func FindOrgIdByUserId(dbConnection *zorm.DBConnection, userId string, page *zor
 }
 
 //FindOrgByUserId 根据UserId,查找用户的部门对象
-func FindOrgByUserId(dbConnection *zorm.DBConnection, userId string, page *zorm.Page) ([]permstruct.OrgStruct, error) {
+func FindOrgByUserId(ctx context.Context, userId string, page *zorm.Page) ([]permstruct.OrgStruct, error) {
 
-	orgIds, errByUserId := FindOrgIdByUserId(dbConnection, userId, page)
+	orgIds, errByUserId := FindOrgIdByUserId(ctx, userId, page)
 
 	if errByUserId != nil {
 		return nil, errByUserId
 	}
-	return listOrgId2ListOrg(dbConnection, orgIds)
+	return listOrgId2ListOrg(ctx, orgIds)
 }
 
 //FindUserOrgByUserId 根据userId查找部门UserOrg中间表对象
-func FindUserOrgByUserId(dbConnection *zorm.DBConnection, userId string, page *zorm.Page) ([]permstruct.UserOrgStruct, error) {
+func FindUserOrgByUserId(ctx context.Context, userId string, page *zorm.Page) ([]permstruct.UserOrgStruct, error) {
 	if len(userId) < 1 {
 		return nil, errors.New("userId不能为空")
 	}
@@ -106,7 +107,7 @@ func FindUserOrgByUserId(dbConnection *zorm.DBConnection, userId string, page *z
 	finder.Append("   WHERE re.userId=?    order by re.managerType desc   ", userId)
 
 	userOrgs := make([]permstruct.UserOrgStruct, 0)
-	errQueryList := zorm.QueryStructList(dbConnection, finder, &userOrgs, page)
+	errQueryList := zorm.QueryStructList(ctx, finder, &userOrgs, page)
 	if errQueryList != nil {
 		return nil, errQueryList
 	}
@@ -116,7 +117,7 @@ func FindUserOrgByUserId(dbConnection *zorm.DBConnection, userId string, page *z
 }
 
 //FindManagerOrgIdByUserId 根据userId查找管理的部门ID,不包括角色扩展的部门
-func FindManagerOrgIdByUserId(dbConnection *zorm.DBConnection, userId string, page *zorm.Page) ([]string, error) {
+func FindManagerOrgIdByUserId(ctx context.Context, userId string, page *zorm.Page) ([]string, error) {
 	if len(userId) < 1 {
 		return nil, errors.New("userId不能为空")
 	}
@@ -125,7 +126,7 @@ func FindManagerOrgIdByUserId(dbConnection *zorm.DBConnection, userId string, pa
 	finder.Append(" re  WHERE re.userId=?  and re.managerType=2  order by re.orgId desc   ", userId)
 
 	orgIds := make([]string, 0)
-	errQueryList := zorm.QueryStructList(dbConnection, finder, &orgIds, page)
+	errQueryList := zorm.QueryStructList(ctx, finder, &orgIds, page)
 	if errQueryList != nil {
 		return nil, errQueryList
 	}
@@ -135,19 +136,19 @@ func FindManagerOrgIdByUserId(dbConnection *zorm.DBConnection, userId string, pa
 }
 
 //FindManagerOrgByUserId 根据userId查找管理的部门对象,不包括角色扩展的部门
-func FindManagerOrgByUserId(dbConnection *zorm.DBConnection, userId string, page *zorm.Page) ([]permstruct.OrgStruct, error) {
+func FindManagerOrgByUserId(ctx context.Context, userId string, page *zorm.Page) ([]permstruct.OrgStruct, error) {
 
-	orgIds, errByUserId := FindManagerOrgIdByUserId(dbConnection, userId, page)
+	orgIds, errByUserId := FindManagerOrgIdByUserId(ctx, userId, page)
 
 	if errByUserId != nil {
 		return nil, errByUserId
 	}
-	return listOrgId2ListOrg(dbConnection, orgIds)
+	return listOrgId2ListOrg(ctx, orgIds)
 
 }
 
 //FindManagerUserIdByOrgId 查找部门主管的UserId,一个部门只有一个主管,其他管理人员可以通过角色进行扩展分配
-func FindManagerUserIdByOrgId(dbConnection *zorm.DBConnection, orgId string) (string, error) {
+func FindManagerUserIdByOrgId(ctx context.Context, orgId string) (string, error) {
 	if len(orgId) < 1 {
 		return "", errors.New("orgId不能为空")
 	}
@@ -156,7 +157,7 @@ func FindManagerUserIdByOrgId(dbConnection *zorm.DBConnection, orgId string) (st
 	finder.Append(" re  WHERE   re.orgId=? and  re.managerType=2   order by re.userId desc   ", orgId)
 
 	managerUserId := ""
-	errQueryStruct := zorm.QueryStruct(dbConnection, finder, &managerUserId)
+	errQueryStruct := zorm.QueryStruct(ctx, finder, &managerUserId)
 	if errQueryStruct != nil {
 		return "", errQueryStruct
 	}
@@ -165,25 +166,25 @@ func FindManagerUserIdByOrgId(dbConnection *zorm.DBConnection, orgId string) (st
 }
 
 //FindManagerUserByOrgId 查找部门主管的UserStruct对象,一个部门只有一个主管,其他管理人员可以通过角色进行扩展分配.调用  FindManagerUserIdByOrgId 方法
-func FindManagerUserByOrgId(dbConnection *zorm.DBConnection, orgId string) (*permstruct.UserStruct, error) {
+func FindManagerUserByOrgId(ctx context.Context, orgId string) (*permstruct.UserStruct, error) {
 
-	managerUserId, errByOrgId := FindManagerUserIdByOrgId(dbConnection, orgId)
+	managerUserId, errByOrgId := FindManagerUserIdByOrgId(ctx, orgId)
 
 	if errByOrgId != nil {
 		return nil, errByOrgId
 	}
 
-	return FindUserStructById(dbConnection, managerUserId)
+	return FindUserStructById(ctx, managerUserId)
 
 }
 
 //FindAllUserCountByOrgId 查询部门下所有的人员数量,包括子部门.不包括会员
-func FindAllUserCountByOrgId(dbConnection *zorm.DBConnection, orgId string) (int, error) {
+func FindAllUserCountByOrgId(ctx context.Context, orgId string) (int, error) {
 	if len(orgId) < 1 {
 		return -1, errors.New("orgId不能为空")
 	}
 
-	org, errByOrgId := FindOrgStructById(dbConnection, orgId)
+	org, errByOrgId := FindOrgStructById(ctx, orgId)
 
 	if errByOrgId != nil {
 		return -1, errByOrgId
@@ -194,12 +195,12 @@ func FindAllUserCountByOrgId(dbConnection *zorm.DBConnection, orgId string) (int
 	finder.Append(" org WHERE org.id=re.orgId and org.comcode like ? and  re.managerType>0 ", org.Comcode+"%")
 	//查询总条数
 	count := -1
-	errCount := zorm.QueryStruct(dbConnection, finder, &count)
+	errCount := zorm.QueryStruct(ctx, finder, &count)
 	return count, errCount
 }
 
 //FindRoleOrgByRoleId 根据roleId查找roleOrg,角色管理的部门,用于角色自定的部门范围,查询 t_role_org 中间表
-func FindRoleOrgByRoleId(dbConnection *zorm.DBConnection, roleId string, page *zorm.Page) ([]permstruct.RoleOrgStruct, error) {
+func FindRoleOrgByRoleId(ctx context.Context, roleId string, page *zorm.Page) ([]permstruct.RoleOrgStruct, error) {
 	if len(roleId) < 1 {
 		return nil, errors.New("roleId不能为空")
 	}
@@ -207,7 +208,7 @@ func FindRoleOrgByRoleId(dbConnection *zorm.DBConnection, roleId string, page *z
 	finder.Append(" re WHERE re.roleId=? order by re.id desc ", roleId)
 
 	roleOrgs := make([]permstruct.RoleOrgStruct, 0)
-	errQueryList := zorm.QueryStructList(dbConnection, finder, &roleOrgs, page)
+	errQueryList := zorm.QueryStructList(ctx, finder, &roleOrgs, page)
 	if errQueryList != nil {
 		return nil, errQueryList
 	}
@@ -218,23 +219,23 @@ func FindRoleOrgByRoleId(dbConnection *zorm.DBConnection, roleId string, page *z
 //WrapOrgIdFinderByUserId 查询用户有权限管理的所有部门,包括角色关联分配产生的部门权限.分装成Finder的形式用于关联查询的finder实体类
 // 1.获取用户所有的 []permstruct.UserRoleStruct,包含主管的部门和角色分配的部门,不包括角色私有部门
 // 2.wrapOrgIdFinderByUserRole(list) 生成完整的Finder对象.
-func WrapOrgIdFinderByUserId(dbConnection *zorm.DBConnection, userId string) (*zorm.Finder, error) {
+func WrapOrgIdFinderByUserId(ctx context.Context, userId string) (*zorm.Finder, error) {
 	// 获取用户所有的 []permstruct.UserRoleStruct,包含主管的部门和角色分配的部门,不包括角色私有部门
-	roleOrgs, errByUserId := findManagerOrgAndRoleOrgByUserId(dbConnection, userId)
+	roleOrgs, errByUserId := findManagerOrgAndRoleOrgByUserId(ctx, userId)
 	if errByUserId != nil {
 		return nil, errByUserId
 	}
 	// 生成 Finder 方法.
-	return wrapOrgIdFinderByRoleOrg(dbConnection, roleOrgs)
+	return wrapOrgIdFinderByRoleOrg(ctx, roleOrgs)
 }
 
 //WrapOrgIdFinderByPrivateOrgRoleId 查询私有部门角色的部门范围,构造成Finder,用于权限范围限制
 //在请求的时候,通过url查询出menuId和对应的roleId,根据RoleId可以知晓是私有还是公共权限,分开调用Finder
-func WrapOrgIdFinderByPrivateOrgRoleId(dbConnection *zorm.DBConnection, roleId string, userId string) (*zorm.Finder, error) {
+func WrapOrgIdFinderByPrivateOrgRoleId(ctx context.Context, roleId string, userId string) (*zorm.Finder, error) {
 	if len(roleId) < 1 || len(userId) < 1 {
 		return nil, errors.New("roleId或userId不能为空")
 	}
-	role, errByRoleId := FindRoleStructById(dbConnection, roleId)
+	role, errByRoleId := FindRoleStructById(ctx, roleId)
 	if errByRoleId != nil {
 		return nil, errByRoleId
 	}
@@ -246,7 +247,7 @@ func WrapOrgIdFinderByPrivateOrgRoleId(dbConnection *zorm.DBConnection, roleId s
 	//  List<RoleOrg> list = wrapManagerRoleOrgByUserId(userId);
 	roleOrgs := make([]permstruct.RoleOrgStruct, 0)
 	//角色分配的 私有部门
-	findRoleOrgIdByRole, errByRole := findRoleOrgIdByRole(dbConnection, role, userId, nil)
+	findRoleOrgIdByRole, errByRole := findRoleOrgIdByRole(ctx, role, userId, nil)
 	if errByRole != nil {
 		return nil, errByRole
 	}
@@ -255,39 +256,39 @@ func WrapOrgIdFinderByPrivateOrgRoleId(dbConnection *zorm.DBConnection, roleId s
 		roleOrgs = append(roleOrgs, findRoleOrgIdByRole...)
 	}
 	// 生成 Finder 方法.
-	return wrapOrgIdFinderByRoleOrg(dbConnection, roleOrgs)
+	return wrapOrgIdFinderByRoleOrg(ctx, roleOrgs)
 }
 
 // 查询用户有权限管理的所有部门,包括角色关联分配产生的部门权限.分装成Finder的形式用于关联查询的finder实体类
 //这个是基础的Finder 封装方法,其他的方式也在转化为List<UserRole> list,调用此方法
 // 1.基于 List<UserRole> list 拼装WHERE条件
 // 2.完善 前面的查询语句,构造完整的Finder 查询语句
-func wrapOrgIdFinderByRoleOrg(dbConnection *zorm.DBConnection, list []permstruct.RoleOrgStruct) (*zorm.Finder, error) {
+func wrapOrgIdFinderByRoleOrg(ctx context.Context, list []permstruct.RoleOrgStruct) (*zorm.Finder, error) {
 
 	// 基于 list []permstruct.RoleOrgStruct 拼装WHERE条件
-	finder, errSQL := wrapOrgIdWheresSQLFinder(dbConnection, list)
+	finder, errSQL := wrapOrgIdWheresSQLFinder(ctx, list)
 	if errSQL != nil {
 		return nil, errSQL
 	}
 	// 完善 前面的查询语句,构造完整的Finder 查询语句
-	return wrapOrgIdFinder(dbConnection, finder)
+	return wrapOrgIdFinder(ctx, finder)
 }
 
 // 查询用户根据角色派生和自身主管的所有部门
-func findManagerOrgAndRoleOrgByUserId(dbConnection *zorm.DBConnection, userId string) ([]permstruct.RoleOrgStruct, error) {
+func findManagerOrgAndRoleOrgByUserId(ctx context.Context, userId string) ([]permstruct.RoleOrgStruct, error) {
 
 	if len(userId) < 1 {
 		return nil, errors.New("userId不能为空")
 	}
 
 	// 如果是主管,其管理的部门
-	list, errRoleOrgByUserId := wrapManagerRoleOrgByUserId(dbConnection, userId)
+	list, errRoleOrgByUserId := wrapManagerRoleOrgByUserId(ctx, userId)
 	if errRoleOrgByUserId != nil {
 		return nil, errRoleOrgByUserId
 	}
 
 	// 查询用户所有的角色
-	listRole, errRoleByUserId := FindRoleByUserId(dbConnection, userId, nil)
+	listRole, errRoleByUserId := FindRoleByUserId(ctx, userId, nil)
 	if errRoleByUserId != nil {
 		return nil, errRoleByUserId
 	}
@@ -301,7 +302,7 @@ func findManagerOrgAndRoleOrgByUserId(dbConnection *zorm.DBConnection, userId st
 			continue
 		}
 		//角色管理的部门
-		findRoleOrgIdByRole, errByRole := findRoleOrgIdByRole(dbConnection, &role, userId, nil)
+		findRoleOrgIdByRole, errByRole := findRoleOrgIdByRole(ctx, &role, userId, nil)
 		if errByRole != nil {
 			return nil, errByRole
 		}
@@ -317,7 +318,7 @@ func findManagerOrgAndRoleOrgByUserId(dbConnection *zorm.DBConnection, userId st
 // 根据role 对象 查询 Role的关联部门.  roleOrgType 0自己的数据,1所在部门,2所在部门及子部门数据,3.自定义部门数据.部门主管有所管理部门的数据全权限,无论角色是否分配
 //  外围需要单独判断是否启用私有角色,不然很容易造成群贤扩大
 //  这里只处理角色产生的权限,不考虑用户如果是主管派生的下级部门权限,这种情况有业务自己处理
-func findRoleOrgIdByRole(dbConnection *zorm.DBConnection, role *permstruct.RoleStruct, userId string, page *zorm.Page) ([]permstruct.RoleOrgStruct, error) {
+func findRoleOrgIdByRole(ctx context.Context, role *permstruct.RoleStruct, userId string, page *zorm.Page) ([]permstruct.RoleOrgStruct, error) {
 
 	if role == nil {
 		return nil, errors.New("role不能为空")
@@ -334,7 +335,7 @@ func findRoleOrgIdByRole(dbConnection *zorm.DBConnection, role *permstruct.RoleS
 			return nil, errors.New("userId不能为空")
 		}
 		//用户所在的部门,这里只处理角色产生的权限,不考虑用户如果是主管派生的下级部门权限,这种情况有业务自己处理
-		orgIdByUserId, errByUserId := FindOrgIdByUserId(dbConnection, userId, page)
+		orgIdByUserId, errByUserId := FindOrgIdByUserId(ctx, userId, page)
 		if errByUserId != nil {
 			return nil, errByUserId
 		}
@@ -355,13 +356,13 @@ func findRoleOrgIdByRole(dbConnection *zorm.DBConnection, role *permstruct.RoleS
 		}
 		return list, nil
 	} else if roleOrgType == 3 { // 自定义权限
-		return findOrgByRoleId(dbConnection, role.Id, page)
+		return findOrgByRoleId(ctx, role.Id, page)
 	}
 	return nil, nil
 }
 
 //findOrgByRoleId 根据roleId,查询role下管理的部门,用于角色自定的部门范围,查询 t_role_org 中间表
-func findOrgByRoleId(dbConnection *zorm.DBConnection, roleId string, page *zorm.Page) ([]permstruct.RoleOrgStruct, error) {
+func findOrgByRoleId(ctx context.Context, roleId string, page *zorm.Page) ([]permstruct.RoleOrgStruct, error) {
 	if len(roleId) < 1 {
 		return nil, errors.New("roleId不能为空")
 	}
@@ -370,7 +371,7 @@ func findOrgByRoleId(dbConnection *zorm.DBConnection, roleId string, page *zorm.
 	finder.Append(" re WHERE re.roleId=? order by re.id desc ", roleId)
 
 	roleOrgs := make([]permstruct.RoleOrgStruct, 0)
-	errQueryList := zorm.QueryStructList(dbConnection, finder, &roleOrgs, page)
+	errQueryList := zorm.QueryStructList(ctx, finder, &roleOrgs, page)
 	if errQueryList != nil {
 		return nil, errQueryList
 	}
@@ -379,11 +380,11 @@ func findOrgByRoleId(dbConnection *zorm.DBConnection, roleId string, page *zorm.
 }
 
 //  查询用户作为主管时所有的管理部门,封装成 []permstruct.RoleOrgStruct 格式
-func wrapManagerRoleOrgByUserId(dbConnection *zorm.DBConnection, userId string) ([]permstruct.RoleOrgStruct, error) {
+func wrapManagerRoleOrgByUserId(ctx context.Context, userId string) ([]permstruct.RoleOrgStruct, error) {
 	list := make([]permstruct.RoleOrgStruct, 0)
 
 	// 查询用户直接管理的部门
-	managerOrgIdByUserId, errByUserId := FindManagerOrgIdByUserId(dbConnection, userId, nil)
+	managerOrgIdByUserId, errByUserId := FindManagerOrgIdByUserId(ctx, userId, nil)
 	if errByUserId != nil {
 		return nil, errByUserId
 	}
@@ -402,7 +403,7 @@ func wrapManagerRoleOrgByUserId(dbConnection *zorm.DBConnection, userId string) 
 }
 
 //wrapOrgIdFinder 构造完整的finder,基于 wrapOrgIdWheresSQLFinder 产生的 WHERE 条件,完善Finder的查询部分.
-func wrapOrgIdFinder(dbConnection *zorm.DBConnection, whereFinder *zorm.Finder) (*zorm.Finder, error) {
+func wrapOrgIdFinder(ctx context.Context, whereFinder *zorm.Finder) (*zorm.Finder, error) {
 	if whereFinder == nil {
 		return nil, errors.New("whereFinder不能为空")
 	}
@@ -434,7 +435,7 @@ func wrapOrgIdFinder(dbConnection *zorm.DBConnection, whereFinder *zorm.Finder) 
 }
 
 //wrapOrgIdWheresSQLFinder 基于 list []permstruct.RoleOrgStruct 生成 Finder 对象,并不是完整的语句,只是 WHERE 后面的部门条件语句 类似 and ( 1=2 or ....
-func wrapOrgIdWheresSQLFinder(dbConnection *zorm.DBConnection, list []permstruct.RoleOrgStruct) (*zorm.Finder, error) {
+func wrapOrgIdWheresSQLFinder(ctx context.Context, list []permstruct.RoleOrgStruct) (*zorm.Finder, error) {
 	if len(list) < 1 {
 		return nil, nil
 	}
@@ -466,7 +467,7 @@ func wrapOrgIdWheresSQLFinder(dbConnection *zorm.DBConnection, list []permstruct
 		if children == 0 { // 不包含子部门
 			noChildrenList = append(noChildrenList, orgId)
 		} else if children == 1 { // 包含子部门
-			org, errByOrgId := FindOrgStructById(dbConnection, orgId)
+			org, errByOrgId := FindOrgStructById(ctx, orgId)
 			if errByOrgId != nil {
 				return nil, errByOrgId
 			}
@@ -486,7 +487,7 @@ func wrapOrgIdWheresSQLFinder(dbConnection *zorm.DBConnection, list []permstruct
 }
 
 //listUserId2ListUser 根据 userIds 查询出 []permstruct.UserStruct
-func listUserId2ListUser(dbConnection *zorm.DBConnection, userIds []string) ([]permstruct.UserStruct, error) {
+func listUserId2ListUser(ctx context.Context, userIds []string) ([]permstruct.UserStruct, error) {
 
 	if len(userIds) < 1 {
 		return nil, nil
@@ -494,7 +495,7 @@ func listUserId2ListUser(dbConnection *zorm.DBConnection, userIds []string) ([]p
 
 	users := make([]permstruct.UserStruct, 0)
 	for _, userId := range userIds {
-		user, errByUserId := FindUserStructById(dbConnection, userId)
+		user, errByUserId := FindUserStructById(ctx, userId)
 		if errByUserId != nil {
 			return nil, errByUserId
 		}
@@ -508,14 +509,14 @@ func listUserId2ListUser(dbConnection *zorm.DBConnection, userIds []string) ([]p
 }
 
 //listOrgId2ListOrg  根据 orgIds 查询出 []permstruct.OrgStruct
-func listOrgId2ListOrg(dbConnection *zorm.DBConnection, orgIds []string) ([]permstruct.OrgStruct, error) {
+func listOrgId2ListOrg(ctx context.Context, orgIds []string) ([]permstruct.OrgStruct, error) {
 	if len(orgIds) < 1 {
 		return nil, nil
 	}
 
 	orgs := make([]permstruct.OrgStruct, 0)
 	for _, orgId := range orgIds {
-		org, errByOrgId := FindOrgStructById(dbConnection, orgId)
+		org, errByOrgId := FindOrgStructById(ctx, orgId)
 		if errByOrgId != nil {
 			return nil, errByOrgId
 		}

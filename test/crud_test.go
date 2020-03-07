@@ -1,6 +1,7 @@
 package test
 
 import (
+	"context"
 	"fmt"
 	"readygo/cache"
 	"readygo/permission/permservice"
@@ -57,7 +58,7 @@ func TestQuey(t *testing.T) {
 
 	var users []permstruct.UserStruct
 
-	err := zorm.QueryStructList(nil, finder, &users, &page)
+	err := zorm.QueryStructList(context.Background(), finder, &users, &page)
 
 	if err != nil {
 		//标记测试失败
@@ -86,7 +87,7 @@ func TestCount(t *testing.T) {
 
 	finder.Append("select count(*) as c from ").Append(permstruct.WxCpconfigStructTableName)
 
-	queryMap, err := zorm.QueryMap(nil, finder)
+	queryMap, err := zorm.QueryMap(context.Background(), finder)
 
 	if err != nil {
 		t.Errorf("TestCount错误：%v", err)
@@ -101,7 +102,7 @@ func worker(id int, wg *sync.WaitGroup) {
 
 	fmt.Println(id)
 
-	zorm.Transaction(nil, func(dbConnection *zorm.DBConnection) (interface{}, error) {
+	zorm.Transaction(context.Background(), func(ctx context.Context) (interface{}, error) {
 
 		var u permstruct.UserStruct
 		//
@@ -110,7 +111,7 @@ func worker(id int, wg *sync.WaitGroup) {
 		//u.Sex = "男"+string(id)
 		////u.Active = 2/0
 		//
-		//e2 := zorm.SaveStruct(dbConnection, &u)
+		//e2 := zorm.SaveStruct(ctx, &u)
 		//if e2 != nil {
 		//	//标记测试失败
 		//	//t.Errorf("TestTrancSave错误:%v", e2)
@@ -119,14 +120,14 @@ func worker(id int, wg *sync.WaitGroup) {
 
 		finder := zorm.NewSelectFinder(permstruct.UserStructTableName).Append(" where id = ?", "1583077877688617000")
 
-		zorm.QueryStruct(dbConnection, finder, &u)
+		zorm.QueryStruct(ctx, finder, &u)
 
 		//u.UserName = u.UserName + "test" + string(id)
 		u.UserName = strconv.Itoa(id)
 
 		u.UserType = id
 
-		e3 := zorm.UpdateStruct(dbConnection, &u)
+		e3 := zorm.UpdateStruct(ctx, &u)
 		if e3 != nil {
 			//标记测试失败
 			//t.Errorf("TestTrancUpdate错误:%v", e3)
@@ -151,7 +152,7 @@ func TestTranc(t *testing.T) {
 }
 
 func TestPrem(t *testing.T) {
-	finder, err := permservice.WrapOrgIdFinderByPrivateOrgRoleId(nil, "r_10001", "u_10001")
+	finder, err := permservice.WrapOrgIdFinderByPrivateOrgRoleId(context.Background(), "r_10001", "u_10001")
 	if err != nil {
 		t.Error(err)
 	}

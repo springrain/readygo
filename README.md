@@ -92,10 +92,10 @@ func (entity *UserOrgStruct) GetPKColumnName() string {
 7.  事务传播
     ```
     //匿名函数return的error如果不为nil,事务就会回滚
-	_, errSaveUserStruct := zorm.Transaction(dbConnection, func(dbConnection *zorm.DBConnection) (interface{}, error) {
+	_, errSaveUserStruct := zorm.Transaction(ctx, func(ctx context.Context) (interface{}, error) {
 
 		//事务下的业务代码开始
-		errSaveUserStruct := zorm.SaveStruct(dbConnection, userStruct)
+		errSaveUserStruct := zorm.SaveStruct(ctx, userStruct)
 
 		if errSaveUserStruct != nil {
 			return nil, errSaveUserStruct
@@ -109,7 +109,7 @@ func (entity *UserOrgStruct) GetPKColumnName() string {
 8.  生产示例
     ```  
     //FindUserOrgByUserId 根据userId查找部门UserOrg中间表对象
-    func FindUserOrgByUserId(dbConnection *zorm.DBConnection, userId string, page *zorm.Page) ([]permstruct.UserOrgStruct, error) {
+    func FindUserOrgByUserId(ctx context.Context, userId string, page *zorm.Page) ([]permstruct.UserOrgStruct, error) {
 	if len(userId) < 1 {
 		return nil, errors.New("userId不能为空")
 	}
@@ -117,7 +117,7 @@ func (entity *UserOrgStruct) GetPKColumnName() string {
 	finder.Append("   WHERE re.userId=?    order by re.managerType desc   ", userId)
 
 	userOrgs := make([]permstruct.UserOrgStruct, 0)
-	errQueryList := zorm.QueryStructList(dbConnection, finder, &userOrgs, page)
+	errQueryList := zorm.QueryStructList(ctx, finder, &userOrgs, page)
 	if errQueryList != nil {
 		return nil, errQueryList
 	}

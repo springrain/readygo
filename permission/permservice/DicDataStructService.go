@@ -1,6 +1,7 @@
 package permservice
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"readygo/permission/permstruct"
@@ -11,15 +12,18 @@ import (
 )
 
 //SaveDicDataStruct 保存公共字典
-//如果入参dbConnection为nil,使用defaultDao开启事务并最后提交.如果入参dbConnection没有事务,调用dbConnection.begin()开启事务并最后提交.如果入参dbConnection有事务,只使用不提交,有开启方提交事务.但是如果遇到错误或者异常,虽然不是事务的开启方,也会回滚事务,让事务尽早回滚
-func SaveDicDataStruct(dbConnection *zorm.DBConnection, dicDataStruct *permstruct.DicDataStruct) error {
+//如果入参ctx中没有dbConnection,使用defaultDao开启事务并最后提交
+//如果入参ctx有dbConnection且没有事务,调用dbConnection.begin()开启事务并最后提交
+//如果入参ctx有dbConnection且有事务,只使用不提交,有开启方提交事务
+//但是如果遇到错误或者异常,虽然不是事务的开启方,也会回滚事务,让事务尽早回滚
+func SaveDicDataStruct(ctx context.Context, dicDataStruct *permstruct.DicDataStruct) error {
 
 	// dicDataStruct对象指针不能为空
 	if dicDataStruct == nil {
 		return errors.New("dicDataStruct对象指针不能为空")
 	}
 	//匿名函数return的error如果不为nil,事务就会回滚
-	_, errSaveDicDataStruct := zorm.Transaction(dbConnection, func(dbConnection *zorm.DBConnection) (interface{}, error) {
+	_, errSaveDicDataStruct := zorm.Transaction(ctx, func(ctx context.Context) (interface{}, error) {
 
 		//事务下的业务代码开始
 
@@ -28,7 +32,7 @@ func SaveDicDataStruct(dbConnection *zorm.DBConnection, dicDataStruct *permstruc
 			dicDataStruct.Id = zorm.GenerateStringID()
 		}
 
-		errSaveDicDataStruct := zorm.SaveStruct(dbConnection, dicDataStruct)
+		errSaveDicDataStruct := zorm.SaveStruct(ctx, dicDataStruct)
 
 		if errSaveDicDataStruct != nil {
 			return nil, errSaveDicDataStruct
@@ -50,8 +54,11 @@ func SaveDicDataStruct(dbConnection *zorm.DBConnection, dicDataStruct *permstruc
 }
 
 //UpdateDicDataStruct 更新公共字典
-//如果入参dbConnection为nil,使用defaultDao开启事务并最后提交.如果入参dbConnection没有事务,调用dbConnection.begin()开启事务并最后提交.如果入参dbConnection有事务,只使用不提交,有开启方提交事务.但是如果遇到错误或者异常,虽然不是事务的开启方,也会回滚事务,让事务尽早回滚
-func UpdateDicDataStruct(dbConnection *zorm.DBConnection, dicDataStruct *permstruct.DicDataStruct) error {
+//如果入参ctx中没有dbConnection,使用defaultDao开启事务并最后提交
+//如果入参ctx有dbConnection且没有事务,调用dbConnection.begin()开启事务并最后提交
+//如果入参ctx有dbConnection且有事务,只使用不提交,有开启方提交事务
+//但是如果遇到错误或者异常,虽然不是事务的开启方,也会回滚事务,让事务尽早回滚
+func UpdateDicDataStruct(ctx context.Context, dicDataStruct *permstruct.DicDataStruct) error {
 
 	// dicDataStruct对象指针或主键Id不能为空
 	if dicDataStruct == nil || len(dicDataStruct.Id) < 1 {
@@ -59,10 +66,10 @@ func UpdateDicDataStruct(dbConnection *zorm.DBConnection, dicDataStruct *permstr
 	}
 
 	//匿名函数return的error如果不为nil,事务就会回滚
-	_, errUpdateDicDataStruct := zorm.Transaction(dbConnection, func(dbConnection *zorm.DBConnection) (interface{}, error) {
+	_, errUpdateDicDataStruct := zorm.Transaction(ctx, func(ctx context.Context) (interface{}, error) {
 
 		//事务下的业务代码开始
-		errUpdateDicDataStruct := zorm.UpdateStruct(dbConnection, dicDataStruct)
+		errUpdateDicDataStruct := zorm.UpdateStruct(ctx, dicDataStruct)
 
 		if errUpdateDicDataStruct != nil {
 			return nil, errUpdateDicDataStruct
@@ -84,8 +91,11 @@ func UpdateDicDataStruct(dbConnection *zorm.DBConnection, dicDataStruct *permstr
 }
 
 //DeleteDicDataStructById 根据Id删除公共字典
-//如果入参dbConnection为nil,使用defaultDao开启事务并最后提交.如果入参dbConnection没有事务,调用dbConnection.begin()开启事务并最后提交.如果入参dbConnection有事务,只使用不提交,有开启方提交事务.但是如果遇到错误或者异常,虽然不是事务的开启方,也会回滚事务,让事务尽早回滚
-func DeleteDicDataStructById(dbConnection *zorm.DBConnection, id string) error {
+//如果入参ctx中没有dbConnection,使用defaultDao开启事务并最后提交
+//如果入参ctx有dbConnection且没有事务,调用dbConnection.begin()开启事务并最后提交
+//如果入参ctx有dbConnection且有事务,只使用不提交,有开启方提交事务
+//但是如果遇到错误或者异常,虽然不是事务的开启方,也会回滚事务,让事务尽早回滚
+func DeleteDicDataStructById(ctx context.Context, id string) error {
 
 	//id不能为空
 	if len(id) < 1 {
@@ -93,11 +103,11 @@ func DeleteDicDataStructById(dbConnection *zorm.DBConnection, id string) error {
 	}
 
 	//匿名函数return的error如果不为nil,事务就会回滚
-	_, errDeleteDicDataStruct := zorm.Transaction(dbConnection, func(dbConnection *zorm.DBConnection) (interface{}, error) {
+	_, errDeleteDicDataStruct := zorm.Transaction(ctx, func(ctx context.Context) (interface{}, error) {
 
 		//事务下的业务代码开始
 		finder := zorm.NewDeleteFinder(permstruct.DicDataStructTableName).Append(" WHERE id=?", id)
-		errDeleteDicDataStruct := zorm.UpdateFinder(dbConnection, finder)
+		errDeleteDicDataStruct := zorm.UpdateFinder(ctx, finder)
 
 		if errDeleteDicDataStruct != nil {
 			return nil, errDeleteDicDataStruct
@@ -119,8 +129,8 @@ func DeleteDicDataStructById(dbConnection *zorm.DBConnection, id string) error {
 }
 
 //FindDicDataStructById 根据Id查询公共字典信息
-//dbConnection如果为nil,则会使用默认的datasource进行无事务查询
-func FindDicDataStructById(dbConnection *zorm.DBConnection, id string) (*permstruct.DicDataStruct, error) {
+//ctx中如果没有dbConnection,则会使用默认的datasource进行无事务查询
+func FindDicDataStructById(ctx context.Context, id string) (*permstruct.DicDataStruct, error) {
 	//id不能为空
 	if len(id) < 1 {
 		return nil, errors.New("id不能为空")
@@ -129,7 +139,7 @@ func FindDicDataStructById(dbConnection *zorm.DBConnection, id string) (*permstr
 	//根据Id查询
 	finder := zorm.NewSelectFinder(permstruct.DicDataStructTableName).Append(" WHERE id=?", id)
 	dicDataStruct := permstruct.DicDataStruct{}
-	errFindDicDataStructById := zorm.QueryStruct(dbConnection, finder, &dicDataStruct)
+	errFindDicDataStructById := zorm.QueryStruct(ctx, finder, &dicDataStruct)
 
 	//记录错误
 	if errFindDicDataStructById != nil {
@@ -143,8 +153,8 @@ func FindDicDataStructById(dbConnection *zorm.DBConnection, id string) (*permstr
 }
 
 //FindDicDataStructList 根据Finder查询公共字典列表
-//dbConnection如果为nil,则会使用默认的datasource进行无事务查询
-func FindDicDataStructList(dbConnection *zorm.DBConnection, finder *zorm.Finder, page *zorm.Page) ([]permstruct.DicDataStruct, error) {
+//ctx中如果没有dbConnection,则会使用默认的datasource进行无事务查询
+func FindDicDataStructList(ctx context.Context, finder *zorm.Finder, page *zorm.Page) ([]permstruct.DicDataStruct, error) {
 
 	//finder不能为空
 	if finder == nil {
@@ -152,7 +162,7 @@ func FindDicDataStructList(dbConnection *zorm.DBConnection, finder *zorm.Finder,
 	}
 
 	dicDataStructList := make([]permstruct.DicDataStruct, 0)
-	errFindDicDataStructList := zorm.QueryStructList(dbConnection, finder, &dicDataStructList, page)
+	errFindDicDataStructList := zorm.QueryStructList(ctx, finder, &dicDataStructList, page)
 
 	//记录错误
 	if errFindDicDataStructList != nil {

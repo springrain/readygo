@@ -2,10 +2,14 @@ gitee.com/chunanyong/logger v1.0.5 h1:2Oq+HX6R/nDPe4Cm3gjoHorBZMxpIsiZNCuBNEl6Zk
 gitee.com/chunanyong/logger v1.0.5/go.mod h1:iMVSpmnwLjBkpxLcvKOOE1X1yUES9bKz+WJ+p5c9Wqw=
 gitee.com/chunanyong/logger v1.0.6 h1:e0SoH7lsAMHSF083WL/CF+ozL7RVw5+chUpvN4rAvRI=
 gitee.com/chunanyong/logger v1.0.6/go.mod h1:iMVSpmnwLjBkpxLcvKOOE1X1yUES9bKz+WJ+p5c9Wqw=
+gitee.com/chunanyong/logger v1.0.7 h1:xyifAU+moXYNxGdKFutNpxKB4pIAvCCGBGCjnxUmYPE=
+gitee.com/chunanyong/logger v1.0.7/go.mod h1:iMVSpmnwLjBkpxLcvKOOE1X1yUES9bKz+WJ+p5c9Wqw=
 gitee.com/chunanyong/zorm v1.0.5 h1:CYAJX8kPf+vRvmdZ7BUpxDTJCDQ0WgqBFQLgx35i5H8=
 gitee.com/chunanyong/zorm v1.0.5/go.mod h1:uvPWBFaa5ZcMsWzj4n29rngknAyRUY5uMUPPgnjyFF8=
 gitee.com/chunanyong/zorm v1.0.6 h1:uuE7bKFfeNE1CY0ErkQgXvbddYqCt5TW4d0iXTH/NGs=
 gitee.com/chunanyong/zorm v1.0.6/go.mod h1:0QQBhhXbE93Vvjj85tr+OUxFkyQynfi3T48WsYwCrSw=
+gitee.com/chunanyong/zorm v1.0.7 h1:FpkoeDj/08BFPPLva2quvAbztH82IFqUIJ2p01vugEM=
+gitee.com/chunanyong/zorm v1.0.7/go.mod h1:cDuj7UQUxsaRpztD5g4Rh76agh7Eufcz+XzoaqU4D+4=
 github.com/BurntSushi/toml v0.3.1 h1:WXkYYl6Yr3qBf1K79EBnL4mak0OimBfB0XUf9Vl28OQ=
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=

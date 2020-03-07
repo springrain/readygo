@@ -1,9 +1,9 @@
 package permapi
 
 import (
-	"github.com/gin-gonic/gin"
 	"readygo/ginext/Ginserializer"
-	"readygo/ginext/serializer"
+
+	"github.com/gin-gonic/gin"
 )
 
 // Ping 状态检查页面

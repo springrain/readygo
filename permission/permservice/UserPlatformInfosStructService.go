@@ -1,6 +1,7 @@
 package permservice
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"readygo/permission/permstruct"
@@ -11,15 +12,18 @@ import (
 )
 
 //SaveUserPlatformInfosStruct 保存用户平台信息表
-//如果入参dbConnection为nil,使用defaultDao开启事务并最后提交.如果入参dbConnection没有事务,调用dbConnection.begin()开启事务并最后提交.如果入参dbConnection有事务,只使用不提交,有开启方提交事务.但是如果遇到错误或者异常,虽然不是事务的开启方,也会回滚事务,让事务尽早回滚
-func SaveUserPlatformInfosStruct(dbConnection *zorm.DBConnection, userPlatformInfosStruct *permstruct.UserPlatformInfosStruct) error {
+//如果入参ctx中没有dbConnection,使用defaultDao开启事务并最后提交
+//如果入参ctx有dbConnection且没有事务,调用dbConnection.begin()开启事务并最后提交
+//如果入参ctx有dbConnection且有事务,只使用不提交,有开启方提交事务
+//但是如果遇到错误或者异常,虽然不是事务的开启方,也会回滚事务,让事务尽早回滚
+func SaveUserPlatformInfosStruct(ctx context.Context, userPlatformInfosStruct *permstruct.UserPlatformInfosStruct) error {
 
 	// userPlatformInfosStruct对象指针不能为空
 	if userPlatformInfosStruct == nil {
 		return errors.New("userPlatformInfosStruct对象指针不能为空")
 	}
 	//匿名函数return的error如果不为nil,事务就会回滚
-	_, errSaveUserPlatformInfosStruct := zorm.Transaction(dbConnection, func(dbConnection *zorm.DBConnection) (interface{}, error) {
+	_, errSaveUserPlatformInfosStruct := zorm.Transaction(ctx, func(ctx context.Context) (interface{}, error) {
 
 		//事务下的业务代码开始
 
@@ -28,7 +32,7 @@ func SaveUserPlatformInfosStruct(dbConnection *zorm.DBConnection, userPlatformIn
 			userPlatformInfosStruct.Id = zorm.GenerateStringID()
 		}
 
-		errSaveUserPlatformInfosStruct := zorm.SaveStruct(dbConnection, userPlatformInfosStruct)
+		errSaveUserPlatformInfosStruct := zorm.SaveStruct(ctx, userPlatformInfosStruct)
 
 		if errSaveUserPlatformInfosStruct != nil {
 			return nil, errSaveUserPlatformInfosStruct
@@ -50,8 +54,11 @@ func SaveUserPlatformInfosStruct(dbConnection *zorm.DBConnection, userPlatformIn
 }
 
 //UpdateUserPlatformInfosStruct 更新用户平台信息表
-//如果入参dbConnection为nil,使用defaultDao开启事务并最后提交.如果入参dbConnection没有事务,调用dbConnection.begin()开启事务并最后提交.如果入参dbConnection有事务,只使用不提交,有开启方提交事务.但是如果遇到错误或者异常,虽然不是事务的开启方,也会回滚事务,让事务尽早回滚
-func UpdateUserPlatformInfosStruct(dbConnection *zorm.DBConnection, userPlatformInfosStruct *permstruct.UserPlatformInfosStruct) error {
+//如果入参ctx中没有dbConnection,使用defaultDao开启事务并最后提交
+//如果入参ctx有dbConnection且没有事务,调用dbConnection.begin()开启事务并最后提交
+//如果入参ctx有dbConnection且有事务,只使用不提交,有开启方提交事务
+//但是如果遇到错误或者异常,虽然不是事务的开启方,也会回滚事务,让事务尽早回滚
+func UpdateUserPlatformInfosStruct(ctx context.Context, userPlatformInfosStruct *permstruct.UserPlatformInfosStruct) error {
 
 	// userPlatformInfosStruct对象指针或主键Id不能为空
 	if userPlatformInfosStruct == nil || len(userPlatformInfosStruct.Id) < 1 {
@@ -59,10 +66,10 @@ func UpdateUserPlatformInfosStruct(dbConnection *zorm.DBConnection, userPlatform
 	}
 
 	//匿名函数return的error如果不为nil,事务就会回滚
-	_, errUpdateUserPlatformInfosStruct := zorm.Transaction(dbConnection, func(dbConnection *zorm.DBConnection) (interface{}, error) {
+	_, errUpdateUserPlatformInfosStruct := zorm.Transaction(ctx, func(ctx context.Context) (interface{}, error) {
 
 		//事务下的业务代码开始
-		errUpdateUserPlatformInfosStruct := zorm.UpdateStruct(dbConnection, userPlatformInfosStruct)
+		errUpdateUserPlatformInfosStruct := zorm.UpdateStruct(ctx, userPlatformInfosStruct)
 
 		if errUpdateUserPlatformInfosStruct != nil {
 			return nil, errUpdateUserPlatformInfosStruct
@@ -84,8 +91,11 @@ func UpdateUserPlatformInfosStruct(dbConnection *zorm.DBConnection, userPlatform
 }
 
 //DeleteUserPlatformInfosStructById 根据Id删除用户平台信息表
-//如果入参dbConnection为nil,使用defaultDao开启事务并最后提交.如果入参dbConnection没有事务,调用dbConnection.begin()开启事务并最后提交.如果入参dbConnection有事务,只使用不提交,有开启方提交事务.但是如果遇到错误或者异常,虽然不是事务的开启方,也会回滚事务,让事务尽早回滚
-func DeleteUserPlatformInfosStructById(dbConnection *zorm.DBConnection, id string) error {
+//如果入参ctx中没有dbConnection,使用defaultDao开启事务并最后提交
+//如果入参ctx有dbConnection且没有事务,调用dbConnection.begin()开启事务并最后提交
+//如果入参ctx有dbConnection且有事务,只使用不提交,有开启方提交事务
+//但是如果遇到错误或者异常,虽然不是事务的开启方,也会回滚事务,让事务尽早回滚
+func DeleteUserPlatformInfosStructById(ctx context.Context, id string) error {
 
 	//id不能为空
 	if len(id) < 1 {
@@ -93,11 +103,11 @@ func DeleteUserPlatformInfosStructById(dbConnection *zorm.DBConnection, id strin
 	}
 
 	//匿名函数return的error如果不为nil,事务就会回滚
-	_, errDeleteUserPlatformInfosStruct := zorm.Transaction(dbConnection, func(dbConnection *zorm.DBConnection) (interface{}, error) {
+	_, errDeleteUserPlatformInfosStruct := zorm.Transaction(ctx, func(ctx context.Context) (interface{}, error) {
 
 		//事务下的业务代码开始
 		finder := zorm.NewDeleteFinder(permstruct.UserPlatformInfosStructTableName).Append(" WHERE id=?", id)
-		errDeleteUserPlatformInfosStruct := zorm.UpdateFinder(dbConnection, finder)
+		errDeleteUserPlatformInfosStruct := zorm.UpdateFinder(ctx, finder)
 
 		if errDeleteUserPlatformInfosStruct != nil {
 			return nil, errDeleteUserPlatformInfosStruct
@@ -119,8 +129,8 @@ func DeleteUserPlatformInfosStructById(dbConnection *zorm.DBConnection, id strin
 }
 
 //FindUserPlatformInfosStructById 根据Id查询用户平台信息表信息
-//dbConnection如果为nil,则会使用默认的datasource进行无事务查询
-func FindUserPlatformInfosStructById(dbConnection *zorm.DBConnection, id string) (*permstruct.UserPlatformInfosStruct, error) {
+//ctx中如果没有dbConnection,则会使用默认的datasource进行无事务查询
+func FindUserPlatformInfosStructById(ctx context.Context, id string) (*permstruct.UserPlatformInfosStruct, error) {
 	//id不能为空
 	if len(id) < 1 {
 		return nil, errors.New("id不能为空")
@@ -129,7 +139,7 @@ func FindUserPlatformInfosStructById(dbConnection *zorm.DBConnection, id string)
 	//根据Id查询
 	finder := zorm.NewSelectFinder(permstruct.UserPlatformInfosStructTableName).Append(" WHERE id=?", id)
 	userPlatformInfosStruct := permstruct.UserPlatformInfosStruct{}
-	errFindUserPlatformInfosStructById := zorm.QueryStruct(dbConnection, finder, &userPlatformInfosStruct)
+	errFindUserPlatformInfosStructById := zorm.QueryStruct(ctx, finder, &userPlatformInfosStruct)
 
 	//记录错误
 	if errFindUserPlatformInfosStructById != nil {
@@ -143,8 +153,8 @@ func FindUserPlatformInfosStructById(dbConnection *zorm.DBConnection, id string)
 }
 
 //FindUserPlatformInfosStructList 根据Finder查询用户平台信息表列表
-//dbConnection如果为nil,则会使用默认的datasource进行无事务查询
-func FindUserPlatformInfosStructList(dbConnection *zorm.DBConnection, finder *zorm.Finder, page *zorm.Page) ([]permstruct.UserPlatformInfosStruct, error) {
+//ctx中如果没有dbConnection,则会使用默认的datasource进行无事务查询
+func FindUserPlatformInfosStructList(ctx context.Context, finder *zorm.Finder, page *zorm.Page) ([]permstruct.UserPlatformInfosStruct, error) {
 
 	//finder不能为空
 	if finder == nil {
@@ -152,7 +162,7 @@ func FindUserPlatformInfosStructList(dbConnection *zorm.DBConnection, finder *zo
 	}
 
 	userPlatformInfosStructList := make([]permstruct.UserPlatformInfosStruct, 0)
-	errFindUserPlatformInfosStructList := zorm.QueryStructList(dbConnection, finder, &userPlatformInfosStructList, page)
+	errFindUserPlatformInfosStructList := zorm.QueryStructList(ctx, finder, &userPlatformInfosStructList, page)
 
 	//记录错误
 	if errFindUserPlatformInfosStructList != nil {

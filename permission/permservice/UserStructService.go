@@ -1,6 +1,7 @@
 package permservice
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"readygo/cache"
@@ -12,15 +13,18 @@ import (
 )
 
 //SaveUserStruct 保存用户
-//如果入参dbConnection为nil,使用defaultDao开启事务并最后提交.如果入参dbConnection没有事务,调用dbConnection.begin()开启事务并最后提交.如果入参dbConnection有事务,只使用不提交,有开启方提交事务.但是如果遇到错误或者异常,虽然不是事务的开启方,也会回滚事务,让事务尽早回滚
-func SaveUserStruct(dbConnection *zorm.DBConnection, userStruct *permstruct.UserStruct) error {
+//如果入参ctx中没有dbConnection,使用defaultDao开启事务并最后提交
+//如果入参ctx有dbConnection且没有事务,调用dbConnection.begin()开启事务并最后提交
+//如果入参ctx有dbConnection且有事务,只使用不提交,有开启方提交事务
+//但是如果遇到错误或者异常,虽然不是事务的开启方,也会回滚事务,让事务尽早回滚
+func SaveUserStruct(ctx context.Context, userStruct *permstruct.UserStruct) error {
 
 	// userStruct对象指针不能为空
 	if userStruct == nil {
 		return errors.New("userStruct对象指针不能为空")
 	}
 	//匿名函数return的error如果不为nil,事务就会回滚
-	_, errSaveUserStruct := zorm.Transaction(dbConnection, func(dbConnection *zorm.DBConnection) (interface{}, error) {
+	_, errSaveUserStruct := zorm.Transaction(ctx, func(ctx context.Context) (interface{}, error) {
 
 		//事务下的业务代码开始
 
@@ -29,7 +33,7 @@ func SaveUserStruct(dbConnection *zorm.DBConnection, userStruct *permstruct.User
 			userStruct.Id = zorm.GenerateStringID()
 		}
 
-		errSaveUserStruct := zorm.SaveStruct(dbConnection, userStruct)
+		errSaveUserStruct := zorm.SaveStruct(ctx, userStruct)
 
 		if errSaveUserStruct != nil {
 			return nil, errSaveUserStruct
@@ -51,8 +55,11 @@ func SaveUserStruct(dbConnection *zorm.DBConnection, userStruct *permstruct.User
 }
 
 //UpdateUserStruct 更新用户
-//如果入参dbConnection为nil,使用defaultDao开启事务并最后提交.如果入参dbConnection没有事务,调用dbConnection.begin()开启事务并最后提交.如果入参dbConnection有事务,只使用不提交,有开启方提交事务.但是如果遇到错误或者异常,虽然不是事务的开启方,也会回滚事务,让事务尽早回滚
-func UpdateUserStruct(dbConnection *zorm.DBConnection, userStruct *permstruct.UserStruct) error {
+//如果入参ctx中没有dbConnection,使用defaultDao开启事务并最后提交
+//如果入参ctx有dbConnection且没有事务,调用dbConnection.begin()开启事务并最后提交
+//如果入参ctx有dbConnection且有事务,只使用不提交,有开启方提交事务
+//但是如果遇到错误或者异常,虽然不是事务的开启方,也会回滚事务,让事务尽早回滚
+func UpdateUserStruct(ctx context.Context, userStruct *permstruct.UserStruct) error {
 
 	// userStruct对象指针或主键Id不能为空
 	if userStruct == nil || len(userStruct.Id) < 1 {
@@ -60,10 +67,10 @@ func UpdateUserStruct(dbConnection *zorm.DBConnection, userStruct *permstruct.Us
 	}
 
 	//匿名函数return的error如果不为nil,事务就会回滚
-	_, errUpdateUserStruct := zorm.Transaction(dbConnection, func(dbConnection *zorm.DBConnection) (interface{}, error) {
+	_, errUpdateUserStruct := zorm.Transaction(ctx, func(ctx context.Context) (interface{}, error) {
 
 		//事务下的业务代码开始
-		errUpdateUserStruct := zorm.UpdateStruct(dbConnection, userStruct)
+		errUpdateUserStruct := zorm.UpdateStruct(ctx, userStruct)
 
 		if errUpdateUserStruct != nil {
 			return nil, errUpdateUserStruct
@@ -86,8 +93,11 @@ func UpdateUserStruct(dbConnection *zorm.DBConnection, userStruct *permstruct.Us
 }
 
 //DeleteUserStructById 根据Id删除用户
-//如果入参dbConnection为nil,使用defaultDao开启事务并最后提交.如果入参dbConnection没有事务,调用dbConnection.begin()开启事务并最后提交.如果入参dbConnection有事务,只使用不提交,有开启方提交事务.但是如果遇到错误或者异常,虽然不是事务的开启方,也会回滚事务,让事务尽早回滚
-func DeleteUserStructById(dbConnection *zorm.DBConnection, id string) error {
+//如果入参ctx中没有dbConnection,使用defaultDao开启事务并最后提交
+//如果入参ctx有dbConnection且没有事务,调用dbConnection.begin()开启事务并最后提交
+//如果入参ctx有dbConnection且有事务,只使用不提交,有开启方提交事务
+//但是如果遇到错误或者异常,虽然不是事务的开启方,也会回滚事务,让事务尽早回滚
+func DeleteUserStructById(ctx context.Context, id string) error {
 
 	//id不能为空
 	if len(id) < 1 {
@@ -95,11 +105,11 @@ func DeleteUserStructById(dbConnection *zorm.DBConnection, id string) error {
 	}
 
 	//匿名函数return的error如果不为nil,事务就会回滚
-	_, errDeleteUserStruct := zorm.Transaction(dbConnection, func(dbConnection *zorm.DBConnection) (interface{}, error) {
+	_, errDeleteUserStruct := zorm.Transaction(ctx, func(ctx context.Context) (interface{}, error) {
 
 		//事务下的业务代码开始
 		finder := zorm.NewDeleteFinder(permstruct.UserStructTableName).Append(" WHERE id=?", id)
-		errDeleteUserStruct := zorm.UpdateFinder(dbConnection, finder)
+		errDeleteUserStruct := zorm.UpdateFinder(ctx, finder)
 
 		if errDeleteUserStruct != nil {
 			return nil, errDeleteUserStruct
@@ -124,8 +134,8 @@ func DeleteUserStructById(dbConnection *zorm.DBConnection, id string) error {
 }
 
 //FindUserStructById 根据Id查询用户信息
-//dbConnection如果为nil,则会使用默认的datasource进行无事务查询
-func FindUserStructById(dbConnection *zorm.DBConnection, id string) (*permstruct.UserStruct, error) {
+//ctx中如果没有dbConnection,则会使用默认的datasource进行无事务查询
+func FindUserStructById(ctx context.Context, id string) (*permstruct.UserStruct, error) {
 	//id不能为空
 	if len(id) < 1 {
 		return nil, errors.New("id不能为空")
@@ -139,7 +149,7 @@ func FindUserStructById(dbConnection *zorm.DBConnection, id string) (*permstruct
 
 	//根据Id查询
 	finder := zorm.NewSelectFinder(permstruct.UserStructTableName).Append(" WHERE id=?", id)
-	errFindUserStructById := zorm.QueryStruct(dbConnection, finder, &userStruct)
+	errFindUserStructById := zorm.QueryStruct(ctx, finder, &userStruct)
 
 	//记录错误
 	if errFindUserStructById != nil {
@@ -156,8 +166,8 @@ func FindUserStructById(dbConnection *zorm.DBConnection, id string) (*permstruct
 }
 
 //FindUserStructList 根据Finder查询用户列表
-//dbConnection如果为nil,则会使用默认的datasource进行无事务查询
-func FindUserStructList(dbConnection *zorm.DBConnection, finder *zorm.Finder, page *zorm.Page) ([]permstruct.UserStruct, error) {
+//ctx中如果没有dbConnection,则会使用默认的datasource进行无事务查询
+func FindUserStructList(ctx context.Context, finder *zorm.Finder, page *zorm.Page) ([]permstruct.UserStruct, error) {
 
 	//finder不能为空
 	if finder == nil {
@@ -165,7 +175,7 @@ func FindUserStructList(dbConnection *zorm.DBConnection, finder *zorm.Finder, pa
 	}
 
 	userStructList := make([]permstruct.UserStruct, 0)
-	errFindUserStructList := zorm.QueryStructList(dbConnection, finder, &userStructList, page)
+	errFindUserStructList := zorm.QueryStructList(ctx, finder, &userStructList, page)
 
 	//记录错误
 	if errFindUserStructList != nil {
