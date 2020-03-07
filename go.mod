@@ -8,6 +8,6 @@ require (
 	github.com/joho/godotenv v1.3.0
 	gopkg.in/square/go-jose.v2 v2.4.1
 
-	gitee.com/chunanyong/zorm v1.0.5
-	gitee.com/chunanyong/logger v1.0.5
+	gitee.com/chunanyong/zorm v1.0.6
+	gitee.com/chunanyong/logger v1.0.6
 )
