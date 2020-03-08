@@ -1,4 +1,4 @@
-package main
+package codegenerator
 
 import (
 	"fmt"
@@ -30,20 +30,14 @@ func init() {
 	baseDao, _ = zorm.NewBaseDao(&baseDaoConfig)
 }
 
-func main() {
-	//code("t_user")
-
-	tableNames := selectAllTable()
-	for _, tableName := range tableNames {
-		code(tableName)
-	}
-
-}
-
 //生成代码
 func code(tableName string) {
 
 	info := selectTableColumn(tableName)
+
+	//创建目录
+	os.MkdirAll("./code/struct", os.ModePerm)
+	os.MkdirAll("./code/service", os.ModePerm)
 
 	structFileName := "./code/struct/" + info["structName"].(string) + ".go"
 	serviceFileName := "./code/service/" + info["structName"].(string) + "Service.go"
