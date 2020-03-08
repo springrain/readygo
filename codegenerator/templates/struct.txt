@@ -1,0 +1,34 @@
+package {{.packageName}}
+import (
+	"time"
+
+	"gitee.com/chunanyong/zorm"
+)
+
+//{{.structName}}TableName 表名常量,方便直接调用
+const {{.structName}}TableName = "{{.tableName}}"
+
+// {{.structName}} {{.tableComment}}
+type {{.structName}} struct {
+	//引入默认的struct,隔离IEntityStruct的方法改动
+	zorm.EntityStruct
+	{{range $i, $v := .columns}}
+    //{{$v.field}} {{$v.COLUMN_COMMENT}}
+    {{$v.field}} {{$v.DATA_TYPE}} `column:"{{$v.COLUMN_NAME}}"`
+    {{end}}
+	//------------------数据库字段结束,自定义字段写在下面---------------//
+
+
+}
+
+
+//GetTableName 获取表名称
+func (entity *{{.structName}}) GetTableName() string {
+	return {{.structName}}TableName
+}
+
+//GetPKColumnName 获取数据库表的主键字段名称.因为要兼容Map,只能是数据库的字段名称.
+func (entity *{{.structName}}) GetPKColumnName() string {
+	return "{{.pkName}}"
+}
+
