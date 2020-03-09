@@ -168,3 +168,16 @@ func TestPrem(t *testing.T) {
 	fmt.Println(finder.GetSQL())
 
 }
+
+func TestUpdateNotZero(t *testing.T) {
+	user := permstruct.UserStruct{}
+	user.Id = "1583077877688617000"
+	user.UserName = "abc"
+
+	zorm.Transaction(context.Background(), func(ctx context.Context) (interface{}, error) {
+		zorm.UpdateStructNotZeroValue(ctx, &user)
+
+		return nil, nil
+	})
+
+}

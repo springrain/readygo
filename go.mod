@@ -9,4 +9,7 @@ require (
 	github.com/go-redis/redis/v7 v7.2.0
 	github.com/joho/godotenv v1.3.0
 	gopkg.in/square/go-jose.v2 v2.4.1
+
+	gitee.com/chunanyong/logger v1.1.8
+	gitee.com/chunanyong/zorm v1.1.8
 )
