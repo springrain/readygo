@@ -44,9 +44,9 @@ func init() {
 	}
 	baseDao, _ = zorm.NewBaseDao(&dataSourceConfig)
 
-//	cache.NewMemeryCacheManager()
+	//	cache.NewMemeryCacheManager()
 	cache.NewRedisClient(&cache.RedisConfig{
-		Addr:         "127.0.0.1:6379",
+		Addr: "127.0.0.1:6379",
 	})
 }
 
@@ -62,7 +62,7 @@ func TestQuey(t *testing.T) {
 
 	var users []permstruct.UserStruct
 
-	err := zorm.QueryStructList(context.Background(), finder, &users, &page)
+	err := zorm.QueryStructList(context.Background(), finder, &users, page)
 
 	if err != nil {
 		//标记测试失败
@@ -112,10 +112,9 @@ func worker(id int, wg *sync.WaitGroup) {
 		//
 		u.UserName = "zyf"
 		u.CreateTime = time.Now()
-		u.Sex = "男"+string(id)
+		u.Sex = "男" + string(id)
 		//u.Active = 2/0
 		incr, _ := cache.RedisINCR("permstruct.UserStruct")
-
 
 		fmt.Println(incr)
 		u.Id = strconv.Itoa(int(incr.(int64)))
