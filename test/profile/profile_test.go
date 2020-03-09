@@ -1,6 +1,7 @@
 package profile
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -30,7 +31,9 @@ func TestQuery(t *testing.T) {
 
 	for i := 0; i < 10000; i++ {
 
-		queryMap, err := zorm.QueryMap(nil, finder)
+		ctx := context.Background()
+
+		queryMap, err := zorm.QueryMap(ctx, finder)
 
 		if err != nil {
 			t.Errorf("TestNull：%v", err)

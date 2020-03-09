@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"sync"
 	"testing"
+	"time"
 
 	"gitee.com/chunanyong/zorm"
 )
@@ -43,7 +44,10 @@ func init() {
 	}
 	baseDao, _ = zorm.NewBaseDao(&dataSourceConfig)
 
-	cache.NewMemeryCacheManager()
+//	cache.NewMemeryCacheManager()
+	cache.NewRedisClient(&cache.RedisConfig{
+		Addr:         "127.0.0.1:6379",
+	})
 }
 
 func initDate() {
@@ -106,17 +110,22 @@ func worker(id int, wg *sync.WaitGroup) {
 
 		var u permstruct.UserStruct
 		//
-		//u.UserName = "zyf"
-		//u.CreateTime = time.Now()
-		//u.Sex = "男"+string(id)
-		////u.Active = 2/0
-		//
-		//e2 := zorm.SaveStruct(ctx, &u)
-		//if e2 != nil {
-		//	//标记测试失败
-		//	//t.Errorf("TestTrancSave错误:%v", e2)
-		//	return nil, e2
-		//}
+		u.UserName = "zyf"
+		u.CreateTime = time.Now()
+		u.Sex = "男"+string(id)
+		//u.Active = 2/0
+		incr, _ := cache.RedisINCR("permstruct.UserStruct")
+
+
+		fmt.Println(incr)
+		u.Id = strconv.Itoa(int(incr.(int64)))
+
+		e2 := zorm.SaveStruct(ctx, &u)
+		if e2 != nil {
+			//标记测试失败
+			//t.Errorf("TestTrancSave错误:%v", e2)
+			return nil, e2
+		}
 
 		finder := zorm.NewSelectFinder(permstruct.UserStructTableName).Append(" where id = ?", "1583077877688617000")
 
@@ -142,7 +151,7 @@ func TestTranc(t *testing.T) {
 
 	var wg sync.WaitGroup
 
-	for i := 1; i <= 6; i++ {
+	for i := 1; i <= 1000; i++ {
 		wg.Add(1)
 		go worker(i, &wg)
 	}

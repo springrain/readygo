@@ -212,6 +212,50 @@ func redisGet(cacheName string) (interface{}, error) {
 	return result, nil
 }
 
+
+
+func RedisINCR(cacheName string) (interface{}, error) {
+	if cacheName == "" {
+		return nil, errors.New("值不能为空")
+	}
+	var result interface{}
+	var errResult error
+	if redisClient != nil { //单机redis
+		result, errResult = redisClient.Do("INCR", cacheName).Result()
+	} else if redisClusterClient != nil { //集群Redis
+		result, errResult = redisClusterClient.Do("INCR", cacheName).Result()
+	} else {
+		return nil, errors.New("没有redisClient或redisClusterClient实现")
+	}
+	//获值错误
+	if errResult != nil {
+		return nil, errResult
+	}
+	return result, nil
+}
+
+
+
+func RedisCMD(cmd string,cacheName string) (interface{}, error) {
+	if cacheName == "" {
+		return nil, errors.New("值不能为空")
+	}
+	var result interface{}
+	var errResult error
+	if redisClient != nil { //单机redis
+		result, errResult = redisClient.Do(cmd, cacheName).Result()
+	} else if redisClusterClient != nil { //集群Redis
+		result, errResult = redisClusterClient.Do(cmd, cacheName).Result()
+	} else {
+		return nil, errors.New("没有redisClient或redisClusterClient实现")
+	}
+	//获值错误
+	if errResult != nil {
+		return nil, errResult
+	}
+	return result, nil
+}
+
 //Lock redis分布式锁,
 //参数:lockName锁的名称,timeout超时时间默认5秒,分布式锁内业务的匿名函数
 //返回值:true获取锁成功,获取锁失败false,匿名函数返回值,错误信息
