@@ -179,6 +179,7 @@ func redisGet(ctx context.Context, cacheName string) (interface{}, error) {
 	return result, nil
 }
 
+//RedisINCR redis实现的计数器
 func RedisINCR(ctx context.Context, cacheName string) (interface{}, error) {
 	if cacheName == "" {
 		return nil, errors.New("值不能为空")
@@ -191,10 +192,10 @@ func RedisINCR(ctx context.Context, cacheName string) (interface{}, error) {
 	return result, nil
 }
 
-//Lock redis分布式锁,
-//参数:lockName锁的名称,timeout超时时间秒,默认5秒,分布式锁内业务的匿名函数
+//RedisLock redis实现的分布式锁
+//参数:lockName锁的名称,timeoutSecond超时秒数默认5秒,分布式锁内业务的匿名函数
 //返回值:true获取锁成功,获取锁失败false,匿名函数返回值,错误信息
-func Lock(ctx context.Context, lockName string, timeoutSecond int, doLock func() (interface{}, error)) (bool, interface{}, error) {
+func RedisLock(ctx context.Context, lockName string, timeoutSecond int, doLock func() (interface{}, error)) (bool, interface{}, error) {
 	if lockName == "" {
 		return false, nil, errors.New("lockName值不能为空")
 	}
@@ -251,8 +252,8 @@ func Lock(ctx context.Context, lockName string, timeoutSecond int, doLock func()
 	return locked == 1, result, errLock
 }
 
+//RedisCMDContext 运行redis指令
 func RedisCMDContext(ctx context.Context, args ...interface{}) (interface{}, error) {
-
 	var result interface{}
 	var errResult error
 	if redisClient != nil { //单机redis
