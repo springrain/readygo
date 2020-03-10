@@ -95,16 +95,16 @@ func NewRedisClient(redisConfig *RedisConfig) error {
 
 //redisHset 为redisCacheManager设置值,不再单独提供redis的API,统一为cacheManager接口
 //值变成json的[]byte进行保存,小写的属性json无法转化,struct需要实现MarshalJSON和UnmarshalJSON的接口方法
-func redisHset(ctx context.Context, hname string, key string, valuePtr interface{}) error {
-	if hname == "" || key == "" || valuePtr == nil {
+func redisHset(ctx context.Context, hname string, key string, value interface{}) error {
+	if hname == "" || key == "" || value == nil {
 		return errors.New("值不能为空")
 	}
 	//把值转成JSON的[]byte格式
-	value, errJSON := json.Marshal(valuePtr)
+	jsonData, errJSON := json.Marshal(value)
 	if errJSON != nil {
 		return errJSON
 	}
-	_, errResult := RedisCMDContext(ctx, "hset", hname, key, value)
+	_, errResult := RedisCMDContext(ctx, "hset", hname, key, jsonData)
 	//获值错误
 	if errResult != nil {
 		return errResult
@@ -257,9 +257,9 @@ func RedisCMDContext(ctx context.Context, args ...interface{}) (interface{}, err
 	var result interface{}
 	var errResult error
 	if redisClient != nil { //单机redis
-		result, errResult = redisClient.DoContext(ctx, args).Result()
+		result, errResult = redisClient.DoContext(ctx, args...).Result()
 	} else if redisClusterClient != nil { //集群Redis
-		result, errResult = redisClusterClient.DoContext(ctx, args).Result()
+		result, errResult = redisClusterClient.DoContext(ctx, args...).Result()
 	} else {
 		return nil, errors.New("没有redisClient或redisClusterClient实现")
 	}
