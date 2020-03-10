@@ -104,7 +104,8 @@ func redisHset(ctx context.Context, hname string, key string, value interface{})
 	if errJSON != nil {
 		return errJSON
 	}
-	_, errResult := RedisCMDContext(ctx, "hset", hname, key, jsonData)
+	//_, errResult := RedisCMDContext(ctx, "hset", hname, key, jsonData)
+	_, errResult := RedisCMDContext(ctx, "hset", hname, key, string(jsonData))
 	//获值错误
 	if errResult != nil {
 		return errResult
@@ -126,7 +127,8 @@ func redisHget(ctx context.Context, hname string, key string, valuePtr interface
 		return errResult
 	}
 	//转换成json的[]byte
-	jsonBytes, jsonOK := jsonData.([]byte)
+	//jsonBytes, jsonOK := jsonData.([]byte)
+	jsonBytes, jsonOK := jsonData.(string)
 	if !jsonOK { //取值失败
 		return errors.New("缓存中的格式值错误")
 	}
@@ -134,7 +136,8 @@ func redisHget(ctx context.Context, hname string, key string, valuePtr interface
 		return nil
 	}
 	//赋值
-	errJSON := json.Unmarshal(jsonBytes, valuePtr)
+	//errJSON := json.Unmarshal(jsonBytes, valuePtr)
+	errJSON := json.Unmarshal([]byte(jsonBytes), valuePtr)
 	return errJSON
 }
 
