@@ -183,7 +183,7 @@ func RedisINCR(ctx context.Context, cacheName string) (interface{}, error) {
 	if cacheName == "" {
 		return nil, errors.New("值不能为空")
 	}
-	result, errResult := RedisCMDContext(ctx, "INCR", cacheName)
+	result, errResult := RedisCMDContext(ctx, "incr", cacheName)
 	//获值错误
 	if errResult != nil {
 		return nil, errResult
