@@ -88,7 +88,7 @@ func UpdateUserStruct(ctx context.Context, userStruct *permstruct.UserStruct) er
 		return errUpdateUserStruct
 	}
 	//清理缓存
-	cache.EvictKey(baseInfoCacheKey, "FindUserStructById_"+userStruct.Id)
+	cache.EvictKey(ctx, baseInfoCacheKey, "FindUserStructById_"+userStruct.Id)
 	return nil
 }
 
@@ -128,7 +128,7 @@ func DeleteUserStructById(ctx context.Context, id string) error {
 	}
 
 	//清理缓存
-	cache.EvictKey(baseInfoCacheKey, "FindUserStructById_"+id)
+	cache.EvictKey(ctx, baseInfoCacheKey, "FindUserStructById_"+id)
 
 	return nil
 }
@@ -142,7 +142,7 @@ func FindUserStructById(ctx context.Context, id string) (*permstruct.UserStruct,
 	}
 	userStruct := permstruct.UserStruct{}
 	cacheKey := "FindUserStructById_" + id
-	cache.GetFromCache(baseInfoCacheKey, cacheKey, &userStruct)
+	cache.GetFromCache(ctx, baseInfoCacheKey, cacheKey, &userStruct)
 	if len(userStruct.Id) > 0 { //缓存存在
 		return &userStruct, nil
 	}
@@ -159,7 +159,7 @@ func FindUserStructById(ctx context.Context, id string) (*permstruct.UserStruct,
 	}
 
 	//放入缓存
-	cache.PutToCache(baseInfoCacheKey, cacheKey, userStruct)
+	cache.PutToCache(ctx, baseInfoCacheKey, cacheKey, userStruct)
 
 	return &userStruct, nil
 

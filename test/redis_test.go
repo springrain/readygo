@@ -1,6 +1,7 @@
 package test
 
 import (
+	"context"
 	"fmt"
 	"readygo/cache"
 	"readygo/permission/permstruct"
@@ -9,29 +10,25 @@ import (
 	"testing"
 )
 
-func init()  {
+func init() {
 	cache.NewRedisClient(&cache.RedisConfig{
-		Addr:         "127.0.0.1:6379",
+		Addr: "127.0.0.1:6379",
 	})
 }
-
 
 func incrWorker(id int, wg *sync.WaitGroup) {
 
 	defer wg.Done()
 
+	ctx := context.Background()
+	incr, _ := cache.RedisINCR(ctx, "permstruct.UserStruct")
+	fmt.Println(id, incr)
 
-		incr, _ := cache.RedisINCR("permstruct.UserStruct")
-		fmt.Println(id , incr)
+	var user permstruct.UserStruct
 
+	user.Id = strconv.Itoa(int(incr.(int64)))
 
-		var user permstruct.UserStruct
-
-
-		user.Id =  strconv.Itoa(int(incr.(int64)))
-
-		fmt.Println(user)
-
+	fmt.Println(user)
 
 }
 

@@ -1,6 +1,7 @@
 package test
 
 import (
+	"context"
 	"fmt"
 	"readygo/cache"
 	"testing"
@@ -8,10 +9,11 @@ import (
 
 func TestMemeryCache(t *testing.T) {
 
+	ctx := context.Background()
 	cache.NewMemeryCacheManager()
-	cache.PutToCache("cacheName", "testKey", "testValue")
+	cache.PutToCache(ctx, "cacheName", "testKey", "testValue")
 	a := ""
-	cache.GetFromCache("cacheName", "testKey", &a)
+	cache.GetFromCache(ctx, "cacheName", "testKey", &a)
 	fmt.Println(a)
 
 }

@@ -61,7 +61,7 @@ func SaveMenuStruct(ctx context.Context, menuStruct *permstruct.MenuStruct) erro
 	}
 
 	// 清理缓存
-	go cache.EvictKey(baseInfoCacheKey, "findAllMenuTree")
+	go cache.EvictKey(ctx, baseInfoCacheKey, "findAllMenuTree")
 
 	return nil
 }
@@ -156,10 +156,10 @@ func UpdateMenuStruct(ctx context.Context, menuStruct *permstruct.MenuStruct) er
 
 	// 清理缓存
 	for _, menuId := range childrenIds {
-		go cache.EvictKey(baseInfoCacheKey, "FindMenuStructById_"+menuId)
+		go cache.EvictKey(ctx, baseInfoCacheKey, "FindMenuStructById_"+menuId)
 	}
 	//go cache.EvictKey(baseInfoCacheKey, "FindMenuStructById_"+menuStruct.Id)
-	go cache.EvictKey(baseInfoCacheKey, "FindAllMenuTree")
+	go cache.EvictKey(ctx, baseInfoCacheKey, "FindAllMenuTree")
 
 	return nil
 }
@@ -204,7 +204,7 @@ func DeleteMenuStructById(ctx context.Context, id string) error {
 
 		//清理缓存
 		for _, menuId := range menuIds {
-			go cache.EvictKey(baseInfoCacheKey, "FindMenuStructById_"+menuId)
+			go cache.EvictKey(ctx, baseInfoCacheKey, "FindMenuStructById_"+menuId)
 		}
 
 		return nil, nil
@@ -220,8 +220,8 @@ func DeleteMenuStructById(ctx context.Context, id string) error {
 	}
 
 	// 清理缓存
-	go cache.ClearCache(qxCacheKey)
-	go cache.EvictKey(baseInfoCacheKey, "FindAllMenuTree")
+	go cache.ClearCache(ctx, qxCacheKey)
+	go cache.EvictKey(ctx, baseInfoCacheKey, "FindAllMenuTree")
 
 	return nil
 }
@@ -236,7 +236,7 @@ func FindMenuStructById(ctx context.Context, id string) (*permstruct.MenuStruct,
 
 	menuStruct := permstruct.MenuStruct{}
 	cacheKey := "FindMenuStructById_" + id
-	cache.GetFromCache(baseInfoCacheKey, cacheKey, &menuStruct)
+	cache.GetFromCache(ctx, baseInfoCacheKey, cacheKey, &menuStruct)
 	if len(menuStruct.Id) > 0 { //如果缓存中存在
 		return &menuStruct, nil
 	}
@@ -253,7 +253,7 @@ func FindMenuStructById(ctx context.Context, id string) (*permstruct.MenuStruct,
 		return nil, errFindMenuStructById
 	}
 	//放入缓存
-	cache.PutToCache(baseInfoCacheKey, cacheKey, menuStruct)
+	cache.PutToCache(ctx, baseInfoCacheKey, cacheKey, menuStruct)
 	return &menuStruct, nil
 
 }
@@ -313,7 +313,7 @@ func FindAllMenuTree(ctx context.Context) ([]permstruct.MenuStruct, error) {
 	menus := make([]permstruct.MenuStruct, 0)
 
 	//从缓存中取数据
-	errFromCache := cache.GetFromCache(baseInfoCacheKey, cacheKey, &menus)
+	errFromCache := cache.GetFromCache(ctx, baseInfoCacheKey, cacheKey, &menus)
 	if errFromCache != nil {
 		return nil, errFromCache
 	}
@@ -332,7 +332,7 @@ func FindAllMenuTree(ctx context.Context) ([]permstruct.MenuStruct, error) {
 	menus = menuList2Tree(menus)
 
 	//放入缓存
-	errPutCache := cache.PutToCache(baseInfoCacheKey, cacheKey, menus)
+	errPutCache := cache.PutToCache(ctx, baseInfoCacheKey, cacheKey, menus)
 	if errPutCache != nil {
 		return nil, errPutCache
 	}

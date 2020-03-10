@@ -89,7 +89,7 @@ func UpdateRoleStruct(ctx context.Context, roleStruct *permstruct.RoleStruct) er
 	}
 
 	//清除缓存
-	go cache.EvictKey(baseInfoCacheKey, "FindRoleStructById_"+roleStruct.Id)
+	go cache.EvictKey(ctx, baseInfoCacheKey, "FindRoleStructById_"+roleStruct.Id)
 
 	return nil
 }
@@ -130,7 +130,7 @@ func DeleteRoleStructById(ctx context.Context, id string) error {
 	}
 
 	//清除缓存
-	go cache.EvictKey(baseInfoCacheKey, "FindRoleStructById_"+id)
+	go cache.EvictKey(ctx, baseInfoCacheKey, "FindRoleStructById_"+id)
 
 	return nil
 }
@@ -146,7 +146,7 @@ func FindRoleStructById(ctx context.Context, id string) (*permstruct.RoleStruct,
 	roleStruct := permstruct.RoleStruct{}
 
 	cacheKey := "FindRoleStructById_" + id
-	cache.GetFromCache(baseInfoCacheKey, cacheKey, &roleStruct)
+	cache.GetFromCache(ctx, baseInfoCacheKey, cacheKey, &roleStruct)
 	if len(roleStruct.Id) > 0 { //如果缓存中存在
 		return &roleStruct, nil
 	}
@@ -163,7 +163,7 @@ func FindRoleStructById(ctx context.Context, id string) (*permstruct.RoleStruct,
 	}
 
 	//放入缓存
-	cache.PutToCache(baseInfoCacheKey, cacheKey, roleStruct)
+	cache.PutToCache(ctx, baseInfoCacheKey, cacheKey, roleStruct)
 	return &roleStruct, nil
 
 }

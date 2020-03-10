@@ -144,7 +144,7 @@ func UpdateOrgStruct(ctx context.Context, orgStruct *permstruct.OrgStruct) error
 	}
 	// 清除缓存
 	for _, orgId := range childrenIds {
-		go cache.EvictKey(baseInfoCacheKey, "FindOrgStructById_"+orgId)
+		go cache.EvictKey(ctx, baseInfoCacheKey, "FindOrgStructById_"+orgId)
 	}
 	//go cache.EvictKey(baseInfoCacheKey, "FindOrgStructById_"+orgStruct.Id)
 	return nil
@@ -201,10 +201,10 @@ func DeleteOrgStructById(ctx context.Context, id string) error {
 	//清理缓存
 	for _, orgId := range orgIds {
 		//清理缓存
-		go cache.EvictKey(baseInfoCacheKey, "FindOrgStructById_"+orgId)
+		go cache.EvictKey(ctx, baseInfoCacheKey, "FindOrgStructById_"+orgId)
 	}
 	//go cache.EvictKey(baseInfoCacheKey, "FindOrgStructById_"+id)
-	go cache.ClearCache(qxCacheKey)
+	go cache.ClearCache(ctx, qxCacheKey)
 	return nil
 }
 
@@ -217,7 +217,7 @@ func FindOrgStructById(ctx context.Context, id string) (*permstruct.OrgStruct, e
 	}
 	orgStruct := permstruct.OrgStruct{}
 	cacheKey := "FindOrgStructById_" + id
-	cache.GetFromCache(baseInfoCacheKey, cacheKey, &orgStruct)
+	cache.GetFromCache(ctx, baseInfoCacheKey, cacheKey, &orgStruct)
 	if len(orgStruct.Id) > 0 { //缓存中有值
 		return &orgStruct, nil
 	}
@@ -235,7 +235,7 @@ func FindOrgStructById(ctx context.Context, id string) (*permstruct.OrgStruct, e
 	}
 
 	//放入缓存
-	cache.PutToCache(baseInfoCacheKey, cacheKey, orgStruct)
+	cache.PutToCache(ctx, baseInfoCacheKey, cacheKey, orgStruct)
 
 	return &orgStruct, nil
 

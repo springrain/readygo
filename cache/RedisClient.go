@@ -1,6 +1,7 @@
 package cache
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"runtime"
@@ -94,7 +95,7 @@ func NewRedisClient(redisConfig *RedisConfig) error {
 
 //redisHset 为redisCacheManager设置值,不再单独提供redis的API,统一为cacheManager接口
 //值变成json的[]byte进行保存,小写的属性json无法转化,struct需要实现MarshalJSON和UnmarshalJSON的接口方法
-func redisHset(hname string, key string, valuePtr interface{}) error {
+func redisHset(ctx context.Context, hname string, key string, valuePtr interface{}) error {
 	if hname == "" || key == "" || valuePtr == nil {
 		return errors.New("值不能为空")
 	}
@@ -103,14 +104,7 @@ func redisHset(hname string, key string, valuePtr interface{}) error {
 	if errJSON != nil {
 		return errJSON
 	}
-	var errResult error
-	if redisClient != nil { //单机redis
-		_, errResult = redisClient.Do("hset", hname, key, value).Result()
-	} else if redisClusterClient != nil { //集群Redis
-		_, errResult = redisClusterClient.Do("hset", hname, key, value).Result()
-	} else {
-		return errors.New("没有redisClient或redisClusterClient实现")
-	}
+	_, errResult := RedisCMDContext(ctx, "hset", hname, key, value)
 	//获值错误
 	if errResult != nil {
 		return errResult
@@ -121,19 +115,12 @@ func redisHset(hname string, key string, valuePtr interface{}) error {
 
 //redisHget 获取指定的值
 //取出json的[]byte进行转化,小写的属性json无法转化,struct需要实现MarshalJSON和UnmarshalJSON的接口方法
-func redisHget(hname string, key string, valuePtr interface{}) error {
+func redisHget(ctx context.Context, hname string, key string, valuePtr interface{}) error {
 	if hname == "" || key == "" || valuePtr == nil {
 		return errors.New("值不能为空")
 	}
-	var errResult error
-	var jsonData interface{}
-	if redisClient != nil { //单机redis
-		jsonData, errResult = redisClient.Do("hget", hname, key).Result()
-	} else if redisClusterClient != nil { //集群Redis
-		jsonData, errResult = redisClusterClient.Do("hget", hname, key).Result()
-	} else {
-		return errors.New("没有redisClient或redisClusterClient实现")
-	}
+
+	jsonData, errResult := RedisCMDContext(ctx, "hget", hname, key)
 	//获值错误
 	if errResult != nil {
 		return errResult
@@ -152,18 +139,12 @@ func redisHget(hname string, key string, valuePtr interface{}) error {
 }
 
 //redisHdel 删除一个map中的key
-func redisHdel(hname string, key string) error {
+func redisHdel(ctx context.Context, hname string, key string) error {
 	if hname == "" || key == "" {
 		return errors.New("值不能为空")
 	}
-	var errResult error
-	if redisClient != nil { //单机redis
-		_, errResult = redisClient.HDel(hname, key).Result()
-	} else if redisClusterClient != nil { //集群Redis
-		_, errResult = redisClusterClient.HDel(hname, key).Result()
-	} else {
-		return errors.New("没有redisClient或redisClusterClient实现")
-	}
+	_, errResult := RedisCMDContext(ctx, "hdel", hname, key)
+
 	//获值错误
 	if errResult != nil {
 		return errResult
@@ -172,19 +153,12 @@ func redisHdel(hname string, key string) error {
 }
 
 //redisDel 删除缓存
-func redisDel(cacheName string) error {
+func redisDel(ctx context.Context, cacheName string) error {
 
 	if cacheName == "" {
 		return errors.New("值不能为空")
 	}
-	var errResult error
-	if redisClient != nil { //单机redis
-		_, errResult = redisClient.Del(cacheName).Result()
-	} else if redisClusterClient != nil { //集群Redis
-		_, errResult = redisClusterClient.Del(cacheName).Result()
-	} else {
-		return errors.New("没有redisClient或redisClusterClient实现")
-	}
+	_, errResult := RedisCMDContext(ctx, "del", cacheName)
 	//获值错误
 	if errResult != nil {
 		return errResult
@@ -192,19 +166,12 @@ func redisDel(cacheName string) error {
 	return nil
 }
 
-func redisGet(cacheName string) (interface{}, error) {
+func redisGet(ctx context.Context, cacheName string) (interface{}, error) {
 	if cacheName == "" {
 		return nil, errors.New("值不能为空")
 	}
-	var result interface{}
-	var errResult error
-	if redisClient != nil { //单机redis
-		result, errResult = redisClient.Do("get", cacheName).Result()
-	} else if redisClusterClient != nil { //集群Redis
-		result, errResult = redisClusterClient.Do("get", cacheName).Result()
-	} else {
-		return nil, errors.New("没有redisClient或redisClusterClient实现")
-	}
+	result, errResult := RedisCMDContext(ctx, "get", cacheName)
+
 	//获值错误
 	if errResult != nil {
 		return nil, errResult
@@ -212,43 +179,11 @@ func redisGet(cacheName string) (interface{}, error) {
 	return result, nil
 }
 
-
-
-func RedisINCR(cacheName string) (interface{}, error) {
+func RedisINCR(ctx context.Context, cacheName string) (interface{}, error) {
 	if cacheName == "" {
 		return nil, errors.New("值不能为空")
 	}
-	var result interface{}
-	var errResult error
-	if redisClient != nil { //单机redis
-		result, errResult = redisClient.Do("INCR", cacheName).Result()
-	} else if redisClusterClient != nil { //集群Redis
-		result, errResult = redisClusterClient.Do("INCR", cacheName).Result()
-	} else {
-		return nil, errors.New("没有redisClient或redisClusterClient实现")
-	}
-	//获值错误
-	if errResult != nil {
-		return nil, errResult
-	}
-	return result, nil
-}
-
-
-
-func RedisCMD(cmd string,cacheName string) (interface{}, error) {
-	if cacheName == "" {
-		return nil, errors.New("值不能为空")
-	}
-	var result interface{}
-	var errResult error
-	if redisClient != nil { //单机redis
-		result, errResult = redisClient.Do(cmd, cacheName).Result()
-	} else if redisClusterClient != nil { //集群Redis
-		result, errResult = redisClusterClient.Do(cmd, cacheName).Result()
-	} else {
-		return nil, errors.New("没有redisClient或redisClusterClient实现")
-	}
+	result, errResult := RedisCMDContext(ctx, "INCR", cacheName)
 	//获值错误
 	if errResult != nil {
 		return nil, errResult
@@ -257,30 +192,28 @@ func RedisCMD(cmd string,cacheName string) (interface{}, error) {
 }
 
 //Lock redis分布式锁,
-//参数:lockName锁的名称,timeout超时时间默认5秒,分布式锁内业务的匿名函数
+//参数:lockName锁的名称,timeout超时时间秒,默认5秒,分布式锁内业务的匿名函数
 //返回值:true获取锁成功,获取锁失败false,匿名函数返回值,错误信息
-func Lock(lockName string, timeout time.Duration, doLock func() (interface{}, error)) (bool, interface{}, error) {
+func Lock(ctx context.Context, lockName string, timeoutSecond int, doLock func() (interface{}, error)) (bool, interface{}, error) {
 	if lockName == "" {
 		return false, nil, errors.New("lockName值不能为空")
 	}
 
-	if timeout == 0 { //如果没有超时时间,默认5秒
-		timeout = time.Second * 5
+	if timeoutSecond == 0 { //如果没有超时时间,默认5秒
+		timeoutSecond = 5
 	}
 
-	var locked bool = false
-	var errResult error = nil
 	//获取超时的时间,作为value
-	value := time.Now().Add(timeout).Unix()
-	if redisClient != nil { //单机redis
-		locked, errResult = redisClient.SetNX(lockName, value, timeout).Result()
-	} else if redisClusterClient != nil { //集群Redis
-		locked, errResult = redisClusterClient.SetNX(lockName, value, timeout).Result()
-	} else {
-		return false, nil, errors.New("没有redisClient或redisClusterClient实现")
+	value := time.Now().Unix() + int64(timeoutSecond)
+
+	lockedStatus, errResult := RedisCMDContext(ctx, "set", lockName, value, "ex", timeoutSecond, "nx")
+	locked, lockOK := lockedStatus.(int)
+	if !lockOK { //结果异常
+		return false, nil, errors.New("获取锁状态异常")
 	}
+
 	//获值错误或者没有获取到锁
-	if errResult != nil || (!locked) {
+	if errResult != nil || (locked == 0) {
 		return false, nil, errResult
 	}
 	//确保解锁逻辑执行
@@ -291,15 +224,15 @@ func Lock(lockName string, timeout time.Duration, doLock func() (interface{}, er
 			return
 		}
 
-		lockValue, errLock := redisGet(lockName)
+		lockValue, errLock := redisGet(ctx, lockName)
 		if errLock != nil { //从redis获取值出现异常,解锁
-			redisDel(lockName)
+			redisDel(ctx, lockName)
 			return
 		}
 
 		oldValue, newOK := lockValue.(int64)
 		if !newOK { //如果获取值异常,解锁
-			redisDel(lockName)
+			redisDel(ctx, lockName)
 			return
 		}
 		if oldValue != value { //值已经被其他的程序修改,已经不再是本程序的锁了,返回
@@ -307,7 +240,7 @@ func Lock(lockName string, timeout time.Duration, doLock func() (interface{}, er
 		}
 
 		//其他情况,解锁
-		redisDel(lockName)
+		redisDel(ctx, lockName)
 
 	}()
 
@@ -315,5 +248,23 @@ func Lock(lockName string, timeout time.Duration, doLock func() (interface{}, er
 	result, errLock := doLock()
 
 	//返回业务逻辑
-	return locked, result, errLock
+	return locked == 1, result, errLock
+}
+
+func RedisCMDContext(ctx context.Context, args ...interface{}) (interface{}, error) {
+
+	var result interface{}
+	var errResult error
+	if redisClient != nil { //单机redis
+		result, errResult = redisClient.DoContext(ctx, args).Result()
+	} else if redisClusterClient != nil { //集群Redis
+		result, errResult = redisClusterClient.DoContext(ctx, args).Result()
+	} else {
+		return nil, errors.New("没有redisClient或redisClusterClient实现")
+	}
+	//获值错误
+	if errResult != nil {
+		return nil, errResult
+	}
+	return result, nil
 }

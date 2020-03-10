@@ -25,7 +25,7 @@ func FindRoleByUserId(ctx context.Context, userId string, page *zorm.Page) ([]pe
 	roles := make([]permstruct.RoleStruct, 0)
 
 	//从缓存中取数据
-	cache.GetFromCache(qxCacheKey, cacheKey, &roles)
+	cache.GetFromCache(ctx, qxCacheKey, cacheKey, &roles)
 	if len(roles) > 0 { //缓存中有数据
 		return roles, nil
 	}
@@ -41,7 +41,7 @@ func FindRoleByUserId(ctx context.Context, userId string, page *zorm.Page) ([]pe
 	}
 
 	//放入缓存
-	errPutCache := cache.PutToCache(qxCacheKey, cacheKey, roles)
+	errPutCache := cache.PutToCache(ctx, qxCacheKey, cacheKey, roles)
 	if errPutCache != nil {
 		return nil, errPutCache
 	}
@@ -60,7 +60,7 @@ func FindMenuByRoleId(ctx context.Context, roleId string, page *zorm.Page) ([]pe
 	menus := make([]permstruct.MenuStruct, 0)
 
 	//从缓存中取数据
-	cache.GetFromCache(qxCacheKey, cacheKey, &menus)
+	cache.GetFromCache(ctx, qxCacheKey, cacheKey, &menus)
 	if len(menus) > 0 { //缓存中有数据
 		return menus, nil
 	}
@@ -76,7 +76,7 @@ func FindMenuByRoleId(ctx context.Context, roleId string, page *zorm.Page) ([]pe
 	}
 
 	//放入缓存
-	errPutCache := cache.PutToCache(qxCacheKey, cacheKey, menus)
+	errPutCache := cache.PutToCache(ctx, qxCacheKey, cacheKey, menus)
 	if errPutCache != nil {
 		return nil, errPutCache
 	}
@@ -95,7 +95,7 @@ func FindMenuByUserId(ctx context.Context, userId string) ([]permstruct.MenuStru
 	menus := make([]permstruct.MenuStruct, 0)
 
 	//从缓存中取数据
-	cache.GetFromCache(qxCacheKey, cacheKey, &menus)
+	cache.GetFromCache(ctx, qxCacheKey, cacheKey, &menus)
 	if len(menus) > 0 { //缓存中有数据
 		return menus, nil
 	}
@@ -144,7 +144,7 @@ func FindMenuByUserId(ctx context.Context, userId string) ([]permstruct.MenuStru
 	}
 
 	//放入缓存
-	errPutCache := cache.PutToCache(qxCacheKey, cacheKey, menus)
+	errPutCache := cache.PutToCache(ctx, qxCacheKey, cacheKey, menus)
 	if errPutCache != nil {
 		return nil, errPutCache
 	}
@@ -196,17 +196,17 @@ func UpdateUserRoles(ctx context.Context, userId string, roleIds []string) error
 
 	//清理老角色缓存
 	for _, roleId := range listOld {
-		go cache.EvictKey(qxCacheKey, "FindUserByRoleId_"+roleId)
+		go cache.EvictKey(ctx, qxCacheKey, "FindUserByRoleId_"+roleId)
 	}
 
 	//清理用户的缓存
-	go cache.EvictKey(qxCacheKey, "FindRoleByUserId_"+userId)
-	go cache.EvictKey(qxCacheKey, "FindMenuByUserId_"+userId)
+	go cache.EvictKey(ctx, qxCacheKey, "FindRoleByUserId_"+userId)
+	go cache.EvictKey(ctx, qxCacheKey, "FindMenuByUserId_"+userId)
 
 	//清理新角色缓存
 	for _, roleId := range roleIds {
 		//清理缓存
-		go cache.EvictKey(qxCacheKey, "FindUserByRoleId_"+roleId)
+		go cache.EvictKey(ctx, qxCacheKey, "FindUserByRoleId_"+roleId)
 	}
 
 	return errTransaction

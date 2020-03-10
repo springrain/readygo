@@ -1,6 +1,7 @@
 package cache
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"sync"
@@ -27,7 +28,7 @@ func NewMemeryCacheManager() error {
 //getFromCache 从cache中获取key的
 //valuePtr形参是接收值的对象指针,例如 &user
 //取出json的[]byte进行转化,小写的属性json无法转化,struct需要实现MarshalJSON和UnmarshalJSON的接口方法
-func (cacheManager *memeryCacheManager) getFromCache(cacheName string, key string, valuePtr interface{}) error {
+func (cacheManager *memeryCacheManager) getFromCache(ctx context.Context, cacheName string, key string, valuePtr interface{}) error {
 	if cacheName == "" || key == "" || valuePtr == nil {
 		return errors.New("值不能为空")
 	}
@@ -53,7 +54,7 @@ func (cacheManager *memeryCacheManager) getFromCache(cacheName string, key strin
 
 //putToCache 设置指定cache中的key
 //值变成json的[]byte进行保存,小写的属性json无法转化,struct需要实现MarshalJSON和UnmarshalJSON的接口方法
-func (cacheManager *memeryCacheManager) putToCache(cacheName string, key string, valuePtr interface{}) error {
+func (cacheManager *memeryCacheManager) putToCache(ctx context.Context, cacheName string, key string, valuePtr interface{}) error {
 	if cacheName == "" || key == "" || valuePtr == nil {
 		return errors.New("值不能为空")
 	}
@@ -79,7 +80,7 @@ func (cacheManager *memeryCacheManager) putToCache(cacheName string, key string,
 }
 
 //clearCahe 清理cache
-func (cacheManager *memeryCacheManager) clearCache(cacheName string) error {
+func (cacheManager *memeryCacheManager) clearCache(ctx context.Context, cacheName string) error {
 	//cacheName值不能为空
 	if len(cacheName) < 1 {
 		return errors.New("cacheName值不能为空")
@@ -89,7 +90,7 @@ func (cacheManager *memeryCacheManager) clearCache(cacheName string) error {
 }
 
 //evictKey 失效一个cache中的key
-func (cacheManager *memeryCacheManager) evictKey(cacheName string, key string) error {
+func (cacheManager *memeryCacheManager) evictKey(ctx context.Context, cacheName string, key string) error {
 	if cacheName == "" || key == "" {
 		return errors.New("值不能为空")
 	}

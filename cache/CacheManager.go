@@ -1,6 +1,9 @@
 package cache
 
-import "errors"
+import (
+	"context"
+	"errors"
+)
 
 //内部使用cacheManger,对外暴露使用方法
 //初始化的时候赋值这个变量,只能有一个cacheManager
@@ -13,36 +16,36 @@ var errNilManager error = errors.New("cacheManager为nil,请先调用NewMemeryCa
 //GetFromCache 从cache中获取key的值.默认使用
 //缓存的结构是map[cacheName string]map[key string]value interface{}
 //valuePtr形参是接收值的对象指针,例如 &user
-func GetFromCache(cacheName string, key string, valuePtr interface{}) error {
+func GetFromCache(ctx context.Context, cacheName string, key string, valuePtr interface{}) error {
 	if cacheManager == nil {
 		return errNilManager
 	}
-	return cacheManager.getFromCache(cacheName, key, valuePtr)
+	return cacheManager.getFromCache(ctx, cacheName, key, valuePtr)
 }
 
 //PutToCache 设置指定cache中的key值
 //缓存的结构是map[cacheName string]map[key string]value interface{}
-func PutToCache(cacheName string, key string, value interface{}) error {
+func PutToCache(ctx context.Context, cacheName string, key string, value interface{}) error {
 	if cacheManager == nil {
 		return errNilManager
 	}
-	return cacheManager.putToCache(cacheName, key, value)
+	return cacheManager.putToCache(ctx, cacheName, key, value)
 }
 
 //ClearCache 清理cache
 //缓存的结构是map[cacheName string]map[key string]value interface{}
-func ClearCache(cacheName string) error {
+func ClearCache(ctx context.Context, cacheName string) error {
 	if cacheManager == nil {
 		return errNilManager
 	}
-	return cacheManager.clearCache(cacheName)
+	return cacheManager.clearCache(ctx, cacheName)
 }
 
 //EvictKey 失效一个cache中的key
 //缓存的结构是map[cacheName string]map[key string]value interface{}
-func EvictKey(cacheName string, key string) error {
+func EvictKey(ctx context.Context, cacheName string, key string) error {
 	if cacheManager == nil {
 		return errNilManager
 	}
-	return cacheManager.evictKey(cacheName, key)
+	return cacheManager.evictKey(ctx, cacheName, key)
 }

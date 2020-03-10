@@ -114,7 +114,7 @@ func worker(id int, wg *sync.WaitGroup) {
 		u.CreateTime = time.Now()
 		u.Sex = "男" + string(id)
 		//u.Active = 2/0
-		incr, _ := cache.RedisINCR("permstruct.UserStruct")
+		incr, _ := cache.RedisINCR(ctx, "permstruct.UserStruct")
 
 		fmt.Println(incr)
 		u.Id = strconv.Itoa(int(incr.(int64)))
