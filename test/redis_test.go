@@ -3,6 +3,7 @@ package test
 import (
 	"context"
 	"fmt"
+	"github.com/shopspring/decimal"
 	"readygo/cache"
 	"readygo/permission/permstruct"
 	"strconv"
@@ -10,10 +11,23 @@ import (
 	"testing"
 )
 
+type Uu struct
+{
+	Name string
+	Teacher string
+	Amount int
+	o decimal.Decimal
+
+	E decimal.Decimal
+	d string
+}
+
 func init() {
 	cache.NewRedisClient(&cache.RedisConfig{
 		Addr: "127.0.0.1:6379",
 	})
+
+	cache.NewRedisCacheManager()
 }
 
 func incrWorker(id int, wg *sync.WaitGroup) {
@@ -22,6 +36,10 @@ func incrWorker(id int, wg *sync.WaitGroup) {
 
 	ctx := context.Background()
 	incr, _ := cache.RedisINCR(ctx, "permstruct.UserStruct")
+
+	if incr == nil {
+		incr,_ = cache.RedisINCR(ctx, "permstruct.UserStruct")
+	}
 	fmt.Println(id, incr)
 
 	var user permstruct.UserStruct
@@ -44,3 +62,41 @@ func TestINCR(t *testing.T) {
 	wg.Wait()
 
 }
+
+
+func TestDemo(t *testing.T){
+
+	ctx := context.Background()
+
+	incr, err := cache.RedisINCR(ctx, "permstruct.UserStruct")
+
+	fmt.Println(incr,err)
+}
+
+
+func TestStruct(t *testing.T){
+
+	var u Uu
+	u.Amount = 2
+	u.Name = "fef"
+	u.Teacher = "yyy"
+	u.o = decimal.NewFromFloat(2.33)
+
+	u.E = decimal.NewFromFloat(2.333)
+
+	u.d  = "ff"
+	ctx := context.Background()
+	err := cache.PutToCache(ctx, "Uu.table", "dd", &u)
+
+	fmt.Println(err,u)
+
+	r := &Uu{}
+
+	cache.GetFromCache(ctx,"Uu.table","dd",r)
+
+	fmt.Println(r)
+
+}
+
+
+
