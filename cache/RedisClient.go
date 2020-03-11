@@ -104,8 +104,8 @@ func redisHset(ctx context.Context, hname string, key string, value interface{})
 	if errJSON != nil {
 		return errJSON
 	}
-	//_, errResult := RedisCMDContext(ctx, "hset", hname, key, jsonData)
-	_, errResult := RedisCMDContext(ctx, "hset", hname, key, string(jsonData))
+	_, errResult := RedisCMDContext(ctx, "hset", hname, key, jsonData)
+	//_, errResult := RedisCMDContext(ctx, "hset", hname, key, string(jsonData))
 	//获值错误
 	if errResult != nil {
 		return errResult
