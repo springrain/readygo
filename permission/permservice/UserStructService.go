@@ -186,3 +186,22 @@ func FindUserStructList(ctx context.Context, finder *zorm.Finder, page *zorm.Pag
 
 	return userStructList, nil
 }
+
+func FindUserVOStructByUserId(ctx context.Context, userId string) (permstruct.UserVOStruct, error) {
+	userVO := permstruct.UserVOStruct{}
+	if userId == "" {
+		return userVO, errors.New("userId不能为空")
+	}
+	userStruct, err := FindUserStructById(ctx, userId)
+	if err != nil {
+		return userVO, err
+	}
+	userVO.UserId = userStruct.Id
+	userVO.Account = userStruct.Account
+	userVO.Email = userStruct.Email
+	userVO.UserName = userStruct.UserName
+	userVO.UserType = userStruct.UserType
+	userVO.Active = userStruct.Active
+	userVO.PrivateOrgRoleId = ""
+	return userVO, nil
+}

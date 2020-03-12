@@ -1,7 +1,7 @@
 /*
  * @Author: your name
  * @Date: 2020-02-26 20:15:09
- * @LastEditTime: 2020-02-27 15:53:10
+ * @LastEditTime: 2020-03-12 19:24:31
  * @LastEditors: Please set LastEditors
  * @Description: In User Settings Edit
  * @FilePath: \readygo\permission\permhandler\PermHandler.go
@@ -9,13 +9,15 @@
 package permhandler
 
 import (
-	"crypto/rand"
-	"crypto/rsa"
 	"fmt"
 	"net/http"
+	"readygo/apistruct"
+	"readygo/permission/permservice"
+	"readygo/permission/permstruct"
+	"readygo/permission/permutility/jwe"
+	"strings"
 
 	"github.com/gin-gonic/gin"
-	"gopkg.in/square/go-jose.v2"
 
 	"gitee.com/chunanyong/logger"
 )
@@ -38,20 +40,110 @@ func PermHandler() gin.HandlerFunc {
 		}
 
 		//装逼一点,禁止所有的GET方法
-		if method != "GET" {
-			c.AbortWithStatus(http.StatusMethodNotAllowed)
-		}
+		// if method != "GET" {
+		// 	c.AbortWithStatus(http.StatusMethodNotAllowed)
+		// }
 
+		responseBody := apistruct.ResponseBodyModel{}
+		ctx := c.Request.Context()
 		//请求的uri
-		uri := c.Request.RequestURI
+		uri := GetPatternURI(c)
 		logger.Info(uri)
 
-		//进入下一个handler
+		if IsExcludePath(uri) {
+			c.Next()
+			return
+		}
+
+		user := permstruct.UserVOStruct{}
+		token := c.GetHeader("READYGOTOKEN")
+		if token == "" {
+			responseBody.Status = http.StatusUnauthorized
+			responseBody.Message = "缺少Token"
+			c.AbortWithStatusJSON(responseBody.Status, responseBody)
+			return
+		}
+
+		// 获取Token并检测有效期
+		userID, err := jwe.GetInfoFromToken(token, &user)
+		if err != nil {
+			responseBody.Status = http.StatusUnauthorized
+			responseBody.Message = fmt.Sprintf("%s%s", "解析Token失败", err.Error())
+			c.AbortWithStatusJSON(responseBody.Status, responseBody)
+			return
+		}
+
+		//TODO 这里需要添加权限判断逻辑
+		// 不知道 u_10001什么意思
+		// if userID == "u_10001" {
+		// 	c.Next()
+		// 	return
+		// }
+		// 获取权限拥有的菜单信息
+		permMenuList, err := permservice.FindMenuByUserId(ctx, userID)
+		if err != nil {
+			responseBody.Status = http.StatusUnauthorized
+			responseBody.Message = fmt.Sprintf("%s%s", "获取用户菜单失败", err.Error())
+			c.AbortWithStatusJSON(responseBody.Status, responseBody)
+			return
+		}
+
+		if len(permMenuList) == 0 {
+			responseBody.Status = http.StatusUnauthorized
+			responseBody.Message = "没有任何权限"
+			c.AbortWithStatusJSON(responseBody.Status, responseBody)
+			return
+		}
+
+		roleID := ""
+		for _, item := range permMenuList {
+			if item.Pageurl == "" {
+				continue
+			}
+			if strings.ToLower(item.Pageurl) == strings.ToLower(uri) {
+				roleID = item.RoleId
+				break
+			}
+		}
+
+		if roleID == "" {
+			responseBody.Status = http.StatusUnauthorized
+			responseBody.Message = "没有当前操作权限"
+			c.AbortWithStatusJSON(responseBody.Status, responseBody)
+			return
+		}
+
+		role, err := permservice.FindRoleStructById(ctx, roleID)
+		if err != nil {
+			responseBody.Status = http.StatusUnauthorized
+			responseBody.Message = fmt.Sprintf("%s%s", "FindRoleStructById失败", err.Error())
+			c.AbortWithStatusJSON(responseBody.Status, responseBody)
+			return
+		}
+
+		userVO, err := permservice.FindUserVOStructByUserId(ctx, userID)
+		if err != nil {
+			responseBody.Status = http.StatusUnauthorized
+			responseBody.Message = fmt.Sprintf("%s%s", "FindUserVOStructByUserId失败", err.Error())
+			c.AbortWithStatusJSON(responseBody.Status, responseBody)
+			return
+		}
+
+		userVO.PrivateOrgRoleId = role.Id
+
+		// 设置当前登录用户到上下文
+		ctx, _ = SetCurrentUser(c.Request.Context(), userVO)
+		c.Request = c.Request.WithContext(ctx)
 		c.Next()
 	}
-
 }
 
+// GetPatternURI 获取格式化路径
+func GetPatternURI(c *gin.Context) string {
+	return c.Request.RequestURI
+}
+
+/*
 func jwe() {
 	// Generate a public/private key pair to use for this example.
 	privateKey, err := rsa.GenerateKey(rand.Reader, 2048)
@@ -98,3 +190,4 @@ func jwe() {
 
 	fmt.Printf(string(decrypted))
 }
+*/

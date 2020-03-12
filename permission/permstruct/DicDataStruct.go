@@ -1,3 +1,11 @@
+/*
+ * @Author: your name
+ * @Date: 2020-03-07 10:17:04
+ * @LastEditTime: 2020-03-12 12:26:55
+ * @LastEditors: Please set LastEditors
+ * @Description: In User Settings Edit
+ * @FilePath: \readygo\permission\permstruct\DicDataStruct.go
+ */
 package permstruct
 
 import (

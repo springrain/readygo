@@ -1,7 +1,7 @@
 /*
  * @Author: your name
  * @Date: 2020-02-27 14:22:57
- * @LastEditTime: 2020-02-27 17:19:34
+ * @LastEditTime: 2020-03-12 19:06:43
  * @LastEditors: Please set LastEditors
  * @Description: In User Settings Edit
  * @FilePath: \readygo\utility\Jwe.go
@@ -23,12 +23,6 @@ import (
 	"gopkg.in/square/go-jose.v2"
 	"gopkg.in/square/go-jose.v2/jwt"
 )
-
-type TokenUser struct {
-	Name  string
-	Role  string
-	Group int
-}
 
 var jweENCRYPTKEY string
 var jweSIGNEDKEY string
@@ -118,8 +112,11 @@ func CreateToken(id string, extInfo interface{}) (raw string, err error) {
 		ID:      id,
 		Expiry:  jwt.NewNumericDate(time.Now().Add(dutation)),
 	}
-
-	raw, err = jwt.SignedAndEncrypted(sig, enc).Claims(cl).Claims(extInfo).CompactSerialize()
+	nestedBuilder := jwt.SignedAndEncrypted(sig, enc).Claims(cl)
+	if extInfo != nil {
+		nestedBuilder = nestedBuilder.Claims(extInfo)
+	}
+	raw, err = nestedBuilder.CompactSerialize()
 	if err != nil {
 		panic(err)
 	}

@@ -1,7 +1,7 @@
 /*
  * @Author: your name
  * @Date: 2020-02-25 23:00:00
- * @LastEditTime: 2020-03-07 11:55:08
+ * @LastEditTime: 2020-03-12 19:22:35
  * @LastEditors: Please set LastEditors
  * @Description: In User Settings Edit
  * @FilePath: \readygo\main.go
@@ -10,6 +10,8 @@ package main
 
 import (
 	"net/http"
+	"readygo/apistruct"
+	"readygo/cache"
 	"readygo/ginext"
 	"readygo/permission/permhandler"
 	"readygo/permission/permutility/jwe"
@@ -31,6 +33,7 @@ func init() {
 		DBType:   "mysql",
 	}
 	_, _ = zorm.NewBaseDao(&baseDaoConfig)
+	cache.NewMemeryCacheManager()
 }
 func main() {
 
@@ -60,27 +63,50 @@ func main() {
 	})
 
 	r.GET("/login", func(c *gin.Context) {
-		user := jwe.TokenUser{
-			Name:  "readygo",
-			Role:  "admin",
-			Group: 0,
-		}
-		token, err := jwe.CreateToken("1001", user)
+		// user := permhandler.TokenUser{
+		// 	Id:    "1001",
+		// 	Name:  "readygo",
+		// 	Role:  "admin",
+		// 	Group: 0,
+		// }
+		//ctx, _ := permhandler.SetCurrentUser(c.Request.Context(), user)
+		//c.Request = c.Request.WithContext(ctx)
+		//cuser, error := permhandler.GetCurrentUser(c.Request.Context())
+		// if error == nil {
+		// 	fmt.Println(cuser)
+		// }
+		token, err := jwe.CreateToken("u_10001", nil)
 		if err == nil {
-			c.JSON(200, gin.H{"result": "OK", "token": token})
+			c.JSON(200, apistruct.ResponseBodyModel{
+				Status:  200,
+				Message: "",
+				Data:    token,
+			})
 		} else {
-			c.JSON(500, gin.H{"result": "Error", "msg": err.Error()})
+			c.JSON(500, apistruct.ResponseBodyModel{
+				Status:  500,
+				Message: err.Error(),
+				Data:    "",
+			})
 		}
 	})
 
-	r.GET("/userInfo", func(c *gin.Context) {
-		user := jwe.TokenUser{}
-		token := c.GetHeader("READYGOTOKEN")
-		userid, err := jwe.GetInfoFromToken(token, &user)
+	r.GET("/system/menu/tree", func(c *gin.Context) {
+		user, err := permhandler.GetCurrentUser(c.Request.Context())
+		// token := c.GetHeader("READYGOTOKEN")
+		// userid, err := jwe.GetInfoFromToken(token, &user)
 		if err == nil {
-			c.JSON(200, gin.H{"result": "OK", "userid": userid, "extInfo": user})
+			c.JSON(http.StatusOK, apistruct.ResponseBodyModel{
+				Status:  200,
+				Message: "",
+				Data:    gin.H{"userid": user.UserId, "extInfo": user},
+			})
 		} else {
-			c.JSON(500, gin.H{"result": "Error", "msg": err.Error()})
+			c.JSON(http.StatusServiceUnavailable, apistruct.ResponseBodyModel{
+				Status:  500,
+				Message: err.Error(),
+				Data:    gin.H{"msg": err.Error()},
+			})
 		}
 	})
 
