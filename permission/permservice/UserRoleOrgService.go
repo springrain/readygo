@@ -9,7 +9,9 @@ import (
 	"gitee.com/chunanyong/zorm"
 )
 
-//FindUserIdByOrgId 根据orgId,查找归属的UserId,不包括子部门,不包括会员
+
+
+ //FindUserIdByOrgId 根据orgId,查找归属的UserId,不包括子部门,不包括会员
 func FindUserIdByOrgId(ctx context.Context, orgId string, page *zorm.Page) ([]string, error) {
 	if len(orgId) < 1 {
 		return nil, errors.New("orgId不能为空")

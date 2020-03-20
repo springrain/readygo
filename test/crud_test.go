@@ -68,8 +68,8 @@ func TestQuey(t *testing.T) {
 		//标记测试失败
 		t.Errorf("TestQuey错误:%v", err)
 	}
-	fmt.Println("总条数:", page.TotalCount)
-	fmt.Println(users)
+	t.Log("总条数:", page.TotalCount)
+	t.Log(users)
 
 }
 func TestNull(t *testing.T) {
@@ -83,7 +83,7 @@ func TestNull(t *testing.T) {
 		t.Errorf("TestNull：%v", err)
 	}
 
-	fmt.Println(queryMap)
+	t.Log(queryMap)
 }
 
 func TestCount(t *testing.T) {
@@ -97,14 +97,14 @@ func TestCount(t *testing.T) {
 		t.Errorf("TestCount错误：%v", err)
 	}
 
-	fmt.Println(queryMap)
+	t.Log(queryMap)
 }
 
 func worker(id int, wg *sync.WaitGroup) {
 
 	defer wg.Done()
 
-	fmt.Println(id)
+	t.Log(id)
 
 	zorm.Transaction(context.Background(), func(ctx context.Context) (interface{}, error) {
 
@@ -116,7 +116,7 @@ func worker(id int, wg *sync.WaitGroup) {
 		//u.Active = 2/0
 		incr, _ := cache.RedisINCR(ctx, "permstruct.UserStruct")
 
-		fmt.Println(incr)
+		t.Log(incr)
 		u.Id = strconv.Itoa(int(incr.(int64)))
 
 		e2 := zorm.SaveStruct(ctx, &u)
@@ -164,7 +164,7 @@ func TestPrem(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	fmt.Println(finder.GetSQL())
+	t.Log(finder.GetSQL())
 
 }
 
