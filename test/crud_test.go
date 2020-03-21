@@ -53,7 +53,7 @@ func initDate() {
 func TestQuey(t *testing.T) {
 
 	finder := zorm.NewSelectFinder(permstruct.UserStructTableName)
-
+	finder.Append(" order by id ")
 	page := zorm.NewPage()
 
 	var users []permstruct.UserStruct
