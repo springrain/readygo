@@ -2,7 +2,6 @@ package test
 
 import (
 	"context"
-	"fmt"
 	"readygo/cache"
 	"readygo/permission/permservice"
 	"readygo/permission/permstruct"
@@ -104,7 +103,7 @@ func worker(id int, wg *sync.WaitGroup) {
 
 	defer wg.Done()
 
-	t.Log(id)
+	//t.Log(id)
 
 	zorm.Transaction(context.Background(), func(ctx context.Context) (interface{}, error) {
 
@@ -116,7 +115,7 @@ func worker(id int, wg *sync.WaitGroup) {
 		//u.Active = 2/0
 		incr, _ := cache.RedisINCR(ctx, "permstruct.UserStruct")
 
-		t.Log(incr)
+		//t.Log(incr)
 		u.Id = strconv.Itoa(int(incr.(int64)))
 
 		e2 := zorm.SaveStruct(ctx, &u)
