@@ -2,7 +2,6 @@ package test
 
 import (
 	"context"
-	"fmt"
 	"readygo/cache"
 	"readygo/permission/permservice"
 	"readygo/permission/permstruct"
@@ -104,7 +103,6 @@ func worker(id int, wg *sync.WaitGroup) {
 
 	defer wg.Done()
 
-	t.Log(id)
 
 	zorm.Transaction(context.Background(), func(ctx context.Context) (interface{}, error) {
 
@@ -116,8 +114,7 @@ func worker(id int, wg *sync.WaitGroup) {
 		//u.Active = 2/0
 		incr, _ := cache.RedisINCR(ctx, "permstruct.UserStruct")
 
-		t.Log(incr)
-		u.Id = strconv.Itoa(int(incr.(int64)))
+ 		u.Id = strconv.Itoa(int(incr.(int64)))
 
 		e2 := zorm.SaveStruct(ctx, &u)
 		if e2 != nil {
@@ -150,10 +147,15 @@ func TestTranc(t *testing.T) {
 
 	var wg sync.WaitGroup
 
+	begin := time.Now()
+
 	for i := 1; i <= 1000; i++ {
 		wg.Add(1)
 		go worker(i, &wg)
 	}
+
+	subTime :=time.Now().Sub(begin)
+	t.Log(subTime)
 
 	wg.Wait()
 
