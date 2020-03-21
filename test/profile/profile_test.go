@@ -13,12 +13,9 @@ var baseDao *zorm.BaseDao
 func init() {
 
 	dataSourceConfig := zorm.DataSourceConfig{
-		Host:     "127.0.0.1",
-		Port:     3306,
-		DBName:   "readygo",
-		UserName: "root",
-		PassWord: "root",
-		DBType:   "mysql",
+		DSN:        "root:root@tcp(127.0.0.1:3306)/readygo?charset=utf8&parseTime=true",
+		DriverName: "mysql",
+		PrintSQL:   true,
 	}
 	baseDao, _ = zorm.NewBaseDao(&dataSourceConfig)
 }
