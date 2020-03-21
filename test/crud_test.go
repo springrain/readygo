@@ -103,7 +103,6 @@ func worker(id int, wg *sync.WaitGroup) {
 
 	defer wg.Done()
 
-
 	zorm.Transaction(context.Background(), func(ctx context.Context) (interface{}, error) {
 
 		var u permstruct.UserStruct
