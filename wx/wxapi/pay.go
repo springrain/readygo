@@ -1,6 +1,7 @@
 package wxapi
 
 import (
+	"os"
 	"readygo/ginext/Ginserializer"
 	"readygo/wx/wxstruct"
 	"strings"
@@ -15,11 +16,10 @@ var WXPay *wxstruct.WxPayConfig
 func init() {
 
 	WXPay = &wxstruct.WxPayConfig{
-		Id:     "test",
-		AppId:  "xxx",
-		Secret: "xxx",
-		MchID:  "xxx",
-		Key:    "xxxx",
+ 		AppId:  os.Getenv("WXPayAppId"),
+		Secret: os.Getenv("WXPaySecret"),
+		MchID:  os.Getenv("WXPayMchID"),
+		Key:    os.Getenv("WXPayKey"),
 	}
 
 }
