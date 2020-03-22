@@ -4,20 +4,20 @@
 golang开发脚手架
 
 #### 软件架构
-基于[gin](https://github.com/gin-gonic/gin)和[zorm](ttps://gitee.com/chunanyong/zorm)  
+基于[gin](https://github.com/gin-gonic/gin),[zorm](ttps://gitee.com/chunanyong/zorm) 和 [gowe](https://gitee.com/chunanyong/gowe)  
 [自带代码生成器](https://gitee.com/chunanyong/readygo/tree/master/codegenerator)    
-zorm基于原生sql语句编写,是springrain的精简和优化  
-zorm代码精简,总计2000行左右,注释详细,方便定制修改.  
-zorm支持事务传播,这是zorm诞生的主要原因  
+* 基于原生sql语句编写,是[springrain](https://gitee.com/chunanyong/springrain)的精简和优化.
+* 代码精简,总计2000行左右,注释详细,方便定制修改.  
+* <font color=#FF0000>支持事务传播,这是zorm诞生的主要原因</font>
+* 支持MySQL,SQLServer,Oracle,PostgreSQL,SQLite3
+* 支持数据库读写分离
 
+生产使用参考 [UserStructService.go](https://gitee.com/chunanyong/readygo/tree/master/permission/permservice)
 
-#### 例子
-具体可以参照 [UserStructService.go](https://gitee.com/chunanyong/readygo/tree/master/permission/permservice)
-
-
+#### 示例  
 
  1.  生成实体类或手动编写,建议使用代码生成器 https://gitee.com/chunanyong/readygo/tree/master/codegenerator
-  ```  
+  ```go  
 
 //UserOrgStructTableName 表名常量,方便直接调用
 const UserOrgStructTableName = "t_user_org"
@@ -56,42 +56,39 @@ func (entity *UserOrgStruct) GetPKColumnName() string {
   ```  
 2.  初始化zorm
 
-    ```  
+    ```go
     dataSourceConfig := zorm.DataSourceConfig{
-	Host:     "127.0.0.1",
-	Port:     3306,
-	DBName:   "readygo",
-	UserName: "root",
-	PassWord: "root",
-	DBType:   "mysql",
+	   DSN:     "root:root@tcp(127.0.0.1:3306)/readygo?charset=utf8&parseTime=true",
+	   DriverName:   "mysql",
      }
      zorm.NewBaseDao(&dataSourceConfig)
     ```  
 3.  增
-    ```
+    ```go
     var user permstruct.UserStruct
     err := zorm.SaveStruct(context.Background(), &user)
     ```
 4.  删
-    ```
+    ```go
     err := zorm.DeleteStruct(context.Background(),&user)
     ```
   
 5.  改
-    ```
+    ```go
     err := zorm.UpdateStruct(context.Background(),&user)
     //finder更新
     err := zorm.UpdateFinder(context.Background(),finder)
     ```
 6.  查
-    ```
+    ```go
 	finder := zorm.NewSelectFinder(permstruct.UserStructTableName)
+	finder.Append(" order by id asc ")
 	page := zorm.NewPage()
 	var users = make([]permstruct.UserStruct, 0)
 	err := zorm.QueryStructList(context.Background(), finder, &users, page)
     ```
 7.  事务传播
-    ```
+    ```go
     //匿名函数return的error如果不为nil,事务就会回滚
 	_, errSaveUserStruct := zorm.Transaction(ctx, func(ctx context.Context) (interface{}, error) {
 
@@ -108,7 +105,7 @@ func (entity *UserOrgStruct) GetPKColumnName() string {
 	})
     ```
 8.  生产示例
-    ```  
+    ```go    
     //FindUserOrgByUserId 根据userId查找部门UserOrg中间表对象
     func FindUserOrgByUserId(ctx context.Context, userId string, page *zorm.Page) ([]permstruct.UserOrgStruct, error) {
 	if len(userId) < 1 {
@@ -128,11 +125,11 @@ func (entity *UserOrgStruct) GetPKColumnName() string {
     ```  
 
 9.  [测试](https://www.jianshu.com/p/1adc69468b6f)
-    ```  
+    ```go 
     //函数测试
     go test -run TestAdd2
     //性能测试
     go test -bench=.
     go test -v -bench=. -cpu=8 -benchtime="3s" -timeout="5s" -benchmem
-    ```  
+    ```
 

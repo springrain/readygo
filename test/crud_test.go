@@ -34,12 +34,9 @@ const (
 func init() {
 
 	dataSourceConfig := zorm.DataSourceConfig{
-		Host:     "127.0.0.1",
-		Port:     3306,
-		DBName:   "readygo",
-		UserName: "root",
-		PassWord: "root",
-		DBType:   "mysql",
+		DSN:        "root:root@tcp(127.0.0.1:3306)/readygo?charset=utf8&parseTime=true",
+		DriverName: "mysql",
+		PrintSQL:   true,
 	}
 	baseDao, _ = zorm.NewBaseDao(&dataSourceConfig)
 
@@ -56,7 +53,7 @@ func initDate() {
 func TestQuey(t *testing.T) {
 
 	finder := zorm.NewSelectFinder(permstruct.UserStructTableName)
-
+	finder.Append(" order by id ")
 	page := zorm.NewPage()
 
 	var users []permstruct.UserStruct
@@ -113,7 +110,7 @@ func worker(id int, wg *sync.WaitGroup) {
 		//u.Active = 2/0
 		incr, _ := cache.RedisINCR(ctx, "permstruct.UserStruct")
 
- 		u.Id = strconv.Itoa(int(incr.(int64)))
+		u.Id = strconv.Itoa(int(incr.(int64)))
 
 		e2 := zorm.SaveStruct(ctx, &u)
 		if e2 != nil {
@@ -153,7 +150,7 @@ func TestTranc(t *testing.T) {
 		go worker(i, &wg)
 	}
 
-	subTime :=time.Now().Sub(begin)
+	subTime := time.Now().Sub(begin)
 	t.Log(subTime)
 
 	wg.Wait()
