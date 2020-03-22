@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"gitee.com/chunanyong/zorm"
+	_ "github.com/go-sql-driver/mysql"
 )
 
 var baseDao *zorm.BaseDao
@@ -36,6 +37,7 @@ func init() {
 	dataSourceConfig := zorm.DataSourceConfig{
 		DSN:        "root:root@tcp(127.0.0.1:3306)/readygo?charset=utf8&parseTime=true",
 		DriverName: "mysql",
+		DBType:     "mysql",
 		PrintSQL:   true,
 	}
 	baseDao, _ = zorm.NewBaseDao(&dataSourceConfig)

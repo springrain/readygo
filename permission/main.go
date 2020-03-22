@@ -4,6 +4,8 @@ import (
 	"readygo/permission/permroute"
 
 	"gitee.com/chunanyong/zorm"
+
+	_ "github.com/go-sql-driver/mysql"
 )
 
 //初始化BaseDao
