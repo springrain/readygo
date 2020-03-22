@@ -4,7 +4,7 @@
 golang开发脚手架
 
 #### 软件架构
-基于[gin](https://github.com/gin-gonic/gin),[zorm](ttps://gitee.com/chunanyong/zorm) 和 [gowe](https://gitee.com/chunanyong/gowe)  
+基于[gin](https://github.com/gin-gonic/gin)  ,  [zorm](ttps://gitee.com/chunanyong/zorm) 和 [gowe](https://gitee.com/chunanyong/gowe)  
 [自带代码生成器](https://gitee.com/chunanyong/readygo/tree/master/codegenerator)    
 * 基于原生sql语句编写,是[springrain](https://gitee.com/chunanyong/springrain)的精简和优化.
 * 代码精简,总计2000行左右,注释详细,方便定制修改.  
