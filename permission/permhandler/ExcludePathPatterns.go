@@ -1,12 +1,3 @@
-/*
- * @Author: your name
- * @Date: 2020-03-11 22:06:03
- * @LastEditTime: 2020-03-11 22:25:21
- * @LastEditors: Please set LastEditors
- * @Description: In User Settings Edit
- * @FilePath: \readygo\permission\permhandler\ExcludePathPatterns.go
- */
-
 package permhandler
 
 //全局排除的路径
@@ -17,12 +8,12 @@ var userDefaultPathPatterns map[string]bool
 
 func init() {
 	excludePathPatterns = make(map[string]bool)
-	AddExcluePath("/login", true)
+	AddExcluePath("/login")
 }
 
 // AddExcluePath 添加排除目录
-func AddExcluePath(path string, pass bool) {
-	excludePathPatterns[path] = pass
+func AddExcluePath(path string) {
+	excludePathPatterns[path] = true
 }
 
 // AddUserDefaulPath 添加登录用户默认能访问的路径
