@@ -99,12 +99,12 @@ func PermHandler() gin.HandlerFunc {
 		// 不能选择部门或则其他操作,只能添加人员,不然存在提权风险,例如 员工角色下有1000人, 如果给 角色 设置了部门,那这1000人都起效了.
 		// 角色 shareRole 设置共享的角色可以被下级部门直接查看到,并添加人员.同样 也是只能添加人员.
 
-		// 1.根据访问的url,通过userRoleMenuService.findMenuByUserId(userId)查询对应的menuId和roleId.需要确保url地址唯一,多个菜单url相同可以使用软跳转,暂时不处理.
+		// 1.根据访问的url,通过permservice.FindMenuByUserId(ctx,userId)查询对应的menuId和roleId.需要确保url地址唯一,多个菜单url相同可以使用软跳转,暂时不处理.
 		// 2.根据userId查询缓存的List<Role>,验证是否包含这个roleId
 		// 3.根据roleId查询缓存的List<Menu>,验证是否包含这个menuId.
 		// 4.查看roleId如果是私有权限,UserVo 就设置 privateOrgRoleId,业务调用SessionUser.getPrivateOrgRoleId获取私有的roleId,
-		// 然后再调用IUserRoleOrgService.wrapOrgIdFinderByPrivateOrgRoleId(String roleId,String userId) 获取权限的 Finder
-		// 5.如果是公共权限,这里不做处理,业务方法调用 IUserRoleOrgService.wrapOrgIdFinderByUserId(String userId) 获取权限的Finder
+		// 通过permservice.WrapOrgIdFinderByPrivateOrgRoleId(ctx, roleId, userId) 获取权限的 Finder
+		// 5.如果是公共权限,这里不做处理,业务方法调用 通过permservice.WrapOrgIdFinderByUserId(ctx, userId) 获取权限的Finder
 
 		// 注意:在返回前端菜单权限时,要包含menuId和roleId,私有privateOrg的roleId优先,如果同一个menuId存在多个定制roleId冲突,按照role的排序,同一个menuId只保留一个roleId.
 
