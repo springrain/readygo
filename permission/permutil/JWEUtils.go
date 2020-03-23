@@ -29,18 +29,18 @@ var expireDuration time.Duration
 
 //var jwtSecretByte []byte
 
-var _jwtSecret string
+var jwtSecret string
 
 //NewJWEConfig 根据配置新建JWE对象
 //jweRSAPrivatePemFilePath 证书路径
 //jwtSecretToken jwt的加密token
 //jweExpireSecond 超时的秒数 默认 24小时=60*60*24
-func NewJWEConfig(jweRSAPrivatePemFilePath string, jwtSecret string, jweExpireSecond int) error {
+func NewJWEConfig(jweRSAPrivatePemFilePath string, jwtSecretStr string, jweExpireSecond int) error {
 	if jweExpireSecond == 0 {
 		jweExpireSecond = 60 * 60 * 24
 	}
 	expireDuration = time.Second * time.Duration(jweExpireSecond)
-	_jwtSecret = jwtSecret
+	jwtSecret = jwtSecretStr
 	//jwtSecretByte = []byte(_jwtSecret)
 	//加载加密私钥文件
 	privateKeyPEMByte, err := ioutil.ReadFile(jweRSAPrivatePemFilePath)
@@ -78,7 +78,7 @@ func JWECreateToken(id string, extInfo interface{}) (raw string, err error) {
 		ID:     id,
 		Expiry: jwt.NewNumericDate(time.Now().Add(expireDuration)),
 	}
-	jwtSecretByte := []byte(_jwtSecret + id)
+	jwtSecretByte := []byte(jwtSecret + id)
 
 	signer, err = jose.NewSigner(jose.SigningKey{Algorithm: jose.HS256, Key: jwtSecretByte}, (&jose.SignerOptions{}).WithType("JWT"))
 	if err != nil {
@@ -116,7 +116,7 @@ func JWEGetInfoFromToken(token string, extInfo interface{}) (id string, err erro
 		return "", err
 	}
 	//签名秘钥拼接用户id
-	jwtSecretByte := []byte(_jwtSecret + claim.ID)
+	jwtSecretByte := []byte(jwtSecret + claim.ID)
 	//验证签名
 	if err := nested.Claims(jwtSecretByte, &claim, extInfo); err != nil {
 		return "", err
