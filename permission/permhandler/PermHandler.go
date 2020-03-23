@@ -14,7 +14,7 @@ import (
 	"readygo/apistruct"
 	"readygo/permission/permservice"
 	"readygo/permission/permstruct"
-	"readygo/permission/permutility/jwe"
+	"readygo/permission/permutil"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -40,7 +40,7 @@ func PermHandler() gin.HandlerFunc {
 		}
 
 		//装逼一点,禁止所有的GET方法
-		// if method != "GET" {
+		// if method == "GET" {
 		// 	c.AbortWithStatus(http.StatusMethodNotAllowed)
 		// }
 
@@ -65,7 +65,7 @@ func PermHandler() gin.HandlerFunc {
 		}
 
 		// 获取Token并检测有效期
-		userID, err := jwe.GetInfoFromToken(token, &user)
+		userID, err := permutil.JWEGetInfoFromToken(token, &user)
 		if err != nil {
 			responseBody.Status = http.StatusUnauthorized
 			responseBody.Message = fmt.Sprintf("%s%s", "解析Token失败", err.Error())

@@ -14,11 +14,12 @@ import (
 	"readygo/cache"
 	"readygo/ginext"
 	"readygo/permission/permhandler"
-	"readygo/permission/permutility/jwe"
+	"readygo/permission/permutil"
 
 	"gitee.com/chunanyong/zorm"
 
 	"github.com/gin-gonic/gin"
+	_ "github.com/go-sql-driver/mysql"
 )
 
 //初始化BaseDao
@@ -31,6 +32,8 @@ func init() {
 	}
 	_, _ = zorm.NewBaseDao(&baseDaoConfig)
 	cache.NewMemeryCacheManager()
+
+	permutil.NewJWEConfig("permission/permcert/private.pem", "readygo", 0)
 }
 func main() {
 
@@ -72,7 +75,7 @@ func main() {
 		// if error == nil {
 		// 	fmt.Println(cuser)
 		// }
-		token, err := jwe.CreateToken("u_10001", nil)
+		token, err := permutil.JWECreateToken("u_10001", nil)
 		if err == nil {
 			c.JSON(200, apistruct.ResponseBodyModel{
 				Status:  200,
@@ -91,7 +94,7 @@ func main() {
 	r.GET("/system/menu/tree", func(c *gin.Context) {
 		user, err := permhandler.GetCurrentUser(c.Request.Context())
 		// token := c.GetHeader("READYGOTOKEN")
-		// userid, err := jwe.GetInfoFromToken(token, &user)
+		// userid, err := permutil.GetInfoFromToken(token, &user)
 		if err == nil {
 			c.JSON(http.StatusOK, apistruct.ResponseBodyModel{
 				Status:  200,

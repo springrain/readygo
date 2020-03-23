@@ -9,7 +9,7 @@ golang开发脚手架
 * 基于原生sql语句编写,是[springrain](https://gitee.com/chunanyong/springrain)的精简和优化.
 * 代码精简,总计2000行左右,注释详细,方便定制修改.  
 * <font color=#FF0000>支持事务传播,这是zorm诞生的主要原因</font>
-* 支持MySQL,SQLServer,Oracle,PostgreSQL,SQLite3
+* 支持mysql,postgresql,oracle,mssql,sqlite
 * 支持数据库读写分离
 
 生产使用参考 [UserStructService.go](https://gitee.com/chunanyong/readygo/tree/master/permission/permservice)
@@ -57,9 +57,13 @@ func (entity *UserOrgStruct) GetPKColumnName() string {
 2.  初始化zorm
 
     ```go
+    import _ "github.com/go-sql-driver/mysql"
+
+
     dataSourceConfig := zorm.DataSourceConfig{
-	   DSN:     "root:root@tcp(127.0.0.1:3306)/readygo?charset=utf8&parseTime=true",
-	   DriverName:   "mysql",
+		DSN:        "root:root@tcp(127.0.0.1:3306)/readygo?charset=utf8&parseTime=true",
+		DriverName: "mysql",
+		DBType:     "mysql",
      }
      zorm.NewBaseDao(&dataSourceConfig)
     ```  
