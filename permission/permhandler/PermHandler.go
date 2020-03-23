@@ -22,6 +22,8 @@ import (
 	"gitee.com/chunanyong/logger"
 )
 
+const JWTTokenName = "READYGOTOKEN"
+
 //PermHandler 权限过滤器
 func PermHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -50,6 +52,7 @@ func PermHandler() gin.HandlerFunc {
 		uri := getPatternURI(c)
 		logger.Info(uri)
 
+		//如果是不拦截的URL
 		if isExcludePath(uri) {
 			c.Next()
 			return
@@ -64,7 +67,7 @@ func PermHandler() gin.HandlerFunc {
 		// String roleId = request.getHeader("roleId");
 
 		user := permstruct.UserVOStruct{}
-		token := c.GetHeader("READYGOTOKEN")
+		token := c.GetHeader(JWTTokenName)
 		if token == "" {
 			responseBody.Status = http.StatusUnauthorized
 			responseBody.Message = "缺少Token"
@@ -78,6 +81,12 @@ func PermHandler() gin.HandlerFunc {
 			responseBody.Status = http.StatusUnauthorized
 			responseBody.Message = fmt.Sprintf("%s%s", "解析Token失败", err.Error())
 			c.AbortWithStatusJSON(responseBody.Status, responseBody)
+			return
+		}
+
+		//如果用户默认有的权限
+		if isUserDefaultPath(uri) {
+			c.Next()
 			return
 		}
 
