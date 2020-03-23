@@ -92,7 +92,7 @@ func main() {
 	})
 
 	r.GET("/system/menu/tree", func(c *gin.Context) {
-		user, err := permhandler.GetCurrentUser(c.Request.Context())
+		user, err := permhandler.GetCurrentUserFromContext(c.Request.Context())
 		// token := c.GetHeader("READYGOTOKEN")
 		// userid, err := permutil.GetInfoFromToken(token, &user)
 		if err == nil {

@@ -14,11 +14,11 @@ import (
 	"readygo/permission/permstruct"
 )
 
-// WrapCurrentUserKey 上下文Key类型
-type WrapCurrentUserKey string
+// wrapCurrentUserKey 上下文Key类型
+type wrapCurrentUserKey string
 
-// CurrentUserKey 上下文Key
-var CurrentUserKey = WrapCurrentUserKey("currentUserKey")
+// currentUserKey 上下文Key
+var currentUserKey = wrapCurrentUserKey("currentUserKey")
 
 // SetCurrentUserToCtx 将当前用户信息添加到上下文
 func setCurrentUserToCtx(c context.Context, userInfo interface{}) (context.Context, error) {
@@ -26,7 +26,7 @@ func setCurrentUserToCtx(c context.Context, userInfo interface{}) (context.Conte
 	if c == nil {
 		return nil, errors.New("context不能为nil")
 	}
-	c = context.WithValue(c, CurrentUserKey, userInfo)
+	c = context.WithValue(c, currentUserKey, userInfo)
 	return c, nil
 }
 
@@ -35,19 +35,19 @@ func getCurrentUserFromCtx(c context.Context) (interface{}, error) {
 	if c == nil {
 		return nil, errors.New("context不能为nil")
 	}
-	userInfo := c.Value(CurrentUserKey)
+	userInfo := c.Value(currentUserKey)
 	return userInfo, nil
 }
 
-// SetCurrentUser 设置当前登录用户到上下文
-func SetCurrentUser(c context.Context, user permstruct.UserVOStruct) (context.Context, error) {
-	return setCurrentUserToCtx(c, user)
+// bindContextCurrentUser 设置当前登录用户到上下文
+func bindContextCurrentUser(ctx context.Context, userVO permstruct.UserVOStruct) (context.Context, error) {
+	return setCurrentUserToCtx(ctx, userVO)
 }
 
-// GetCurrentUser 从上下文获取登录用户信息
-func GetCurrentUser(c context.Context) (permstruct.UserVOStruct, error) {
+// GetCurrentUserFromContext 从上下文获取登录用户信息
+func GetCurrentUserFromContext(ctx context.Context) (permstruct.UserVOStruct, error) {
 	var user permstruct.UserVOStruct
-	ctxUser, error := getCurrentUserFromCtx(c)
+	ctxUser, error := getCurrentUserFromCtx(ctx)
 	if error != nil {
 		return user, error
 	}

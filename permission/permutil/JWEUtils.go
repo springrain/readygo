@@ -5,6 +5,7 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"time"
 
@@ -97,7 +98,6 @@ func JWECreateToken(id string, extInfo interface{}) (raw string, err error) {
 
 //根据token获取用户id 和 扩展信息  扩展信息extInfo传结构体的指针
 func JWEGetInfoFromToken(token string, extInfo interface{}) (id string, err error) {
-
 	tok, err := jwt.ParseSignedAndEncrypted(token)
 	if err != nil {
 		return "", err
@@ -111,6 +111,7 @@ func JWEGetInfoFromToken(token string, extInfo interface{}) (id string, err erro
 
 	//验签并返回Claim对象和扩展对象
 	claim := jwt.Claims{}
+	fmt.Println(nested.Headers)
 	//先不验证签名获取token信息
 	if err := nested.UnsafeClaimsWithoutVerification(&claim, extInfo); err != nil {
 		return "", err

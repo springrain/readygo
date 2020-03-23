@@ -22,7 +22,7 @@ import (
 	"gitee.com/chunanyong/logger"
 )
 
-//权限过滤器
+//PermHandler 权限过滤器
 func PermHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
 
@@ -47,13 +47,21 @@ func PermHandler() gin.HandlerFunc {
 		responseBody := apistruct.ResponseBodyModel{}
 		ctx := c.Request.Context()
 		//请求的uri
-		uri := GetPatternURI(c)
+		uri := getPatternURI(c)
 		logger.Info(uri)
 
-		if IsExcludePath(uri) {
+		if isExcludePath(uri) {
 			c.Next()
 			return
 		}
+
+		// 建议不再传递menuId和roleId,权限的URL不能重复即可,通过访问的url,查到menuId和roleId.
+		// 前后端分离之后,后台的菜单实际只管理了数据,并不管理前端的菜单层次结构.
+
+		// 请求的菜单Id,可以通过url地址反查menuId或者根据/api/user/menu返回的数据再遍历一次,获取menuId
+		// String menuId = request.getHeader("menuId");
+		// 请求的角色Id,可以通过url地址反查menuId或者根据/api/user/menu返回的数据再遍历一次,获取roleId
+		// String roleId = request.getHeader("roleId");
 
 		user := permstruct.UserVOStruct{}
 		token := c.GetHeader("READYGOTOKEN")
@@ -72,6 +80,30 @@ func PermHandler() gin.HandlerFunc {
 			c.AbortWithStatusJSON(responseBody.Status, responseBody)
 			return
 		}
+
+		// 角色关联部门实现数据权限,角色指定 roleOrgType <0自己的数据,1所在部门,2所在部门及子部门数据,3.自定义部门数据>.
+		// 0就是类似员工,1和2 是根据使用者自身数据进行数据授权,适合公用全局属性,例如专员只能查看他所在的部门的数据,虽然他不是部门主管.
+
+		// 角色指定 privateOrg 角色的部门是否私有,0否,1是,默认0.当角色私有时,菜单只使用此角色的部门权限,不再扩散到全局角色权限,用于设置特殊的菜单权限.
+		// 公共权限时部门主管有所管理部门的数据全权限,无论角色是否分配.私有部门权限时,严格按照配置的数据执行,部门主管可能没有部门权限.
+		// privateOrg私有权限和公共权限分别处理,不能交叉.处理公共权限时会跳过私有权限
+		//  privateOrg 和 roleOrgType 交叉情况,比较复杂,场景也很少,暂时未细测,如果是私有的所在部门权限,应该只能查看所在部门的数据,也不会扩散权限.
+
+		// 角色关联人员,部门,菜单,作为整个权限设计的中心枢纽.
+		// 角色都有归属部门,其部门主管或上级主管才可以修改角色属性,其他使用人员只能往角色里添加人员,
+		// 不能选择部门或则其他操作,只能添加人员,不然存在提权风险,例如 员工角色下有1000人, 如果给 角色 设置了部门,那这1000人都起效了.
+		// 角色 shareRole 设置共享的角色可以被下级部门直接查看到,并添加人员.同样 也是只能添加人员.
+
+		// 1.根据访问的url,通过userRoleMenuService.findMenuByUserId(userId)查询对应的menuId和roleId.需要确保url地址唯一,多个菜单url相同可以使用软跳转,暂时不处理.
+		// 2.根据userId查询缓存的List<Role>,验证是否包含这个roleId
+		// 3.根据roleId查询缓存的List<Menu>,验证是否包含这个menuId.
+		// 4.查看roleId如果是私有权限,UserVo 就设置 privateOrgRoleId,业务调用SessionUser.getPrivateOrgRoleId获取私有的roleId,
+		// 然后再调用IUserRoleOrgService.wrapOrgIdFinderByPrivateOrgRoleId(String roleId,String userId) 获取权限的 Finder
+		// 5.如果是公共权限,这里不做处理,业务方法调用 IUserRoleOrgService.wrapOrgIdFinderByUserId(String userId) 获取权限的Finder
+
+		// 注意:在返回前端菜单权限时,要包含menuId和roleId,私有privateOrg的roleId优先,如果同一个menuId存在多个定制roleId冲突,按照role的排序,同一个menuId只保留一个roleId.
+
+		// 注意:缓存的清理,使用缓存java组装用户权限的树形结构.
 
 		//TODO 这里需要添加权限判断逻辑
 		// 不知道 u_10001什么意思
@@ -94,7 +126,7 @@ func PermHandler() gin.HandlerFunc {
 			c.AbortWithStatusJSON(responseBody.Status, responseBody)
 			return
 		}
-
+		//用户是否有uri的权限.循环遍历用户有权限的菜单URL,因为pageUrl是唯一的,可以取出menuId和roleId
 		roleID := ""
 		for _, item := range permMenuList {
 			if item.Pageurl == "" {
@@ -113,6 +145,7 @@ func PermHandler() gin.HandlerFunc {
 			return
 		}
 
+		//根据roleId 查询 role
 		role, err := permservice.FindRoleStructById(ctx, roleID)
 		if err != nil {
 			responseBody.Status = http.StatusUnauthorized
@@ -129,17 +162,21 @@ func PermHandler() gin.HandlerFunc {
 			return
 		}
 
-		userVO.PrivateOrgRoleId = role.Id
+		// 如果是私有的部门权限,setPrivateOrgRoleId,业务调用SessionUser.getPrivateOrgRoleId,如果不是NULL,就调用IUserRoleOrgService.wrapOrgIdFinderByPrivateOrgRoleId(String roleId,String userId) 获取权限的 Finder
+		if role.PrivateOrg == 1 {
+			userVO.PrivateOrgRoleId = role.Id
+		}
 
 		// 设置当前登录用户到上下文
-		ctx, _ = SetCurrentUser(c.Request.Context(), userVO)
+		ctx, _ = bindContextCurrentUser(c.Request.Context(), userVO)
+		//重新覆盖ctx
 		c.Request = c.Request.WithContext(ctx)
 		c.Next()
 	}
 }
 
-// GetPatternURI 获取格式化路径
-func GetPatternURI(c *gin.Context) string {
+// getPatternURI 获取格式化路径
+func getPatternURI(c *gin.Context) string {
 	return c.Request.RequestURI
 }
 
