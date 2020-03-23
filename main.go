@@ -19,6 +19,7 @@ import (
 	"gitee.com/chunanyong/zorm"
 
 	"github.com/gin-gonic/gin"
+	_ "github.com/go-sql-driver/mysql"
 )
 
 //初始化BaseDao
