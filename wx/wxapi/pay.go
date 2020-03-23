@@ -1,6 +1,7 @@
 package wxapi
 
 import (
+	"os"
 	"readygo/ginext/Ginserializer"
 	"readygo/wx/wxstruct"
 	"strings"
@@ -15,12 +16,15 @@ var WXPay *wxstruct.WxPayConfig
 func init() {
 
 	WXPay = &wxstruct.WxPayConfig{
-		Id:     "test",
-		AppId:  "xxx",
-		Secret: "xxx",
-		MchID:  "xxx",
-		Key:    "xxxx",
+ 		AppId:  os.Getenv("WXPayAppId"),
+		Secret: os.Getenv("WXPaySecret"),
+		MchID:  os.Getenv("WXPayMchID"),
+		Key:    os.Getenv("WXPayKey"),
 	}
+
+}
+
+func WxPayNotifyPay(c *gin.Context){
 
 }
 
@@ -32,6 +36,7 @@ func WxPayUnifiedOrder(c *gin.Context) {
 		Body:           "人参果",
 		OutTradeNo:     strings.Replace(zorm.GenerateStringID(), "-", "", -1), // zorm.GenerateStringID(),
 		TotalFee:       gowe.ServiceTypeNormalDomestic,
+
 		SpbillCreateIP: "127.0.0.1",
 		NotifyUrl:      "http://www.qq.com",
 		OpenId:         openid,

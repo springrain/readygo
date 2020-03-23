@@ -2,7 +2,7 @@ package test
 
 import (
 	"gitee.com/chunanyong/gowe"
-	_ "gitee.com/chunanyong/gowe"
+ 	"os"
 	"testing"
 )
 //
@@ -15,9 +15,8 @@ type wxconfig struct {
 
 }
 var wx = &wxconfig{
-	id:"test",
-	appid:"xxxx",
-	secret:"xxx",
+ 	appid:os.Getenv("APPID"),
+	secret:os.Getenv("SECRET"),
 }
 
 func (w wxconfig) GetId() string {
