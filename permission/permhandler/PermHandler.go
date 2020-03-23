@@ -22,7 +22,8 @@ import (
 	"gitee.com/chunanyong/logger"
 )
 
-const JWTTokenName = "READYGOTOKEN"
+//JWTTokenName jwt的token名称
+var JWTTokenName = "READYGOTOKEN"
 
 //PermHandler 权限过滤器
 func PermHandler() gin.HandlerFunc {
