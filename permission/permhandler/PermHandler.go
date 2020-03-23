@@ -108,7 +108,7 @@ func PermHandler() gin.HandlerFunc {
 
 		// 注意:在返回前端菜单权限时,要包含menuId和roleId,私有privateOrg的roleId优先,如果同一个menuId存在多个定制roleId冲突,按照role的排序,同一个menuId只保留一个roleId.
 
-		// 注意:缓存的清理,使用缓存java组装用户权限的树形结构.
+		// 注意:缓存的清理,使用缓存,代码组装用户权限的树形结构.
 
 		//TODO 这里需要添加权限判断逻辑
 		// 不知道 u_10001什么意思
