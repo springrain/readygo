@@ -59,13 +59,8 @@ func PermHandler() gin.HandlerFunc {
 			return
 		}
 
-		// 建议不再传递menuId和roleId,权限的URL不能重复即可,通过访问的url,查到menuId和roleId.
+		// 权限的URL不能重复,通过访问的url,根据/api/user/menu返回的数据再遍历一次,获取menuId 和 roleId
 		// 前后端分离之后,后台的菜单实际只管理了数据,并不管理前端的菜单层次结构.
-
-		// 请求的菜单Id,可以通过url地址反查menuId或者根据/api/user/menu返回的数据再遍历一次,获取menuId
-		// String menuId = request.getHeader("menuId");
-		// 请求的角色Id,可以通过url地址反查menuId或者根据/api/user/menu返回的数据再遍历一次,获取roleId
-		// String roleId = request.getHeader("roleId");
 
 		user := permstruct.UserVOStruct{}
 		token := c.GetHeader(JWTTokenName)
