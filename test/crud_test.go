@@ -2,6 +2,7 @@ package test
 
 import (
 	"context"
+	"fmt"
 	"readygo/cache"
 	"readygo/permission/permservice"
 	"readygo/permission/permstruct"
@@ -58,7 +59,12 @@ func TestQuey(t *testing.T) {
 
 	var users []permstruct.UserStruct
 
-	err := zorm.QueryStructList(context.Background(), finder, &users, page)
+	background := context.Background()
+
+	err := zorm.QueryStructList(background, finder, &users, page)
+
+	  zorm.QueryMap(background, finder)
+
 
 	if err != nil {
 		//标记测试失败
@@ -106,6 +112,9 @@ func worker(id int, wg *sync.WaitGroup) {
 		//
 		u.UserName = "zyf"
 		u.CreateTime = time.Now()
+		u.UpdateTime = time.Now()
+
+
 		u.Sex = "男" + string(id)
 		//u.Active = 2/0
 		incr, _ := cache.RedisINCR(ctx, "permstruct.UserStruct")
@@ -121,7 +130,9 @@ func worker(id int, wg *sync.WaitGroup) {
 
 		finder := zorm.NewSelectFinder(permstruct.UserStructTableName).Append(" where id = ?", "1583077877688617000")
 
-		zorm.QueryStruct(ctx, finder, &u)
+		ee := zorm.QueryStruct(nil, finder, &u)
+
+		fmt.Println(ee)
 
 		//u.UserName = u.UserName + "test" + string(id)
 		u.UserName = strconv.Itoa(id)

@@ -16,7 +16,7 @@ func NewRouter() *gin.Engine {
 		v1.POST("ping", wxapi.Ping)
 
 		v1.POST("WxMaCode2Session", wxapi.WxMaCode2Session)
-		v1.GET("WxPayUnifiedOrder",wxapi.WxPayUnifiedOrder)
+		v1.POST("WxPayUnifiedOrder",wxapi.WxPayUnifiedOrder)
 
 
 

@@ -24,6 +24,10 @@ func init() {
 
 }
 
+func WxPayNotifyPay(c *gin.Context){
+
+}
+
 func WxPayUnifiedOrder(c *gin.Context) {
 
 	openid := c.Query("openid")
@@ -32,6 +36,7 @@ func WxPayUnifiedOrder(c *gin.Context) {
 		Body:           "人参果",
 		OutTradeNo:     strings.Replace(zorm.GenerateStringID(), "-", "", -1), // zorm.GenerateStringID(),
 		TotalFee:       gowe.ServiceTypeNormalDomestic,
+
 		SpbillCreateIP: "127.0.0.1",
 		NotifyUrl:      "http://www.qq.com",
 		OpenId:         openid,

@@ -13,3 +13,5 @@ require (
 	gopkg.in/square/go-jose.v2 v2.4.1
 )
 
+replace gitee.com/chunanyong/zorm => /Users/zyf/zorm
+replace gitee.com/chunanyong/gowe => /Users/zyf/gowe

@@ -5,6 +5,7 @@ import (
 	"gitee.com/chunanyong/gowe"
 	"gitee.com/chunanyong/logger"
 	"github.com/gin-gonic/gin"
+	"os"
 	"readygo/ginext/Ginserializer"
 
 	"readygo/wx/wxstruct"
@@ -17,9 +18,8 @@ var WX *wxstruct.WxConfig
 func init()  {
 
 	WX = &wxstruct.WxConfig{
-		Id:"test",
-		AppId:"xxx",
-		Secret:"xxxx",
+ 		AppId:os.Getenv("APPID"),
+		Secret:os.Getenv("SECRET"),
 	}
 }
 
