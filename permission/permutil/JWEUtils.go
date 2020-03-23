@@ -27,7 +27,9 @@ var encrypter jose.Encrypter
 //expireDuration 过期时间
 var expireDuration time.Duration
 
-var jwtSecretByte []byte
+//var jwtSecretByte []byte
+
+var _jwtSecret string
 
 //NewJWEConfig 根据配置新建JWE对象
 //jweRSAPrivatePemFilePath 证书路径
@@ -38,7 +40,8 @@ func NewJWEConfig(jweRSAPrivatePemFilePath string, jwtSecret string, jweExpireSe
 		jweExpireSecond = 60 * 60 * 24
 	}
 	expireDuration = time.Second * time.Duration(jweExpireSecond)
-	jwtSecretByte = []byte(jwtSecret)
+	_jwtSecret = jwtSecret
+	//jwtSecretByte = []byte(_jwtSecret)
 	//加载加密私钥文件
 	privateKeyPEMByte, err := ioutil.ReadFile(jweRSAPrivatePemFilePath)
 	if err != nil {
@@ -57,10 +60,11 @@ func NewJWEConfig(jweRSAPrivatePemFilePath string, jwtSecret string, jweExpireSe
 	publicKey = &privateKey.PublicKey
 
 	//创建jose.Signer
-	signer, err = jose.NewSigner(jose.SigningKey{Algorithm: jose.HS256, Key: jwtSecretByte}, (&jose.SignerOptions{}).WithType("JWT"))
-	if err != nil {
-		return err
-	}
+	//修改成每个用户独立的签名秘钥，这里不再统一生成
+	// signer, err = jose.NewSigner(jose.SigningKey{Algorithm: jose.HS256, Key: jwtSecretByte}, (&jose.SignerOptions{}).WithType("JWT"))
+	// if err != nil {
+	// 	return err
+	// }
 	//创建 jose.Encrypter
 	encrypter, err = jose.NewEncrypter(jose.A128GCM, jose.Recipient{Algorithm: jose.RSA_OAEP, Key: publicKey}, (&jose.EncrypterOptions{}).WithType("JWT").WithContentType("JWT"))
 	return err
@@ -74,6 +78,13 @@ func JWECreateToken(id string, extInfo interface{}) (raw string, err error) {
 		ID:     id,
 		Expiry: jwt.NewNumericDate(time.Now().Add(expireDuration)),
 	}
+	jwtSecretByte := []byte(_jwtSecret + id)
+
+	signer, err = jose.NewSigner(jose.SigningKey{Algorithm: jose.HS256, Key: jwtSecretByte}, (&jose.SignerOptions{}).WithType("JWT"))
+	if err != nil {
+		return "", err
+	}
+
 	nestedBuilder := jwt.SignedAndEncrypted(signer, encrypter).Claims(cl)
 	if extInfo != nil {
 		nestedBuilder = nestedBuilder.Claims(extInfo)
@@ -100,6 +111,13 @@ func JWEGetInfoFromToken(token string, extInfo interface{}) (id string, err erro
 
 	//验签并返回Claim对象和扩展对象
 	claim := jwt.Claims{}
+	//先不验证签名获取token信息
+	if err := nested.UnsafeClaimsWithoutVerification(&claim, extInfo); err != nil {
+		return "", err
+	}
+	//签名秘钥拼接用户id
+	jwtSecretByte := []byte(_jwtSecret + claim.ID)
+	//验证签名
 	if err := nested.Claims(jwtSecretByte, &claim, extInfo); err != nil {
 		return "", err
 	}
