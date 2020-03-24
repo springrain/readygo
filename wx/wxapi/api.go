@@ -5,9 +5,9 @@ import (
 	"gitee.com/chunanyong/gowe"
 	"gitee.com/chunanyong/logger"
 	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
 	"os"
 	"readygo/ginext/Ginserializer"
-
 	"readygo/wx/wxstruct"
 )
 
@@ -16,7 +16,7 @@ import (
 var WX *wxstruct.WxConfig
 
 func init()  {
-
+	godotenv.Load()
 	WX = &wxstruct.WxConfig{
  		AppId:os.Getenv("APPID"),
 		Secret:os.Getenv("SECRET"),
@@ -40,6 +40,7 @@ func WxMaCode2Session(c *gin.Context)  {
 
 
 	session, err := gowe.WxMaCode2Session(WX, code)
+	logger.Info(session.OpenId)
 
 	if err != nil {
 		c.JSON(505, Ginserializer.Response{

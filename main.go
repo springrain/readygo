@@ -93,7 +93,7 @@ func main() {
 
 	r.GET("/system/menu/tree", func(c *gin.Context) {
 		user, err := permhandler.GetCurrentUserFromContext(c.Request.Context())
-		// token := c.GetHeader("READYGOTOKEN")
+		// token := c.GetHeader(JWTTokenName)
 		// userid, err := permutil.GetInfoFromToken(token, &user)
 		if err == nil {
 			c.JSON(http.StatusOK, apistruct.ResponseBodyModel{
