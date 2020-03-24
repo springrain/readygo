@@ -1,19 +1,20 @@
 package wxapi
 
 import (
+	"gitee.com/chunanyong/gowe"
+	"gitee.com/chunanyong/zorm"
+	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
 	"os"
 	"readygo/ginext/Ginserializer"
 	"readygo/wx/wxstruct"
 	"strings"
-
-	"gitee.com/chunanyong/gowe"
-	"gitee.com/chunanyong/zorm"
-	"github.com/gin-gonic/gin"
 )
 
 var WXPay *wxstruct.WxPayConfig
 
 func init() {
+	godotenv.Load()
 
 	WXPay = &wxstruct.WxPayConfig{
  		AppId:  os.Getenv("WXPayAppId"),
