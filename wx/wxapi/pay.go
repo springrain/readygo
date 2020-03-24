@@ -1,10 +1,12 @@
 package wxapi
 
 import (
+	"fmt"
 	"gitee.com/chunanyong/gowe"
 	"gitee.com/chunanyong/zorm"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
+	"io/ioutil"
 	"os"
 	"readygo/ginext/Ginserializer"
 	"readygo/wx/wxstruct"
@@ -26,7 +28,41 @@ func init() {
 }
 
 func WxPayNotifyPay(c *gin.Context){
+	//
+	//var body gowe.WxPayNotifyPayBody
+	//c.Bind(&body)
 
+	body, _ := ioutil.ReadAll(c.Request.Body)
+
+	gowe.WxPayNotifyPay(WXPay, func(wxPayNotifyPayBody gowe.WxPayNotifyPayBody) error {
+
+
+		fmt.Println(wxPayNotifyPayBody)
+
+		return nil
+	},body)
+
+
+}
+
+func WxPayAppSign(c *gin.Context){
+
+	body := make(map[string]string,0)
+	c.BindJSON(&body)
+
+	 fmt.Println(body)
+
+
+
+
+	paySign := gowe.WxPayMaSign(WXPay.GetAppId() ,body["nonceStr"],body["packages"], body["signType"], body["timeStamp"] ,WXPay.GetAPIKey())
+
+	body["paySign"] = paySign
+
+	c.JSON(200, Ginserializer.Response{
+		Code: 0,
+		Data:body,
+	})
 }
 
 func WxPayUnifiedOrder(c *gin.Context) {

@@ -17,6 +17,12 @@ func NewRouter() *gin.Engine {
 
 		v1.POST("WxMaCode2Session", wxapi.WxMaCode2Session)
 		v1.POST("WxPayUnifiedOrder",wxapi.WxPayUnifiedOrder)
+		v1.POST("WxPayNotifyPay",wxapi.WxPayNotifyPay)
+
+		v1.POST("WxPayAppSign",wxapi.WxPayAppSign)
+
+
+
 
 
 
