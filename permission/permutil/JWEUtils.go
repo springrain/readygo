@@ -5,7 +5,6 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"errors"
-	"fmt"
 	"io/ioutil"
 	"time"
 
@@ -81,7 +80,10 @@ func JWECreateToken(id string, extInfo interface{}) (raw string, err error) {
 	}
 	jwtSecretByte := []byte(_jwtSecret + id)
 
-	signer, err = jose.NewSigner(jose.SigningKey{Algorithm: jose.HS256, Key: jwtSecretByte}, (&jose.SignerOptions{}).WithType("JWT"))
+	signerOption := jose.SignerOptions{}
+	signerOption.WithType("JWT")
+	signerOption.WithHeader("R", id)
+	signer, err = jose.NewSigner(jose.SigningKey{Algorithm: jose.HS256, Key: jwtSecretByte}, &signerOption) //(&jose.SignerOptions{}).WithType("JWT")
 	if err != nil {
 		return "", err
 	}
@@ -109,15 +111,23 @@ func JWEGetInfoFromToken(token string, extInfo interface{}) (id string, err erro
 		return "", err
 	}
 
+	if len(nested.Headers) < 1 {
+		return "", errors.New("缺少Header")
+	}
+	if _, ok := nested.Headers[0].ExtraHeaders["R"]; !ok {
+		return "", errors.New("缺少Header")
+	}
+	id = nested.Headers[0].ExtraHeaders["R"].(string)
+
 	//验签并返回Claim对象和扩展对象
 	claim := jwt.Claims{}
-	fmt.Println(nested.Headers)
+
 	//先不验证签名获取token信息
-	if err := nested.UnsafeClaimsWithoutVerification(&claim, extInfo); err != nil {
-		return "", err
-	}
+	// if err := nested.UnsafeClaimsWithoutVerification(&claim, extInfo); err != nil {
+	// 	return "", err
+	// }
 	//签名秘钥拼接用户id
-	jwtSecretByte := []byte(_jwtSecret + claim.ID)
+	jwtSecretByte := []byte(_jwtSecret + id)
 	//验证签名
 	if err := nested.Claims(jwtSecretByte, &claim, extInfo); err != nil {
 		return "", err
