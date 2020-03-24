@@ -1,6 +1,7 @@
 package permutil
 
 import (
+	"crypto/md5"
 	"crypto/rsa"
 	"crypto/x509"
 	"encoding/pem"
@@ -77,7 +78,7 @@ func JWECreateToken(id string, extInfo interface{}) (raw string, err error) {
 		ID:     id,
 		Expiry: jwt.NewNumericDate(time.Now().Add(expireDuration)),
 	}
-	jwtSecretByte := []byte(jwtSecret + id)
+	jwtSecretByte := getJwtSecretByte(id)
 
 	signerOption := jose.SignerOptions{}
 	signerOption.WithType("JWT")
@@ -122,11 +123,11 @@ func JWEGetInfoFromToken(token string, extInfo interface{}) (id string, err erro
 	claim := jwt.Claims{}
 	//fmt.Println(nested.Headers)
 	//先不验证签名获取token信息
-	// if err := nested.UnsafeClaimsWithoutVerification(&claim, extInfo); err != nil {
-	// 	return "", err
-	// }
+	if err := nested.UnsafeClaimsWithoutVerification(&claim); err != nil {
+		return "", err
+	}
 	//签名秘钥拼接用户id
-	jwtSecretByte := []byte(jwtSecret + id)
+	jwtSecretByte := getJwtSecretByte(claim.ID)
 	//验证签名
 	if err := nested.Claims(jwtSecretByte, &claim, extInfo); err != nil {
 		return "", err
@@ -141,4 +142,10 @@ func JWEGetInfoFromToken(token string, extInfo interface{}) (id string, err erro
 	}
 
 	return claim.ID, err
+}
+
+//getJwtSecretByte 拼接id,构造secret
+func getJwtSecretByte(id string) []byte {
+	md5Bytes := md5.Sum([]byte(jwtSecret + id))
+	return md5Bytes[:]
 }
