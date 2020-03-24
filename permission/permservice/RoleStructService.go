@@ -30,7 +30,7 @@ func SaveRoleStruct(ctx context.Context, roleStruct *permstruct.RoleStruct) erro
 
 		//赋值主键Id
 		if len(roleStruct.Id) < 1 {
-			roleStruct.Id = zorm.GenerateStringID()
+			roleStruct.Id = zorm.FuncGenerateStringID()
 		}
 
 		errSaveRoleStruct := zorm.SaveStruct(ctx, roleStruct)

@@ -182,7 +182,7 @@ func UpdateUserRoles(ctx context.Context, userId string, roleIds []string) error
 		}
 		for _, roleId := range roleIds {
 			ur := permstruct.UserRoleStruct{}
-			ur.Id = zorm.GenerateStringID()
+			ur.Id = zorm.FuncGenerateStringID()
 			ur.UserId = userId
 			ur.RoleId = roleId
 			errSaveStruct := zorm.SaveStruct(ctx, &ur)
