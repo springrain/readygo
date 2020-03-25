@@ -20,6 +20,7 @@ func NewRouter() *gin.Engine {
 		v1.POST("WxPayNotifyPay",wxapi.WxPayNotifyPay)
 
 		v1.POST("WxPayAppSign",wxapi.WxPayAppSign)
+		v1.GET("WxMaSubscribeMessageSend",wxapi.WxMaSubscribeMessageSend)
 
 
 
