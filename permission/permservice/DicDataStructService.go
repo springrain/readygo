@@ -29,7 +29,7 @@ func SaveDicDataStruct(ctx context.Context, dicDataStruct *permstruct.DicDataStr
 
 		//赋值主键Id
 		if len(dicDataStruct.Id) < 1 {
-			dicDataStruct.Id = zorm.GenerateStringID()
+			dicDataStruct.Id = zorm.FuncGenerateStringID()
 		}
 
 		errSaveDicDataStruct := zorm.SaveStruct(ctx, dicDataStruct)

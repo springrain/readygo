@@ -65,8 +65,7 @@ func TestQuey(t *testing.T) {
 
 	err := zorm.QueryStructList(background, finder, &users, page)
 
-	  zorm.QueryMap(background, finder)
-
+	fmt.Println(users)
 
 	if err != nil {
 		//标记测试失败
@@ -115,7 +114,6 @@ func worker(id int, wg *sync.WaitGroup) {
 		u.UserName = "zyf"
 		u.CreateTime = time.Now()
 		u.UpdateTime = time.Now()
-
 
 		u.Sex = "男" + string(id)
 		//u.Active = 2/0

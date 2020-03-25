@@ -23,7 +23,7 @@ func Save{{.structName}}(ctx context.Context, {{.pname}} *{{.packageName}}.{{.st
 
         //赋值主键{{.pkField}}
 		if len({{.pname}}.{{.pkField}}) < 1 {
-			{{.pname}}.{{.pkField}} = zorm.GenerateStringID()
+			{{.pname}}.{{.pkField}} = zorm.FuncGenerateStringID()
 		}
 
 
