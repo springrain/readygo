@@ -130,7 +130,7 @@ func worker(id int, wg *sync.WaitGroup) {
 
 		finder := zorm.NewSelectFinder(permstruct.UserStructTableName).Append(" where id = ?", "1583077877688617000")
 
-		ee := zorm.QueryStruct(nil, finder, &u)
+		ee := zorm.QueryStruct(ctx, finder, &u)
 
 		fmt.Println(ee)
 

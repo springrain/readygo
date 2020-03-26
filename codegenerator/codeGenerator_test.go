@@ -15,3 +15,11 @@ func TestCodeGeneratorALL(t *testing.T) {
 		code(tableName)
 	}
 }
+
+
+
+func TestCodeGeneratorDemo(t *testing.T) {
+
+		code("t_demo")
+}
+
