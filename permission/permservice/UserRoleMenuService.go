@@ -172,7 +172,7 @@ func UpdateUserRoles(ctx context.Context, userId string, roleIds []string) error
 
 		//删除用户现有的角色
 		f_del := zorm.NewDeleteFinder(permstruct.UserRoleStructTableName).Append(" WHERE userId=? ", userId)
-		errUpdateFinder := zorm.UpdateFinder(ctx, f_del)
+		_, errUpdateFinder := zorm.UpdateFinder(ctx, f_del)
 		if errUpdateFinder != nil {
 			return nil, errUpdateFinder
 		}
@@ -185,7 +185,7 @@ func UpdateUserRoles(ctx context.Context, userId string, roleIds []string) error
 			ur.Id = zorm.FuncGenerateStringID()
 			ur.UserId = userId
 			ur.RoleId = roleId
-			errSaveStruct := zorm.SaveStruct(ctx, &ur)
+			_, errSaveStruct := zorm.SaveStruct(ctx, &ur)
 			if errSaveStruct != nil {
 				return nil, errSaveStruct
 			}

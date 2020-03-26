@@ -32,7 +32,7 @@ func SaveDicDataStruct(ctx context.Context, dicDataStruct *permstruct.DicDataStr
 			dicDataStruct.Id = zorm.FuncGenerateStringID()
 		}
 
-		errSaveDicDataStruct := zorm.SaveStruct(ctx, dicDataStruct)
+		_, errSaveDicDataStruct := zorm.SaveStruct(ctx, dicDataStruct)
 
 		if errSaveDicDataStruct != nil {
 			return nil, errSaveDicDataStruct
@@ -69,7 +69,7 @@ func UpdateDicDataStruct(ctx context.Context, dicDataStruct *permstruct.DicDataS
 	_, errUpdateDicDataStruct := zorm.Transaction(ctx, func(ctx context.Context) (interface{}, error) {
 
 		//事务下的业务代码开始
-		errUpdateDicDataStruct := zorm.UpdateStruct(ctx, dicDataStruct)
+		_, errUpdateDicDataStruct := zorm.UpdateStruct(ctx, dicDataStruct)
 
 		if errUpdateDicDataStruct != nil {
 			return nil, errUpdateDicDataStruct
@@ -107,7 +107,7 @@ func DeleteDicDataStructById(ctx context.Context, id string) error {
 
 		//事务下的业务代码开始
 		finder := zorm.NewDeleteFinder(permstruct.DicDataStructTableName).Append(" WHERE id=?", id)
-		errDeleteDicDataStruct := zorm.UpdateFinder(ctx, finder)
+		_, errDeleteDicDataStruct := zorm.UpdateFinder(ctx, finder)
 
 		if errDeleteDicDataStruct != nil {
 			return nil, errDeleteDicDataStruct

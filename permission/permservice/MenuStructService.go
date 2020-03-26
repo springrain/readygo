@@ -42,7 +42,7 @@ func SaveMenuStruct(ctx context.Context, menuStruct *permstruct.MenuStruct) erro
 		menuStruct.Comcode = comcode
 
 		//保存menu
-		errSaveMenuStruct := zorm.SaveStruct(ctx, menuStruct)
+		_, errSaveMenuStruct := zorm.SaveStruct(ctx, menuStruct)
 
 		if errSaveMenuStruct != nil {
 			return nil, errSaveMenuStruct
@@ -105,7 +105,7 @@ func UpdateMenuStruct(ctx context.Context, menuStruct *permstruct.MenuStruct) er
 		//事务下的业务代码开始
 
 		menuStruct.Comcode = newComcode
-		errUpdateMenuStruct := zorm.UpdateStruct(ctx, menuStruct)
+		_, errUpdateMenuStruct := zorm.UpdateStruct(ctx, menuStruct)
 
 		if errUpdateMenuStruct != nil {
 			return nil, errUpdateMenuStruct
@@ -135,7 +135,7 @@ func UpdateMenuStruct(ctx context.Context, menuStruct *permstruct.MenuStruct) er
 
 			//更新 comCode
 			comcodeFinder := zorm.NewUpdateFinder(permstruct.MenuStructTableName).Append(" comcode=? WHERE id=? ", updateComcode, menuId)
-			errComcodeFinder := zorm.UpdateFinder(ctx, comcodeFinder)
+			_, errComcodeFinder := zorm.UpdateFinder(ctx, comcodeFinder)
 			if errComcodeFinder != nil {
 				return nil, errComcodeFinder
 			}
@@ -191,13 +191,13 @@ func DeleteMenuStructById(ctx context.Context, id string) error {
 
 		//删除中间表
 		f_delete_re := zorm.NewDeleteFinder(permstruct.RoleMenuStructTableName).Append(" WHERE menuId in (?)", menuIds)
-		errDeleteRE := zorm.UpdateFinder(ctx, f_delete_re)
+		_, errDeleteRE := zorm.UpdateFinder(ctx, f_delete_re)
 		if errDeleteRE != nil {
 			return nil, errDeleteRE
 		}
 
 		f_delete := zorm.NewDeleteFinder(permstruct.MenuStructTableName).Append(" WHERE id in (?)", menuIds)
-		errDelete := zorm.UpdateFinder(ctx, f_delete)
+		_, errDelete := zorm.UpdateFinder(ctx, f_delete)
 		if errDelete != nil {
 			return nil, errDelete
 		}

@@ -32,7 +32,7 @@ func SaveUserPlatformInfosStruct(ctx context.Context, userPlatformInfosStruct *p
 			userPlatformInfosStruct.Id = zorm.FuncGenerateStringID()
 		}
 
-		errSaveUserPlatformInfosStruct := zorm.SaveStruct(ctx, userPlatformInfosStruct)
+		_, errSaveUserPlatformInfosStruct := zorm.SaveStruct(ctx, userPlatformInfosStruct)
 
 		if errSaveUserPlatformInfosStruct != nil {
 			return nil, errSaveUserPlatformInfosStruct
@@ -69,7 +69,7 @@ func UpdateUserPlatformInfosStruct(ctx context.Context, userPlatformInfosStruct 
 	_, errUpdateUserPlatformInfosStruct := zorm.Transaction(ctx, func(ctx context.Context) (interface{}, error) {
 
 		//事务下的业务代码开始
-		errUpdateUserPlatformInfosStruct := zorm.UpdateStruct(ctx, userPlatformInfosStruct)
+		_, errUpdateUserPlatformInfosStruct := zorm.UpdateStruct(ctx, userPlatformInfosStruct)
 
 		if errUpdateUserPlatformInfosStruct != nil {
 			return nil, errUpdateUserPlatformInfosStruct
@@ -107,7 +107,7 @@ func DeleteUserPlatformInfosStructById(ctx context.Context, id string) error {
 
 		//事务下的业务代码开始
 		finder := zorm.NewDeleteFinder(permstruct.UserPlatformInfosStructTableName).Append(" WHERE id=?", id)
-		errDeleteUserPlatformInfosStruct := zorm.UpdateFinder(ctx, finder)
+		_, errDeleteUserPlatformInfosStruct := zorm.UpdateFinder(ctx, finder)
 
 		if errDeleteUserPlatformInfosStruct != nil {
 			return nil, errDeleteUserPlatformInfosStruct

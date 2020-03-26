@@ -40,7 +40,7 @@ func SaveOrgStruct(ctx context.Context, orgStruct *permstruct.OrgStruct) error {
 		orgStruct.Comcode = comcode
 		orgStruct.Active = 1
 
-		errSaveOrgStruct := zorm.SaveStruct(ctx, orgStruct)
+		_, errSaveOrgStruct := zorm.SaveStruct(ctx, orgStruct)
 
 		if errSaveOrgStruct != nil {
 			return nil, errSaveOrgStruct
@@ -96,7 +96,7 @@ func UpdateOrgStruct(ctx context.Context, orgStruct *permstruct.OrgStruct) error
 	_, errUpdateOrgStruct := zorm.Transaction(ctx, func(ctx context.Context) (interface{}, error) {
 
 		orgStruct.Comcode = newComcode
-		errUpdateOrgStruct := zorm.UpdateStruct(ctx, orgStruct)
+		_, errUpdateOrgStruct := zorm.UpdateStruct(ctx, orgStruct)
 
 		if errUpdateOrgStruct != nil {
 			return nil, errUpdateOrgStruct
@@ -124,7 +124,7 @@ func UpdateOrgStruct(ctx context.Context, orgStruct *permstruct.OrgStruct) error
 
 			//更新 comCode
 			comcodeFinder := zorm.NewUpdateFinder(permstruct.OrgStructTableName).Append(" comcode=? WHERE id=? ", updateComcode, orgId)
-			errComcodeFinder := zorm.UpdateFinder(ctx, comcodeFinder)
+			_, errComcodeFinder := zorm.UpdateFinder(ctx, comcodeFinder)
 			if errComcodeFinder != nil {
 				return nil, errComcodeFinder
 			}
@@ -181,7 +181,7 @@ func DeleteOrgStructById(ctx context.Context, id string) error {
 		//事务下的业务代码开始
 
 		finder := zorm.NewUpdateFinder(permstruct.OrgStructTableName).Append("  active=0  WHERE comcode like ? ", org.Comcode+"%")
-		errDeleteOrgStruct := zorm.UpdateFinder(ctx, finder)
+		_, errDeleteOrgStruct := zorm.UpdateFinder(ctx, finder)
 
 		if errDeleteOrgStruct != nil {
 			return nil, errDeleteOrgStruct
@@ -330,7 +330,7 @@ func UpdateOrgManagerUserId(ctx context.Context, orgId string, managerUserId str
 	//匿名函数return的error如果不为nil,事务就会回滚
 	_, errUpdateOrgManagerUserId := zorm.Transaction(ctx, func(ctx context.Context) (interface{}, error) {
 		finder := zorm.NewDeleteFinder(permstruct.UserOrgStructTableName).Append(" WHERE orgId=? and managerType=2 ", orgId)
-		errUpdateFinder := zorm.UpdateFinder(ctx, finder)
+		_, errUpdateFinder := zorm.UpdateFinder(ctx, finder)
 		if errUpdateFinder != nil {
 			return nil, errUpdateFinder
 		}
@@ -340,7 +340,7 @@ func UpdateOrgManagerUserId(ctx context.Context, orgId string, managerUserId str
 		userOrg.UserId = managerUserId
 		userOrg.ManagerType = 2
 
-		errSave := zorm.SaveStruct(ctx, &userOrg)
+		_, errSave := zorm.SaveStruct(ctx, &userOrg)
 		if errSave != nil {
 			return nil, errSave
 		}

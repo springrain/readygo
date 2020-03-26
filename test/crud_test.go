@@ -121,7 +121,7 @@ func worker(id int, wg *sync.WaitGroup) {
 
 		u.Id = strconv.Itoa(int(incr.(int64)))
 
-		e2 := zorm.SaveStruct(ctx, &u)
+		_, e2 := zorm.SaveStruct(ctx, &u)
 		if e2 != nil {
 			//标记测试失败
 			//t.Errorf("TestTrancSave错误:%v", e2)
@@ -139,7 +139,7 @@ func worker(id int, wg *sync.WaitGroup) {
 
 		u.UserType = id
 
-		e3 := zorm.UpdateStruct(ctx, &u)
+		_, e3 := zorm.UpdateStruct(ctx, &u)
 		if e3 != nil {
 			//标记测试失败
 			//t.Errorf("TestTrancUpdate错误:%v", e3)

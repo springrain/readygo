@@ -33,7 +33,7 @@ func SaveRoleStruct(ctx context.Context, roleStruct *permstruct.RoleStruct) erro
 			roleStruct.Id = zorm.FuncGenerateStringID()
 		}
 
-		errSaveRoleStruct := zorm.SaveStruct(ctx, roleStruct)
+		_, errSaveRoleStruct := zorm.SaveStruct(ctx, roleStruct)
 
 		if errSaveRoleStruct != nil {
 			return nil, errSaveRoleStruct
@@ -70,7 +70,7 @@ func UpdateRoleStruct(ctx context.Context, roleStruct *permstruct.RoleStruct) er
 	_, errUpdateRoleStruct := zorm.Transaction(ctx, func(ctx context.Context) (interface{}, error) {
 
 		//事务下的业务代码开始
-		errUpdateRoleStruct := zorm.UpdateStruct(ctx, roleStruct)
+		_, errUpdateRoleStruct := zorm.UpdateStruct(ctx, roleStruct)
 
 		if errUpdateRoleStruct != nil {
 			return nil, errUpdateRoleStruct
@@ -111,7 +111,7 @@ func DeleteRoleStructById(ctx context.Context, id string) error {
 
 		//事务下的业务代码开始
 		finder := zorm.NewDeleteFinder(permstruct.RoleStructTableName).Append(" WHERE id=?", id)
-		errDeleteRoleStruct := zorm.UpdateFinder(ctx, finder)
+		_, errDeleteRoleStruct := zorm.UpdateFinder(ctx, finder)
 
 		if errDeleteRoleStruct != nil {
 			return nil, errDeleteRoleStruct

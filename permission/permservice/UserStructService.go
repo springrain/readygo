@@ -33,7 +33,7 @@ func SaveUserStruct(ctx context.Context, userStruct *permstruct.UserStruct) erro
 			userStruct.Id = zorm.FuncGenerateStringID()
 		}
 
-		errSaveUserStruct := zorm.SaveStruct(ctx, userStruct)
+		_, errSaveUserStruct := zorm.SaveStruct(ctx, userStruct)
 
 		if errSaveUserStruct != nil {
 			return nil, errSaveUserStruct
@@ -70,7 +70,7 @@ func UpdateUserStruct(ctx context.Context, userStruct *permstruct.UserStruct) er
 	_, errUpdateUserStruct := zorm.Transaction(ctx, func(ctx context.Context) (interface{}, error) {
 
 		//事务下的业务代码开始
-		errUpdateUserStruct := zorm.UpdateStruct(ctx, userStruct)
+		_, errUpdateUserStruct := zorm.UpdateStruct(ctx, userStruct)
 
 		if errUpdateUserStruct != nil {
 			return nil, errUpdateUserStruct
@@ -109,7 +109,7 @@ func DeleteUserStructById(ctx context.Context, id string) error {
 
 		//事务下的业务代码开始
 		finder := zorm.NewDeleteFinder(permstruct.UserStructTableName).Append(" WHERE id=?", id)
-		errDeleteUserStruct := zorm.UpdateFinder(ctx, finder)
+		_, errDeleteUserStruct := zorm.UpdateFinder(ctx, finder)
 
 		if errDeleteUserStruct != nil {
 			return nil, errDeleteUserStruct

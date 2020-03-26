@@ -26,9 +26,7 @@ func Save{{.structName}}(ctx context.Context, {{.pname}} *{{.packageName}}.{{.st
 			{{.pname}}.{{.pkField}} = zorm.FuncGenerateStringID()
 		}
 
-
-		errSave{{.structName}} := zorm.SaveStruct(ctx, {{.pname}})
-
+		_,errSave{{.structName}} := zorm.SaveStruct(ctx, {{.pname}})
 
 		if errSave{{.structName}} != nil {
 			return nil, errSave{{.structName}}
@@ -66,7 +64,7 @@ func Update{{.structName}}(ctx context.Context, {{.pname}} *{{.packageName}}.{{.
 	_, errUpdate{{.structName}} := zorm.Transaction(ctx,func(ctx context.Context) (interface{}, error) {
 
 		//事务下的业务代码开始
-		errUpdate{{.structName}} := zorm.UpdateStruct(ctx, {{.pname}})
+		_,errUpdate{{.structName}} := zorm.UpdateStruct(ctx, {{.pname}})
 
 
 		if errUpdate{{.structName}} != nil {
@@ -106,7 +104,7 @@ func Delete{{.structName}}ById(ctx context.Context, id string) error {
 
 		//事务下的业务代码开始
 		finder := zorm.NewDeleteFinder({{.packageName}}.{{.structName}}TableName).Append(" WHERE id=?", id)
-		errDelete{{.structName}} := zorm.UpdateFinder(ctx, finder)
+		_,errDelete{{.structName}} := zorm.UpdateFinder(ctx, finder)
 
 
 		if errDelete{{.structName}} != nil {
