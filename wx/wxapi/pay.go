@@ -35,21 +35,13 @@ func WxPayNotifyPay(c *gin.Context) {
 
 	body, _ := ioutil.ReadAll(c.Request.Body)
 
-<<<<<<< HEAD
-	gowe.WxPayNotifyPay(WXPay,body, func(wxPayNotifyPayBody gowe.WxPayNotifyPayBody) error {
+ 	gowe.WxPayNotifyPay(WXPay,body, func(wxPayNotifyPayBody gowe.WxPayNotifyPayBody) error {
 
-=======
-	gowe.WxPayNotifyPay(WXPay, body, func(wxPayNotifyPayBody gowe.WxPayNotifyPayBody) error {
->>>>>>> e7c90c9850f0ae658e70321fa46869fc44d26bc5
 
 		fmt.Println(wxPayNotifyPayBody)
 
 		return nil
 	})
-<<<<<<< HEAD
-
-=======
->>>>>>> e7c90c9850f0ae658e70321fa46869fc44d26bc5
 
 }
 
