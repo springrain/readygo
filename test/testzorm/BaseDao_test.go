@@ -64,6 +64,7 @@ func TestSaveStruct(t *testing.T) {
 
 		//保存对象,参数是对象指针.如果主键是自增,会赋值到对象的主键属性
 		_, err := zorm.SaveStruct(ctx, &demo)
+
 		//如果返回的err不是nil,事务就会回滚
 		return nil, err
 	})
@@ -93,7 +94,9 @@ func TestSaveEntityMap(t *testing.T) {
 		entityMap.Set("createTime", time.Now())
 		entityMap.Set("active", 1)
 
+		//执行
 		_, err := zorm.SaveEntityMap(ctx, entityMap)
+
 		//如果返回的err不是nil,事务就会回滚
 		return nil, err
 	})
@@ -192,7 +195,7 @@ func TestUpdateStructNotZeroValue(t *testing.T) {
 
 	//需要手动开启事务,匿名函数返回的error如果不是nil,事务就会回滚
 	_, err := zorm.Transaction(ctx, func(ctx context.Context) (interface{}, error) {
-		//声明一个对象的指针,用于承载返回的数据
+		//声明一个对象的指针,用于更新数据
 		demo := &demoStruct{}
 		demo.Id = "41b2aa4f-379a-4319-8af9-08472b6e514e"
 		demo.UserName = "UpdateStructNotZeroValue"
@@ -215,7 +218,7 @@ func TestUpdateStruct(t *testing.T) {
 	//需要手动开启事务,匿名函数返回的error如果不是nil,事务就会回滚
 	_, err := zorm.Transaction(ctx, func(ctx context.Context) (interface{}, error) {
 
-		//声明一个对象的指针,用于承载返回的数据
+		//声明一个对象的指针,用于更新数据
 		demo := &demoStruct{}
 		demo.Id = "41b2aa4f-379a-4319-8af9-08472b6e514e"
 		demo.UserName = "TestUpdateStruct"
