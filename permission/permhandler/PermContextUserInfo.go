@@ -31,11 +31,11 @@ func setCurrentUserToCtx(c context.Context, userInfo interface{}) (context.Conte
 }
 
 // GetCurrentUserFromCtx 将当前上下文获取用户信息
-func getCurrentUserFromCtx(c context.Context) (interface{}, error) {
-	if c == nil {
+func getCurrentUserFromCtx(ctx context.Context) (interface{}, error) {
+	if ctx == nil {
 		return nil, errors.New("context不能为nil")
 	}
-	userInfo := c.Value(currentUserKey)
+	userInfo := ctx.Value(currentUserKey)
 	return userInfo, nil
 }
 
