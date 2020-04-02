@@ -15,3 +15,4 @@ func TestUUID(t *testing.T) {
 	t.Log(len(strings.Replace(uuid, "-", "", -1)))
 
 }
+

@@ -25,8 +25,9 @@ func (w WxPayConfig) GetSecret() string {
 	return w.Secret
 }
 
+
 func (w WxPayConfig) GetCertificateFile() string {
-	panic("implement me")
+	return  "../cert/apiclient_cert.pem"
 }
 
 func (w WxPayConfig) GetMchId() string {

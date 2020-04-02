@@ -13,3 +13,5 @@ require (
 	github.com/shopspring/decimal v0.0.0-20200227202807-02e2044944cc
 	gopkg.in/square/go-jose.v2 v2.4.1
 )
+
+replace gitee.com/chunanyong/gowe => /Users/zyf/gowe

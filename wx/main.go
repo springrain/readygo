@@ -1,9 +1,12 @@
 package main
 
 import (
+	"os"
 	"readygo/wx/wxroute"
 )
 
+
+ var systemPath, _ = os.Getwd()
 
 func main() {
 
