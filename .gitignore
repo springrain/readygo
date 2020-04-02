@@ -39,5 +39,6 @@ readygo/*/*/cmd/debug
 readygo/*/*/*/cmd/debug
 readygo/tool/kratos/kratos
 
-readygo/wx/cert
+wx/cert/
 _output
+.env

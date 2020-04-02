@@ -51,9 +51,7 @@ func WxMaSubscribeMessageSend(c *gin.Context) {
 	if err != nil {
 		fmt.Println(err.Error())
 	}
-
 	fmt.Println(send)
-
 	c.JSON(200, Ginserializer.Response{
 		Code: 0,
 		Data: send,
