@@ -26,7 +26,7 @@ func Save{{.structName}}(ctx context.Context, {{.pname}} *{{.packageName}}.{{.st
 			{{.pname}}.{{.pkField}} = zorm.FuncGenerateStringID()
 		}
 
-		_,errSave{{.structName}} := zorm.SaveStruct(ctx, {{.pname}})
+		_,errSave{{.structName}} := zorm.Insert(ctx, {{.pname}})
 
 		if errSave{{.structName}} != nil {
 			return nil, errSave{{.structName}}
@@ -64,7 +64,7 @@ func Update{{.structName}}(ctx context.Context, {{.pname}} *{{.packageName}}.{{.
 	_, errUpdate{{.structName}} := zorm.Transaction(ctx,func(ctx context.Context) (interface{}, error) {
 
 		//事务下的业务代码开始
-		_,errUpdate{{.structName}} := zorm.UpdateStruct(ctx, {{.pname}})
+		_,errUpdate{{.structName}} := zorm.Update(ctx, {{.pname}})
 
 
 		if errUpdate{{.structName}} != nil {
@@ -137,7 +137,7 @@ func Find{{.structName}}ById(ctx context.Context, id string) (*{{.packageName}}.
 	//根据Id查询
 	finder := zorm.NewSelectFinder({{.packageName}}.{{.structName}}TableName).Append(" WHERE id=?", id)
 	{{.pname}} := {{.packageName}}.{{.structName}}{}
-	errFind{{.structName}}ById := zorm.QueryStruct(ctx, finder, &{{.pname}})
+	errFind{{.structName}}ById := zorm.Query(ctx, finder, &{{.pname}})
 
 	//记录错误
 	if errFind{{.structName}}ById != nil {
@@ -160,7 +160,7 @@ func Find{{.structName}}List(ctx context.Context, finder *zorm.Finder, page *zor
 	}
 
 	{{.pname}}List := make([]{{.packageName}}.{{.structName}}, 0)
-	errFind{{.structName}}List := zorm.QueryStructList(ctx, finder, &{{.pname}}List, page)
+	errFind{{.structName}}List := zorm.QuerySlice(ctx, finder, &{{.pname}}List, page)
 
 	//记录错误
 	if errFind{{.structName}}List != nil {

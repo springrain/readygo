@@ -33,7 +33,7 @@ func SaveUserStruct(ctx context.Context, userStruct *permstruct.UserStruct) erro
 			userStruct.Id = zorm.FuncGenerateStringID()
 		}
 
-		_, errSaveUserStruct := zorm.SaveStruct(ctx, userStruct)
+		_, errSaveUserStruct := zorm.Insert(ctx, userStruct)
 
 		if errSaveUserStruct != nil {
 			return nil, errSaveUserStruct
@@ -70,7 +70,7 @@ func UpdateUserStruct(ctx context.Context, userStruct *permstruct.UserStruct) er
 	_, errUpdateUserStruct := zorm.Transaction(ctx, func(ctx context.Context) (interface{}, error) {
 
 		//事务下的业务代码开始
-		_, errUpdateUserStruct := zorm.UpdateStruct(ctx, userStruct)
+		_, errUpdateUserStruct := zorm.Update(ctx, userStruct)
 
 		if errUpdateUserStruct != nil {
 			return nil, errUpdateUserStruct
@@ -149,7 +149,7 @@ func FindUserStructById(ctx context.Context, id string) (*permstruct.UserStruct,
 
 	//根据Id查询
 	finder := zorm.NewSelectFinder(permstruct.UserStructTableName).Append(" WHERE id=?", id)
-	errFindUserStructById := zorm.QueryStruct(ctx, finder, &userStruct)
+	errFindUserStructById := zorm.Query(ctx, finder, &userStruct)
 
 	//记录错误
 	if errFindUserStructById != nil {
@@ -175,7 +175,7 @@ func FindUserStructList(ctx context.Context, finder *zorm.Finder, page *zorm.Pag
 	}
 
 	userStructList := make([]permstruct.UserStruct, 0)
-	errFindUserStructList := zorm.QueryStructList(ctx, finder, &userStructList, page)
+	errFindUserStructList := zorm.QuerySlice(ctx, finder, &userStructList, page)
 
 	//记录错误
 	if errFindUserStructList != nil {

@@ -35,7 +35,7 @@ func FindRoleByUserId(ctx context.Context, userId string, page *zorm.Page) ([]pe
 	finder.Append(permstruct.UserRoleStructTableName).Append("  re where re.userId=? and re.roleId=r.id and r.active=1 order by r.privateOrg,r.sortno desc", userId)
 
 	//查询列表
-	errQueryList := zorm.QueryStructList(ctx, finder, &roles, page)
+	errQueryList := zorm.QuerySlice(ctx, finder, &roles, page)
 	if errQueryList != nil {
 		return nil, errQueryList
 	}
@@ -70,7 +70,7 @@ func FindMenuByRoleId(ctx context.Context, roleId string, page *zorm.Page) ([]pe
 	finder.Append(permstruct.RoleMenuStructTableName).Append("  re where re.roleId=? and re.menuId=m.id and m.active=1 order by m.sortno desc ", roleId)
 
 	//查询列表
-	errQueryList := zorm.QueryStructList(ctx, finder, &menus, page)
+	errQueryList := zorm.QuerySlice(ctx, finder, &menus, page)
 	if errQueryList != nil {
 		return nil, errQueryList
 	}
@@ -162,7 +162,7 @@ func UpdateUserRoles(ctx context.Context, userId string, roleIds []string) error
 	//查询用户的现有的角色,清理缓存
 	f_select_old := zorm.NewSelectFinder(permstruct.UserRoleStructTableName, "roleId").Append(" WHERE userId=? ", userId)
 	listOld := make([]string, 0)
-	errQueryList := zorm.QueryStructList(ctx, f_select_old, listOld, nil)
+	errQueryList := zorm.QuerySlice(ctx, f_select_old, listOld, nil)
 	if errQueryList != nil {
 		return errQueryList
 	}
@@ -185,7 +185,7 @@ func UpdateUserRoles(ctx context.Context, userId string, roleIds []string) error
 			ur.Id = zorm.FuncGenerateStringID()
 			ur.UserId = userId
 			ur.RoleId = roleId
-			_, errSaveStruct := zorm.SaveStruct(ctx, &ur)
+			_, errSaveStruct := zorm.Insert(ctx, &ur)
 			if errSaveStruct != nil {
 				return nil, errSaveStruct
 			}

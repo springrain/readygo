@@ -32,7 +32,7 @@ func SaveDicDataStruct(ctx context.Context, dicDataStruct *permstruct.DicDataStr
 			dicDataStruct.Id = zorm.FuncGenerateStringID()
 		}
 
-		_, errSaveDicDataStruct := zorm.SaveStruct(ctx, dicDataStruct)
+		_, errSaveDicDataStruct := zorm.Insert(ctx, dicDataStruct)
 
 		if errSaveDicDataStruct != nil {
 			return nil, errSaveDicDataStruct
@@ -69,7 +69,7 @@ func UpdateDicDataStruct(ctx context.Context, dicDataStruct *permstruct.DicDataS
 	_, errUpdateDicDataStruct := zorm.Transaction(ctx, func(ctx context.Context) (interface{}, error) {
 
 		//事务下的业务代码开始
-		_, errUpdateDicDataStruct := zorm.UpdateStruct(ctx, dicDataStruct)
+		_, errUpdateDicDataStruct := zorm.Update(ctx, dicDataStruct)
 
 		if errUpdateDicDataStruct != nil {
 			return nil, errUpdateDicDataStruct
@@ -139,7 +139,7 @@ func FindDicDataStructById(ctx context.Context, id string) (*permstruct.DicDataS
 	//根据Id查询
 	finder := zorm.NewSelectFinder(permstruct.DicDataStructTableName).Append(" WHERE id=?", id)
 	dicDataStruct := permstruct.DicDataStruct{}
-	errFindDicDataStructById := zorm.QueryStruct(ctx, finder, &dicDataStruct)
+	errFindDicDataStructById := zorm.Query(ctx, finder, &dicDataStruct)
 
 	//记录错误
 	if errFindDicDataStructById != nil {
@@ -162,7 +162,7 @@ func FindDicDataStructList(ctx context.Context, finder *zorm.Finder, page *zorm.
 	}
 
 	dicDataStructList := make([]permstruct.DicDataStruct, 0)
-	errFindDicDataStructList := zorm.QueryStructList(ctx, finder, &dicDataStructList, page)
+	errFindDicDataStructList := zorm.QuerySlice(ctx, finder, &dicDataStructList, page)
 
 	//记录错误
 	if errFindDicDataStructList != nil {

@@ -33,7 +33,7 @@ func SaveRoleStruct(ctx context.Context, roleStruct *permstruct.RoleStruct) erro
 			roleStruct.Id = zorm.FuncGenerateStringID()
 		}
 
-		_, errSaveRoleStruct := zorm.SaveStruct(ctx, roleStruct)
+		_, errSaveRoleStruct := zorm.Insert(ctx, roleStruct)
 
 		if errSaveRoleStruct != nil {
 			return nil, errSaveRoleStruct
@@ -70,7 +70,7 @@ func UpdateRoleStruct(ctx context.Context, roleStruct *permstruct.RoleStruct) er
 	_, errUpdateRoleStruct := zorm.Transaction(ctx, func(ctx context.Context) (interface{}, error) {
 
 		//事务下的业务代码开始
-		_, errUpdateRoleStruct := zorm.UpdateStruct(ctx, roleStruct)
+		_, errUpdateRoleStruct := zorm.Update(ctx, roleStruct)
 
 		if errUpdateRoleStruct != nil {
 			return nil, errUpdateRoleStruct
@@ -153,7 +153,7 @@ func FindRoleStructById(ctx context.Context, id string) (*permstruct.RoleStruct,
 	//根据Id查询
 	finder := zorm.NewSelectFinder(permstruct.RoleStructTableName).Append(" WHERE id=?", id)
 
-	errFindRoleStructById := zorm.QueryStruct(ctx, finder, &roleStruct)
+	errFindRoleStructById := zorm.Query(ctx, finder, &roleStruct)
 
 	//记录错误
 	if errFindRoleStructById != nil {
@@ -178,7 +178,7 @@ func FindRoleStructList(ctx context.Context, finder *zorm.Finder, page *zorm.Pag
 	}
 
 	roleStructList := make([]permstruct.RoleStruct, 0)
-	errFindRoleStructList := zorm.QueryStructList(ctx, finder, &roleStructList, page)
+	errFindRoleStructList := zorm.QuerySlice(ctx, finder, &roleStructList, page)
 
 	//记录错误
 	if errFindRoleStructList != nil {

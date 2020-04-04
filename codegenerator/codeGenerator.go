@@ -11,7 +11,7 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
-var baseDao *zorm.BaseDao
+var dbDao *zorm.DBDao
 
 const (
 	dbName             = "readygo"
@@ -20,20 +20,20 @@ const (
 )
 
 func init() {
-	baseDaoConfig := zorm.DataSourceConfig{
+	dbDaoConfig := zorm.DataSourceConfig{
 		DSN:        "root:root@tcp(127.0.0.1:3306)/readygo?charset=utf8&parseTime=true",
 		DriverName: "mysql",
 		PrintSQL:   true,
 	}
 
-	baseDao, _ = zorm.NewBaseDao(&baseDaoConfig)
+	dbDao, _ = zorm.NewDBDao(&dbDaoConfig)
 }
 
 //生成代码
 func code(tableName string) {
 	ctx := context.Background()
 
-	info := selectTableColumn(ctx,tableName)
+	info := selectTableColumn(ctx, tableName)
 
 	//创建目录
 	os.MkdirAll("./code/struct", os.ModePerm)
@@ -69,31 +69,31 @@ func selectAllTable() []string {
 	finder := zorm.NewFinder()
 	finder.Append("select table_name from information_schema.TABLES where  TABLE_SCHEMA =?", dbName)
 	tableNames := []string{}
-	zorm.QueryStructList(nil, finder, &tableNames, nil)
+	zorm.QuerySlice(nil, finder, &tableNames, nil)
 	return tableNames
 }
 
 //根据表名查询字段信息和主键名称
-func selectTableColumn(ctx context.Context,tableName string) map[string]interface{} {
+func selectTableColumn(ctx context.Context, tableName string) map[string]interface{} {
 
 	info := make(map[string]interface{})
 
 	tableComment := ""
 	finder := zorm.NewFinder()
 	finder.Append("select table_comment from information_schema.TABLES where  TABLE_SCHEMA =? and TABLE_Name=? ", dbName, tableName)
-	zorm.QueryStruct(ctx, finder, &tableComment)
+	zorm.Query(ctx, finder, &tableComment)
 
 	//查找主键
 	finderPK := zorm.NewFinder()
 	finderPK.Append("SELECT column_name FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE WHERE TABLE_SCHEMA=? and  table_name=? AND constraint_name=?", dbName, tableName, "PRIMARY")
 	pkName := ""
-	zorm.QueryStruct(ctx, finderPK, &pkName)
+	zorm.Query(ctx, finderPK, &pkName)
 
 	finder2 := zorm.NewFinder()
 	// select * from information_schema.COLUMNS where table_schema ='readygo' and table_name='t_user';
 	finder2.Append("select COLUMN_NAME,DATA_TYPE,IS_NULLABLE,COLUMN_COMMENT from information_schema.COLUMNS where  TABLE_SCHEMA =? and TABLE_NAME=? and COLUMN_NAME not like ?  order by ORDINAL_POSITION asc", dbName, tableName, "bak%")
 
-	maps, _ := zorm.QueryMapList(ctx, finder2, nil)
+	maps, _ := zorm.QueryMapSlice(ctx, finder2, nil)
 
 	for _, m := range maps {
 		dataType := m["DATA_TYPE"].(string)

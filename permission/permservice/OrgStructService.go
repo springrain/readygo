@@ -40,7 +40,7 @@ func SaveOrgStruct(ctx context.Context, orgStruct *permstruct.OrgStruct) error {
 		orgStruct.Comcode = comcode
 		orgStruct.Active = 1
 
-		_, errSaveOrgStruct := zorm.SaveStruct(ctx, orgStruct)
+		_, errSaveOrgStruct := zorm.Insert(ctx, orgStruct)
 
 		if errSaveOrgStruct != nil {
 			return nil, errSaveOrgStruct
@@ -96,7 +96,7 @@ func UpdateOrgStruct(ctx context.Context, orgStruct *permstruct.OrgStruct) error
 	_, errUpdateOrgStruct := zorm.Transaction(ctx, func(ctx context.Context) (interface{}, error) {
 
 		orgStruct.Comcode = newComcode
-		_, errUpdateOrgStruct := zorm.UpdateStruct(ctx, orgStruct)
+		_, errUpdateOrgStruct := zorm.Update(ctx, orgStruct)
 
 		if errUpdateOrgStruct != nil {
 			return nil, errUpdateOrgStruct
@@ -225,7 +225,7 @@ func FindOrgStructById(ctx context.Context, id string) (*permstruct.OrgStruct, e
 	//根据Id查询
 	finder := zorm.NewSelectFinder(permstruct.OrgStructTableName).Append(" WHERE id=?", id)
 
-	errFindOrgStructById := zorm.QueryStruct(ctx, finder, &orgStruct)
+	errFindOrgStructById := zorm.Query(ctx, finder, &orgStruct)
 
 	//记录错误
 	if errFindOrgStructById != nil {
@@ -251,7 +251,7 @@ func FindOrgStructList(ctx context.Context, finder *zorm.Finder, page *zorm.Page
 	}
 
 	orgStructList := make([]permstruct.OrgStruct, 0)
-	errFindOrgStructList := zorm.QueryStructList(ctx, finder, &orgStructList, page)
+	errFindOrgStructList := zorm.QuerySlice(ctx, finder, &orgStructList, page)
 
 	//记录错误
 	if errFindOrgStructList != nil {
@@ -282,7 +282,7 @@ func FindOrgTreeByPid(ctx context.Context, pid string) ([]permstruct.OrgStruct, 
 	finder.Append(" order by sortno asc ")
 
 	orgs := make([]permstruct.OrgStruct, 0)
-	errQueryList := zorm.QueryStructList(ctx, finder, &orgs, nil)
+	errQueryList := zorm.QuerySlice(ctx, finder, &orgs, nil)
 	if errQueryList != nil {
 		return nil, errQueryList
 	}
@@ -313,7 +313,7 @@ func FindOrgIdByPid(ctx context.Context, pid string) ([]string, error) {
 	finder.Append(" order by sortno asc ")
 
 	orgIds := make([]string, 0)
-	errQueryList := zorm.QueryStructList(ctx, finder, &orgIds, nil)
+	errQueryList := zorm.QuerySlice(ctx, finder, &orgIds, nil)
 	if errQueryList != nil {
 		return nil, errQueryList
 	}
@@ -340,7 +340,7 @@ func UpdateOrgManagerUserId(ctx context.Context, orgId string, managerUserId str
 		userOrg.UserId = managerUserId
 		userOrg.ManagerType = 2
 
-		_, errSave := zorm.SaveStruct(ctx, &userOrg)
+		_, errSave := zorm.Insert(ctx, &userOrg)
 		if errSave != nil {
 			return nil, errSave
 		}
@@ -409,7 +409,7 @@ func newOrgComcode(ctx context.Context, id string, pid string) (string, error) {
 
 	comcode := ""
 	finder := zorm.NewSelectFinder(permstruct.OrgStructTableName, "comcode").Append(" WHERE id=? ", pid)
-	errComcode := zorm.QueryStruct(ctx, finder, &comcode)
+	errComcode := zorm.Query(ctx, finder, &comcode)
 	if errComcode != nil {
 		return "", errComcode
 	}

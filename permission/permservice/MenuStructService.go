@@ -42,7 +42,7 @@ func SaveMenuStruct(ctx context.Context, menuStruct *permstruct.MenuStruct) erro
 		menuStruct.Comcode = comcode
 
 		//保存menu
-		_, errSaveMenuStruct := zorm.SaveStruct(ctx, menuStruct)
+		_, errSaveMenuStruct := zorm.Insert(ctx, menuStruct)
 
 		if errSaveMenuStruct != nil {
 			return nil, errSaveMenuStruct
@@ -105,7 +105,7 @@ func UpdateMenuStruct(ctx context.Context, menuStruct *permstruct.MenuStruct) er
 		//事务下的业务代码开始
 
 		menuStruct.Comcode = newComcode
-		_, errUpdateMenuStruct := zorm.UpdateStruct(ctx, menuStruct)
+		_, errUpdateMenuStruct := zorm.Update(ctx, menuStruct)
 
 		if errUpdateMenuStruct != nil {
 			return nil, errUpdateMenuStruct
@@ -244,7 +244,7 @@ func FindMenuStructById(ctx context.Context, id string) (*permstruct.MenuStruct,
 	//根据Id查询
 	finder := zorm.NewSelectFinder(permstruct.MenuStructTableName).Append(" WHERE id=?", id)
 
-	errFindMenuStructById := zorm.QueryStruct(ctx, finder, &menuStruct)
+	errFindMenuStructById := zorm.Query(ctx, finder, &menuStruct)
 
 	//记录错误
 	if errFindMenuStructById != nil {
@@ -268,7 +268,7 @@ func FindMenuStructList(ctx context.Context, finder *zorm.Finder, page *zorm.Pag
 	}
 
 	menuStructList := make([]permstruct.MenuStruct, 0)
-	errFindMenuStructList := zorm.QueryStructList(ctx, finder, &menuStructList, page)
+	errFindMenuStructList := zorm.QuerySlice(ctx, finder, &menuStructList, page)
 
 	//记录错误
 	if errFindMenuStructList != nil {
@@ -299,7 +299,7 @@ func FindMenuIdByPid(ctx context.Context, pid string, page *zorm.Page) ([]string
 
 	f_select.Append(" order by sortno desc ")
 	menuIds := make([]string, 0)
-	errQueryList := zorm.QueryStructList(ctx, f_select, &menuIds, page)
+	errQueryList := zorm.QuerySlice(ctx, f_select, &menuIds, page)
 	if errQueryList != nil {
 		return menuIds, errQueryList
 	}
@@ -323,7 +323,7 @@ func FindAllMenuTree(ctx context.Context) ([]permstruct.MenuStruct, error) {
 
 	finder := zorm.NewSelectFinder(permstruct.MenuStructTableName).Append(" WHERE active=1 order by sortno desc ")
 
-	errQueryList := zorm.QueryStructList(ctx, finder, &menus, nil)
+	errQueryList := zorm.QuerySlice(ctx, finder, &menus, nil)
 	if errQueryList != nil {
 		return nil, errQueryList
 	}
@@ -431,7 +431,7 @@ func newMenuComcode(ctx context.Context, id string, pid string) (string, error) 
 
 	comcode := ""
 	finder := zorm.NewSelectFinder(permstruct.MenuStructTableName, "comcode").Append(" WHERE id=? ", pid)
-	errComcode := zorm.QueryStruct(ctx, finder, &comcode)
+	errComcode := zorm.Query(ctx, finder, &comcode)
 	if errComcode != nil {
 		return "", errComcode
 	}

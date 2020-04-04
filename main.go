@@ -22,15 +22,15 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
-//初始化BaseDao
+//初始化DBDao
 func init() {
 
-	baseDaoConfig := zorm.DataSourceConfig{
+	dbDaoConfig := zorm.DataSourceConfig{
 		DSN:        "root:root@tcp(127.0.0.1:3306)/readygo?charset=utf8&parseTime=true",
 		DriverName: "mysql",
 		PrintSQL:   true,
 	}
-	_, _ = zorm.NewBaseDao(&baseDaoConfig)
+	_, _ = zorm.NewDBDao(&dbDaoConfig)
 	cache.NewMemeryCacheManager()
 
 	permutil.NewJWEConfig("permission/permcert/private.pem", "readygo", 0)

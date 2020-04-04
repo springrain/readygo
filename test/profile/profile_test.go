@@ -8,7 +8,7 @@ import (
 	"gitee.com/chunanyong/zorm"
 )
 
-var baseDao *zorm.BaseDao
+var dbDao *zorm.DBDao
 
 func init() {
 
@@ -17,7 +17,7 @@ func init() {
 		DriverName: "mysql",
 		PrintSQL:   true,
 	}
-	baseDao, _ = zorm.NewBaseDao(&dataSourceConfig)
+	dbDao, _ = zorm.NewDBDao(&dataSourceConfig)
 }
 
 func TestQuery(t *testing.T) {

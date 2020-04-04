@@ -65,21 +65,21 @@ func (entity *UserOrgStruct) GetPKColumnName() string {
 		DriverName: "mysql",
 		DBType:     "mysql",
      }
-     zorm.NewBaseDao(&dataSourceConfig)
+     zorm.NewDBDao(&dataSourceConfig)
     ```  
 3.  增
     ```go
     var user permstruct.UserStruct
-    err := zorm.SaveStruct(context.Background(), &user)
+    err := zorm.Insert(context.Background(), &user)
     ```
 4.  删
     ```go
-    err := zorm.DeleteStruct(context.Background(),&user)
+    err := zorm.Delete(context.Background(),&user)
     ```
   
 5.  改
     ```go
-    err := zorm.UpdateStruct(context.Background(),&user)
+    err := zorm.Update(context.Background(),&user)
     //finder更新
     err := zorm.UpdateFinder(context.Background(),finder)
     ```
@@ -89,7 +89,7 @@ func (entity *UserOrgStruct) GetPKColumnName() string {
 	finder.Append(" order by id asc ")
 	page := zorm.NewPage()
 	var users = make([]permstruct.UserStruct, 0)
-	err := zorm.QueryStructList(context.Background(), finder, &users, page)
+	err := zorm.QuerySlice(context.Background(), finder, &users, page)
     ```
 7.  事务传播
     ```go
@@ -97,7 +97,7 @@ func (entity *UserOrgStruct) GetPKColumnName() string {
 	_, errSaveUserStruct := zorm.Transaction(ctx, func(ctx context.Context) (interface{}, error) {
 
 		//事务下的业务代码开始
-		errSaveUserStruct := zorm.SaveStruct(ctx, userStruct)
+		errSaveUserStruct := zorm.Insert(ctx, userStruct)
 
 		if errSaveUserStruct != nil {
 			return nil, errSaveUserStruct
@@ -119,7 +119,7 @@ func (entity *UserOrgStruct) GetPKColumnName() string {
 	finder.Append("   WHERE re.userId=?    order by re.managerType desc   ", userId)
 
 	userOrgs := make([]permstruct.UserOrgStruct, 0)
-	errQueryList := zorm.QueryStructList(ctx, finder, &userOrgs, page)
+	errQueryList := zorm.QuerySlice(ctx, finder, &userOrgs, page)
 	if errQueryList != nil {
 		return nil, errQueryList
 	}

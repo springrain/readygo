@@ -15,7 +15,7 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
-var baseDao *zorm.BaseDao
+var dbDao *zorm.DBDao
 
 //性别枚举
 type Gander int
@@ -41,7 +41,7 @@ func init() {
 		DBType:     "mysql",
 		PrintSQL:   true,
 	}
-	baseDao, _ = zorm.NewBaseDao(&dataSourceConfig)
+	dbDao, _ = zorm.NewDBDao(&dataSourceConfig)
 
 	//	cache.NewMemeryCacheManager()
 	cache.NewRedisClient(&cache.RedisConfig{
@@ -63,7 +63,7 @@ func TestQuey(t *testing.T) {
 
 	background := context.Background()
 
-	err := zorm.QueryStructList(background, finder, &users, page)
+	err := zorm.QuerySlice(background, finder, &users, page)
 
 	fmt.Println(users)
 
@@ -121,7 +121,7 @@ func worker(id int, wg *sync.WaitGroup) {
 
 		u.Id = strconv.Itoa(int(incr.(int64)))
 
-		_, e2 := zorm.SaveStruct(ctx, &u)
+		_, e2 := zorm.Insert(ctx, &u)
 		if e2 != nil {
 			//标记测试失败
 			//t.Errorf("TestTrancSave错误:%v", e2)
@@ -130,7 +130,7 @@ func worker(id int, wg *sync.WaitGroup) {
 
 		finder := zorm.NewSelectFinder(permstruct.UserStructTableName).Append(" where id = ?", "1583077877688617000")
 
-		ee := zorm.QueryStruct(ctx, finder, &u)
+		ee := zorm.Query(ctx, finder, &u)
 
 		fmt.Println(ee)
 
@@ -139,7 +139,7 @@ func worker(id int, wg *sync.WaitGroup) {
 
 		u.UserType = id
 
-		_, e3 := zorm.UpdateStruct(ctx, &u)
+		_, e3 := zorm.Update(ctx, &u)
 		if e3 != nil {
 			//标记测试失败
 			//t.Errorf("TestTrancUpdate错误:%v", e3)
@@ -183,7 +183,7 @@ func TestUpdateNotZero(t *testing.T) {
 	user.UserName = "abc"
 
 	zorm.Transaction(context.Background(), func(ctx context.Context) (interface{}, error) {
-		zorm.UpdateStructNotZeroValue(ctx, &user)
+		zorm.UpdateNotZeroValue(ctx, &user)
 
 		return nil, nil
 	})

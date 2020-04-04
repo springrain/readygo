@@ -32,7 +32,7 @@ func SaveUserPlatformInfosStruct(ctx context.Context, userPlatformInfosStruct *p
 			userPlatformInfosStruct.Id = zorm.FuncGenerateStringID()
 		}
 
-		_, errSaveUserPlatformInfosStruct := zorm.SaveStruct(ctx, userPlatformInfosStruct)
+		_, errSaveUserPlatformInfosStruct := zorm.Insert(ctx, userPlatformInfosStruct)
 
 		if errSaveUserPlatformInfosStruct != nil {
 			return nil, errSaveUserPlatformInfosStruct
@@ -69,7 +69,7 @@ func UpdateUserPlatformInfosStruct(ctx context.Context, userPlatformInfosStruct 
 	_, errUpdateUserPlatformInfosStruct := zorm.Transaction(ctx, func(ctx context.Context) (interface{}, error) {
 
 		//事务下的业务代码开始
-		_, errUpdateUserPlatformInfosStruct := zorm.UpdateStruct(ctx, userPlatformInfosStruct)
+		_, errUpdateUserPlatformInfosStruct := zorm.Update(ctx, userPlatformInfosStruct)
 
 		if errUpdateUserPlatformInfosStruct != nil {
 			return nil, errUpdateUserPlatformInfosStruct
@@ -139,7 +139,7 @@ func FindUserPlatformInfosStructById(ctx context.Context, id string) (*permstruc
 	//根据Id查询
 	finder := zorm.NewSelectFinder(permstruct.UserPlatformInfosStructTableName).Append(" WHERE id=?", id)
 	userPlatformInfosStruct := permstruct.UserPlatformInfosStruct{}
-	errFindUserPlatformInfosStructById := zorm.QueryStruct(ctx, finder, &userPlatformInfosStruct)
+	errFindUserPlatformInfosStructById := zorm.Query(ctx, finder, &userPlatformInfosStruct)
 
 	//记录错误
 	if errFindUserPlatformInfosStructById != nil {
@@ -162,7 +162,7 @@ func FindUserPlatformInfosStructList(ctx context.Context, finder *zorm.Finder, p
 	}
 
 	userPlatformInfosStructList := make([]permstruct.UserPlatformInfosStruct, 0)
-	errFindUserPlatformInfosStructList := zorm.QueryStructList(ctx, finder, &userPlatformInfosStructList, page)
+	errFindUserPlatformInfosStructList := zorm.QuerySlice(ctx, finder, &userPlatformInfosStructList, page)
 
 	//记录错误
 	if errFindUserPlatformInfosStructList != nil {
