@@ -54,6 +54,9 @@ func NewCaptchaB64string(w int, h int, context string) (string, error) {
 	captcha := newItemChar(w, h, bgColor)
 	captcha.drawHollowLine()
 	err := captcha.drawText(context)
+	if err != nil {
+		return "", err
+	}
 	return captcha.encodeB64string(), err
 }
 
