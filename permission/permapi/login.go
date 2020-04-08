@@ -11,5 +11,5 @@ func Login(c *gin.Context) {
 
 //Captcha 获取验证码
 func Captcha(c *gin.Context) {
-
+	gouuid
 }
