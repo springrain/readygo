@@ -104,12 +104,3 @@ func randBytes(n int) []byte {
 	}
 	return b[:n]
 }
-
-// RandomId returns a new random id key string.
-func RandomId() string {
-	b := randomBytesMod(idLen, byte(len(idChars)))
-	for i, c := range b {
-		b[i] = idChars[c]
-	}
-	return string(b)
-}

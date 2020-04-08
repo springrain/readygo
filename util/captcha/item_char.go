@@ -20,6 +20,11 @@ import (
 	"golang.org/x/image/font"
 )
 
+const (
+	imageStringDpi = 72.0
+	MimeTypeImage  = "image/png"
+)
+
 var f *truetype.Font
 
 func init() {
