@@ -1,8 +1,9 @@
 package permroute
 
 import (
-	"github.com/gin-gonic/gin"
 	"readygo/permission/permapi"
+
+	"github.com/gin-gonic/gin"
 )
 
 // NewRouter 路由配置
@@ -13,8 +14,7 @@ func NewRouter() *gin.Engine {
 	v1 := r.Group("/api/perm/v1")
 	{
 		v1.POST("ping", permapi.Ping)
-
-
+		v1.POST("Captcha", permapi.Captcha)
 
 		//// 用户登录
 		//v1.POST("user/register", UserRegister)
@@ -33,7 +33,6 @@ func NewRouter() *gin.Engine {
 		//	auth.DELETE("user/logout", UserLogout)
 		//}
 	}
-
 
 	return r
 }

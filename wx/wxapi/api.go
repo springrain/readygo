@@ -3,7 +3,7 @@ package wxapi
 import (
 	"fmt"
 	"os"
-	"readygo/ginext/Ginserializer"
+	"readygo/ginext"
 	"readygo/wx/wxstruct"
 
 	"gitee.com/chunanyong/gowe"
@@ -24,9 +24,9 @@ func init() {
 
 // Ping 状态检查页面
 func Ping(c *gin.Context) {
-	c.JSON(200, Ginserializer.Response{
-		Code: 0,
-		Msg:  "Pong",
+	c.JSON(200, ginext.ResponseData{
+		StatusCode: 0,
+		Message:    "Pong",
 	})
 }
 
@@ -52,9 +52,9 @@ func WxMaSubscribeMessageSend(c *gin.Context) {
 		fmt.Println(err.Error())
 	}
 	fmt.Println(send)
-	c.JSON(200, Ginserializer.Response{
-		Code: 0,
-		Data: send,
+	c.JSON(200, ginext.ResponseData{
+		StatusCode: 0,
+		Data:       send,
 	})
 }
 
@@ -67,16 +67,16 @@ func WxMaCode2Session(c *gin.Context) {
 	logger.Info(session.OpenId)
 
 	if err != nil {
-		c.JSON(505, Ginserializer.Response{
-			Code: 1,
-			Msg:  err.Error(),
+		c.JSON(505, ginext.ResponseData{
+			StatusCode: 1,
+			Message:    err.Error(),
 		})
 	} else {
 		fmt.Println(session)
 
-		c.JSON(200, Ginserializer.Response{
-			Code: 0,
-			Msg:  session.OpenId,
+		c.JSON(200, ginext.ResponseData{
+			StatusCode: 0,
+			Message:    session.OpenId,
 		})
 	}
 

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"readygo/ginext/Ginserializer"
+	"readygo/ginext"
 	"readygo/wx/wxstruct"
 	"strings"
 
@@ -55,9 +55,9 @@ func WxPayAppSign(c *gin.Context) {
 
 	body["paySign"] = paySign
 
-	c.JSON(200, Ginserializer.Response{
-		Code: 0,
-		Data: body,
+	c.JSON(200, ginext.ResponseData{
+		StatusCode: 0,
+		Data:       body,
 	})
 }
 
@@ -79,14 +79,14 @@ func WxPayUnifiedOrder(c *gin.Context) {
 	order, err := gowe.WxPayUnifiedOrder(WXPay, body)
 
 	if err != nil {
-		c.JSON(505, Ginserializer.Response{
-			Code: 1,
-			Msg:  err.Error(),
+		c.JSON(505, ginext.ResponseData{
+			StatusCode: 1,
+			Message:    err.Error(),
 		})
 	} else {
-		c.JSON(200, Ginserializer.Response{
-			Code: 0,
-			Data: order,
+		c.JSON(200, ginext.ResponseData{
+			StatusCode: 0,
+			Data:       order,
 		})
 	}
 

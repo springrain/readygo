@@ -1,5 +1,6 @@
 package permhandler
 
+//bug(springrain) 需要支持url的正则表达式
 //全局排除的路径
 var excludePathPatterns map[string]bool
 
@@ -21,7 +22,7 @@ func AddUserDefaulPath(path string) {
 	userDefaultPathPatterns[path] = true
 }
 
-// isExcludePath 是否排除目录
+// isExcludePath 是否排除目录,需要验证正则
 func isExcludePath(path string) bool {
 	has := excludePathPatterns[path]
 	return has
