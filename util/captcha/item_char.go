@@ -25,6 +25,8 @@ const (
 	MimeTypeImage  = "image/png"
 )
 
+var bgColor = color.RGBA{0, 0, 0, 0}
+
 var f *truetype.Font
 
 func init() {
@@ -45,6 +47,14 @@ type itemChar struct {
 	width   int
 	height  int
 	nrgba   *image.NRGBA
+}
+
+//NewCaptchaB64string 生成指定内容的base64字符串
+func NewCaptchaB64string(w int, h int, context string) (string, error) {
+	captcha := newItemChar(w, h, bgColor)
+	captcha.drawHollowLine()
+	err := captcha.drawText(context)
+	return captcha.encodeB64string(), err
 }
 
 //newItemChar creates a captcha item of characters
