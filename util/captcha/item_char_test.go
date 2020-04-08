@@ -13,19 +13,19 @@ import (
 func TestNewItemChar(t *testing.T) {
 
 	bgColor := color.RGBA{0, 0, 0, 0}
-	got := NewItemChar(48, 30, bgColor)
+	got := newItemChar(48, 30, bgColor)
 	got.drawHollowLine()
 	got.drawText("ab1c")
 
-	fmt.Println(got.EncodeB64string())
+	fmt.Println(got.encodeB64string())
 
 }
 
 func TestItemChar_drawHollowLine(t *testing.T) {
 	tests := []struct {
 		name string
-		item *ItemChar
-		want *ItemChar
+		item *itemChar
+		want *itemChar
 	}{
 		// TODO: Add test cases.
 	}
@@ -41,8 +41,8 @@ func TestItemChar_drawHollowLine(t *testing.T) {
 func TestItemChar_drawSineLine(t *testing.T) {
 	tests := []struct {
 		name string
-		item *ItemChar
-		want *ItemChar
+		item *itemChar
+		want *itemChar
 	}{
 		// TODO: Add test cases.
 	}
@@ -61,9 +61,9 @@ func TestItemChar_drawSlimLine(t *testing.T) {
 	}
 	tests := []struct {
 		name string
-		item *ItemChar
+		item *itemChar
 		args args
-		want *ItemChar
+		want *itemChar
 	}{
 		// TODO: Add test cases.
 	}
@@ -84,7 +84,7 @@ func TestItemChar_drawBeeline(t *testing.T) {
 	}
 	tests := []struct {
 		name string
-		item *ItemChar
+		item *itemChar
 		args args
 	}{
 		// TODO: Add test cases.
@@ -103,7 +103,7 @@ func TestItemChar_drawNoise(t *testing.T) {
 	}
 	tests := []struct {
 		name    string
-		item    *ItemChar
+		item    *itemChar
 		args    args
 		wantErr bool
 	}{
@@ -125,7 +125,7 @@ func TestItemChar_drawText(t *testing.T) {
 	}
 	tests := []struct {
 		name    string
-		item    *ItemChar
+		item    *itemChar
 		args    args
 		wantErr bool
 	}{
@@ -143,14 +143,14 @@ func TestItemChar_drawText(t *testing.T) {
 func TestItemChar_BinaryEncoding(t *testing.T) {
 	tests := []struct {
 		name string
-		item *ItemChar
+		item *itemChar
 		want []byte
 	}{
 		// TODO: Add test cases.
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := tt.item.BinaryEncoding(); !reflect.DeepEqual(got, tt.want) {
+			if got := tt.item.binaryEncoding(); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("ItemChar.BinaryEncoding() = %v, want %v", got, tt.want)
 			}
 		})
@@ -160,7 +160,7 @@ func TestItemChar_BinaryEncoding(t *testing.T) {
 func TestItemChar_WriteTo(t *testing.T) {
 	tests := []struct {
 		name    string
-		item    *ItemChar
+		item    *itemChar
 		want    int64
 		wantW   string
 		wantErr bool
@@ -170,7 +170,7 @@ func TestItemChar_WriteTo(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			w := &bytes.Buffer{}
-			got, err := tt.item.WriteTo(w)
+			got, err := tt.item.writeTo(w)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("ItemChar.WriteTo() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -188,14 +188,14 @@ func TestItemChar_WriteTo(t *testing.T) {
 func TestItemChar_EncodeB64string(t *testing.T) {
 	tests := []struct {
 		name string
-		item *ItemChar
+		item *itemChar
 		want string
 	}{
 		// TODO: Add test cases.
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := tt.item.EncodeB64string(); got != tt.want {
+			if got := tt.item.encodeB64string(); got != tt.want {
 				t.Errorf("ItemChar.EncodeB64string() = %v, want %v", got, tt.want)
 			}
 		})

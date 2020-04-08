@@ -14,8 +14,8 @@ func init() {
 	rand.Seed(time.Now().UnixNano())
 }
 
-//RandText creates random text of given size.
-func RandText(size int, sourceChars string) string {
+//randText creates random text of given size.
+func randText(size int, sourceChars string) string {
 	if sourceChars == "" || size == 0 {
 		return ""
 	}
@@ -39,31 +39,31 @@ func random(min int64, max int64) float64 {
 	return float64(min) + rand.Float64()*float64(max-min)
 }
 
-//RandDeepColor get random deep color. 随机生成深色系.
-func RandDeepColor() color.RGBA {
+//randDeepColor get random deep color. 随机生成深色系.
+func randDeepColor() color.RGBA {
 
-	randColor := RandColor()
+	rc := randColor()
 
 	increase := float64(30 + rand.Intn(255))
 
-	red := math.Abs(math.Min(float64(randColor.R)-increase, 255))
+	red := math.Abs(math.Min(float64(rc.R)-increase, 255))
 
-	green := math.Abs(math.Min(float64(randColor.G)-increase, 255))
-	blue := math.Abs(math.Min(float64(randColor.B)-increase, 255))
+	green := math.Abs(math.Min(float64(rc.G)-increase, 255))
+	blue := math.Abs(math.Min(float64(rc.B)-increase, 255))
 
 	return color.RGBA{R: uint8(red), G: uint8(green), B: uint8(blue), A: uint8(255)}
 }
 
-//RandLightColor get random ligth color. 随机生成浅色.
-func RandLightColor() color.RGBA {
+//randLightColor get random ligth color. 随机生成浅色.
+func randLightColor() color.RGBA {
 	red := rand.Intn(55) + 200
 	green := rand.Intn(55) + 200
 	blue := rand.Intn(55) + 200
 	return color.RGBA{R: uint8(red), G: uint8(green), B: uint8(blue), A: uint8(255)}
 }
 
-//RandColor get random color. 生成随机颜色.
-func RandColor() color.RGBA {
+//randColor get random color. 生成随机颜色.
+func randColor() color.RGBA {
 	red := rand.Intn(255)
 	green := rand.Intn(255)
 	var blue int
