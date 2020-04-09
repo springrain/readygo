@@ -54,8 +54,18 @@ func CheckLogin() ResponseData {
 	}
 }
 
-// ErrorSatus 通用错误处理
-func ErrorSatus(errCode int, message string, err error) ResponseData {
+// SuccessReponseData 通用成功处理
+func SuccessReponseData(data interface{}, message string) ResponseData {
+	res := ResponseData{
+		Data:       data,
+		StatusCode: 200,
+		Message:    message,
+	}
+	return res
+}
+
+// ErrorReponseData 通用错误处理
+func ErrorReponseData(errCode int, message string, err error) ResponseData {
 	res := ResponseData{
 		StatusCode: errCode,
 		Message:    message,
@@ -72,7 +82,7 @@ func DBErr(message string, err error) ResponseData {
 	if message == "" {
 		message = "数据库操作失败"
 	}
-	return ErrorSatus(CodeDBError, message, err)
+	return ErrorReponseData(CodeDBError, message, err)
 }
 
 // ParamErr 各种参数错误
@@ -80,5 +90,5 @@ func ParamErr(message string, err error) ResponseData {
 	if message == "" {
 		message = "参数错误"
 	}
-	return ErrorSatus(CodeParamErr, message, err)
+	return ErrorReponseData(CodeParamErr, message, err)
 }

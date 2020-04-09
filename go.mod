@@ -14,4 +14,5 @@ require (
 	github.com/shopspring/decimal v0.0.0-20200227202807-02e2044944cc
 	golang.org/x/image v0.0.0-20200119044424-58c23975cae1
 	gopkg.in/square/go-jose.v2 v2.4.1
+	gitee.com/chunanyong/gouuid v1.3.1
 )
