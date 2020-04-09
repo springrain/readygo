@@ -27,7 +27,7 @@ func init() {
 	}
 
 }
-
+//支付结果通知
 func WxPayNotifyPay(c *gin.Context) {
 	//
 	//var body gowe.WxPayNotifyPayBody
@@ -43,7 +43,7 @@ func WxPayNotifyPay(c *gin.Context) {
 	})
 
 }
-
+//统一下单
 func WxPayAppSign(c *gin.Context) {
 
 	body := make(map[string]string, 0)

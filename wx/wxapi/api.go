@@ -29,7 +29,7 @@ func Ping(c *gin.Context) {
 		Message:    "Pong",
 	})
 }
-
+// 订阅消息
 func WxMaSubscribeMessageSend(c *gin.Context) {
 
 	token, _ := gowe.GetAccessToken(WX)
@@ -57,7 +57,7 @@ func WxMaSubscribeMessageSend(c *gin.Context) {
 		Data:       send,
 	})
 }
-
+//登录凭证校验
 func WxMaCode2Session(c *gin.Context) {
 
 	code := c.Query("jsCode")
