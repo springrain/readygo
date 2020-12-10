@@ -633,4 +633,17 @@ END ;
 //
 DELIMITER ;
 
+-- 测试用的自定义函数
+SET GLOBAL log_bin_trust_function_creators = 1;
+DELIMITER //
+CREATE  FUNCTION   testfunc(userId VARCHAR(50))
+RETURNS VARCHAR(30)
+BEGIN
+declare returnValue VARCHAR(30) default ''; 
+SELECT userName into returnValue FROM `t_user` WHERE id=userId;
+return returnValue;
+END
+//
+DELIMITER;
+
 SET FOREIGN_KEY_CHECKS = 1;
