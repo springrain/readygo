@@ -8,6 +8,7 @@ package testzorm
 import (
 	"context"
 	"fmt"
+	"readygo/permission/permstruct"
 	"testing"
 	"time"
 
@@ -296,7 +297,15 @@ func TestDelete(t *testing.T) {
 
 }
 
-//TestOther 13.其他的一些说明.非常感谢您能看到这一行
+//TestProc 13.测试调用存储过程
+func TestProc(t *testing.T) {
+	user := permstruct.UserStruct{}
+	finder := zorm.NewFinder().Append("call testproc(?) ", "u_10001")
+	zorm.Query(ctx, finder, &user)
+	fmt.Println(user)
+}
+
+//TestOther 14.其他的一些说明.非常感谢您能看到这一行
 func TestOther(t *testing.T) {
 
 	//场景1.多个数据库.通过对应数据库的dbDao,调用BindContextDBConnection函数,把这个数据库的连接绑定到返回的ctx上,然后把ctx传递到zorm的函数即可.

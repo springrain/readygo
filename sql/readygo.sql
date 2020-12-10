@@ -621,4 +621,16 @@ CREATE TABLE `wx_payconfig`  (
 -- Records of wx_payconfig
 -- ----------------------------
 
+
+
+
+-- 测试用的存储过程
+DELIMITER //
+CREATE PROCEDURE testproc(IN userId VARCHAR(50))
+BEGIN
+     SELECT * FROM `t_user` WHERE id=userId;
+END ;
+//
+DELIMITER ;
+
 SET FOREIGN_KEY_CHECKS = 1;
