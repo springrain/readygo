@@ -296,7 +296,37 @@ func TestDelete(t *testing.T) {
 
 }
 
-//TestProc 13.测试调用存储过程
+//TestInsert 13.测试批量保存Struct对象的Slice
+func TestInsertSlice(t *testing.T) {
+
+	//需要手动开启事务,匿名函数返回的error如果不是nil,事务就会回滚
+	_, err := zorm.Transaction(ctx, func(ctx context.Context) (interface{}, error) {
+
+		//slice存放的类型是zorm.IEntityStruct!!!,golang目前没有泛型,使用IEntityStruct接口,兼容Struct实体类
+		demoSlice := make([]zorm.IEntityStruct, 0)
+
+		//创建对象1
+		demo1 := newDemoStruct()
+		demo1.UserName = "demo1"
+		//创建对象2
+		demo2 := newDemoStruct()
+		demo2.UserName = "demo2"
+
+		demoSlice = append(demoSlice, &demo1, &demo2)
+
+		//批量保存对象,如果主键是自增,无法保存自增的ID到对象里.
+		_, err := zorm.InsertSlice(ctx, demoSlice)
+
+		//如果返回的err不是nil,事务就会回滚
+		return nil, err
+	})
+	//标记测试失败
+	if err != nil {
+		t.Errorf("错误:%v", err)
+	}
+}
+
+//TestProc 14.测试调用存储过程
 func TestProc(t *testing.T) {
 	demo := &demoStruct{}
 	finder := zorm.NewFinder().Append("call testproc(?) ", "u_10001")
@@ -304,7 +334,7 @@ func TestProc(t *testing.T) {
 	fmt.Println(demo)
 }
 
-//TestProc 14.测试调用自定义函数
+//TestProc 15.测试调用自定义函数
 func TestFunc(t *testing.T) {
 	userName := ""
 	finder := zorm.NewFinder().Append("select testfunc(?) ", "u_10001")
@@ -312,7 +342,7 @@ func TestFunc(t *testing.T) {
 	fmt.Println(userName)
 }
 
-//TestOther 15.其他的一些说明.非常感谢您能看到这一行
+//TestOther 16.其他的一些说明.非常感谢您能看到这一行
 func TestOther(t *testing.T) {
 
 	//场景1.多个数据库.通过对应数据库的dbDao,调用BindContextDBConnection函数,把这个数据库的连接绑定到返回的ctx上,然后把ctx传递到zorm的函数即可.
