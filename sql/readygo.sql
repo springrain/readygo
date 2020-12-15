@@ -622,6 +622,20 @@ CREATE TABLE `wx_payconfig`  (
 -- ----------------------------
 
 
+-- ----------------------------
+-- Table structure for t_demo
+-- ----------------------------
+DROP TABLE IF EXISTS `t_demo`;
+CREATE TABLE `t_demo`  (
+  `id` varchar(50)  NOT NULL,
+  `userName` varchar(50)  NOT NULL DEFAULT '' ,
+  `password` varchar(500)  NOT NULL DEFAULT '' ,
+  `createTime` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP(0),
+  `active` int(11) NOT NULL DEFAULT 1 ,
+  PRIMARY KEY (`id`) 
+) ENGINE = InnoDB CHARACTER SET = utf8mb4;
+
+
 
 
 -- 测试用的存储过程
