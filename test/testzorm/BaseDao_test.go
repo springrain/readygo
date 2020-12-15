@@ -38,7 +38,7 @@ func init() {
 		DSN: "root:root@tcp(127.0.0.1:3306)/readygo?charset=utf8&parseTime=true",
 		//DriverName 数据库驱动名称,和DBType对应,一个数据库可以有多个驱动(DriverName)
 		DriverName: "mysql",
-		//DBType 数据库类型(mysql,postgresql,oracle,mssql,sqlite),zorm判断方言的依据,一个数据库可以有多个驱动(DriverName)
+		//DBType 数据库类型(mysql,postgresql,oracle,mssql,sqlite,dm),zorm判断方言的依据,一个数据库可以有多个驱动(DriverName)
 		DBType: "mysql",
 		//MaxOpenConns 数据库最大连接数 默认50
 		MaxOpenConns: 50,
@@ -296,7 +296,8 @@ func TestDelete(t *testing.T) {
 
 }
 
-//TestInsert 13.测试批量保存Struct对象的Slice
+//TestInsertSlice 13.测试批量保存Struct对象的Slice
+//如果是自增主键,无法对Struct对象里的主键属性赋值
 func TestInsertSlice(t *testing.T) {
 
 	//需要手动开启事务,匿名函数返回的error如果不是nil,事务就会回滚
