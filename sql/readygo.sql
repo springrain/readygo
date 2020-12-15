@@ -626,9 +626,9 @@ CREATE TABLE `wx_payconfig`  (
 
 -- 测试用的存储过程
 DELIMITER //
-CREATE PROCEDURE testproc(IN userId VARCHAR(50))
+CREATE PROCEDURE testproc(IN demoId VARCHAR(50))
 BEGIN
-     SELECT * FROM `t_user` WHERE id=userId;
+     SELECT * FROM `t_demo` WHERE id=demoId;
 END ;
 //
 DELIMITER ;
@@ -640,7 +640,7 @@ CREATE  FUNCTION   testfunc(userId VARCHAR(50))
 RETURNS VARCHAR(30)
 BEGIN
 declare returnValue VARCHAR(30) default ''; 
-SELECT userName into returnValue FROM `t_user` WHERE id=userId;
+SELECT userName into returnValue FROM `t_demo` WHERE id=demoId;
 return returnValue;
 END
 //

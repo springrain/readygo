@@ -8,7 +8,6 @@ package testzorm
 import (
 	"context"
 	"fmt"
-	"readygo/permission/permstruct"
 	"testing"
 	"time"
 
@@ -299,10 +298,10 @@ func TestDelete(t *testing.T) {
 
 //TestProc 13.测试调用存储过程
 func TestProc(t *testing.T) {
-	user := permstruct.UserStruct{}
+	demo := &demoStruct{}
 	finder := zorm.NewFinder().Append("call testproc(?) ", "u_10001")
-	zorm.Query(ctx, finder, &user)
-	fmt.Println(user)
+	zorm.Query(ctx, finder, &demo)
+	fmt.Println(demo)
 }
 
 //TestProc 14.测试调用自定义函数
