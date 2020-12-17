@@ -35,9 +35,9 @@ func init() {
 	dbDaoConfig := zorm.DataSourceConfig{
 		//DSN 数据库的连接字符串
 		DSN: "root:root@tcp(127.0.0.1:3306)/readygo?charset=utf8&parseTime=true",
-		//DriverName 数据库驱动名称,和DBType对应,一个数据库可以有多个驱动(DriverName)
+		//数据库驱动名称:mysql,postgres,oci8,sqlserver,sqlite3,dm,kingbase 和DBType对应,处理数据库有多个驱动
 		DriverName: "mysql",
-		//DBType 数据库类型(mysql,postgresql,oracle,mssql,sqlite,dm,kingbase),zorm判断方言的依据,一个数据库可以有多个驱动(DriverName)
+		//数据库类型(方言判断依据):mysql,postgresql,oracle,mssql,sqlite,dm,kingbase 和 DriverName 对应,处理数据库有多个驱动
 		DBType: "mysql",
 		//MaxOpenConns 数据库最大连接数 默认50
 		MaxOpenConns: 50,
@@ -73,7 +73,38 @@ func TestInsert(t *testing.T) {
 	}
 }
 
-//TestInsertEntityMap 03.测试保存EntityMap对象,用于不方便使用struct的场景,使用Map作为载体
+//TestInsertSlice 03.测试批量保存Struct对象的Slice
+//如果是自增主键,无法对Struct对象里的主键属性赋值
+func TestInsertSlice(t *testing.T) {
+
+	//需要手动开启事务,匿名函数返回的error如果不是nil,事务就会回滚
+	_, err := zorm.Transaction(ctx, func(ctx context.Context) (interface{}, error) {
+
+		//slice存放的类型是zorm.IEntityStruct!!!,golang目前没有泛型,使用IEntityStruct接口,兼容Struct实体类
+		demoSlice := make([]zorm.IEntityStruct, 0)
+
+		//创建对象1
+		demo1 := newDemoStruct()
+		demo1.UserName = "demo1"
+		//创建对象2
+		demo2 := newDemoStruct()
+		demo2.UserName = "demo2"
+
+		demoSlice = append(demoSlice, &demo1, &demo2)
+
+		//批量保存对象,如果主键是自增,无法保存自增的ID到对象里.
+		_, err := zorm.InsertSlice(ctx, demoSlice)
+
+		//如果返回的err不是nil,事务就会回滚
+		return nil, err
+	})
+	//标记测试失败
+	if err != nil {
+		t.Errorf("错误:%v", err)
+	}
+}
+
+//TestInsertEntityMap 04.测试保存EntityMap对象,用于不方便使用struct的场景,使用Map作为载体
 func TestInsertEntityMap(t *testing.T) {
 
 	//需要手动开启事务,匿名函数返回的error如果不是nil,事务就会回滚
@@ -105,7 +136,7 @@ func TestInsertEntityMap(t *testing.T) {
 	}
 }
 
-//TestQuery 04.测试查询一个struct对象
+//TestQuery 05.测试查询一个struct对象
 func TestQuery(t *testing.T) {
 
 	//声明一个对象的指针,用于承载返回的数据
@@ -129,7 +160,7 @@ func TestQuery(t *testing.T) {
 	fmt.Println(demo)
 }
 
-//TestQueryMap 05.测试查询map接收结果,用于不太适合struct的场景,比较灵活
+//TestQueryMap 06.测试查询map接收结果,用于不太适合struct的场景,比较灵活
 func TestQueryMap(t *testing.T) {
 
 	//构造查询用的finder
@@ -146,7 +177,7 @@ func TestQueryMap(t *testing.T) {
 	fmt.Println(resultMap)
 }
 
-//TestQuerySlice 06.测试查询对象列表
+//TestQuerySlice 07.测试查询对象列表
 func TestQuerySlice(t *testing.T) {
 	//创建用于接收结果的slice
 	list := make([]demoStruct, 0)
@@ -167,7 +198,7 @@ func TestQuerySlice(t *testing.T) {
 	fmt.Println("总条数:", page.TotalCount, "  列表:", list)
 }
 
-//TestQueryMapSlice 07.测试查询map列表,用于不方便使用struct的场景,一条记录是一个map对象
+//TestQueryMapSlice 08.测试查询map列表,用于不方便使用struct的场景,一条记录是一个map对象
 func TestQueryMapSlice(t *testing.T) {
 	//构造查询用的finder
 	finder := zorm.NewSelectFinder(demoStructTableName) // select * from t_demo
@@ -184,7 +215,7 @@ func TestQueryMapSlice(t *testing.T) {
 	fmt.Println("总条数:", page.TotalCount, "  列表:", listMap)
 }
 
-//TestUpdateNotZeroValue 08.更新struct对象,只更新不为零值的字段.主键必须有值
+//TestUpdateNotZeroValue 09.更新struct对象,只更新不为零值的字段.主键必须有值
 func TestUpdateNotZeroValue(t *testing.T) {
 
 	//需要手动开启事务,匿名函数返回的error如果不是nil,事务就会回滚
@@ -206,7 +237,7 @@ func TestUpdateNotZeroValue(t *testing.T) {
 
 }
 
-//TestUpdate 09.更新struct对象,更新所有字段.主键必须有值
+//TestUpdate 10.更新struct对象,更新所有字段.主键必须有值
 func TestUpdate(t *testing.T) {
 
 	//需要手动开启事务,匿名函数返回的error如果不是nil,事务就会回滚
@@ -227,7 +258,7 @@ func TestUpdate(t *testing.T) {
 	}
 }
 
-//TestUpdateFinder 10.通过finder更新,zorm最灵活的方式,可以编写任何更新语句,甚至手动编写insert语句
+//TestUpdateFinder 11.通过finder更新,zorm最灵活的方式,可以编写任何更新语句,甚至手动编写insert语句
 func TestUpdateFinder(t *testing.T) {
 	//需要手动开启事务,匿名函数返回的error如果不是nil,事务就会回滚
 	_, err := zorm.Transaction(ctx, func(ctx context.Context) (interface{}, error) {
@@ -248,7 +279,7 @@ func TestUpdateFinder(t *testing.T) {
 
 }
 
-//TestUpdateEntityMap 11.更新一个EntityMap,主键必须有值
+//TestUpdateEntityMap 12.更新一个EntityMap,主键必须有值
 func TestUpdateEntityMap(t *testing.T) {
 	//需要手动开启事务,匿名函数返回的error如果不是nil,事务就会回滚
 	_, err := zorm.Transaction(ctx, func(ctx context.Context) (interface{}, error) {
@@ -271,7 +302,7 @@ func TestUpdateEntityMap(t *testing.T) {
 
 }
 
-//TestDelete 12.删除一个struct对象,主键必须有值
+//TestDelete 13.删除一个struct对象,主键必须有值
 func TestDelete(t *testing.T) {
 	//需要手动开启事务,匿名函数返回的error如果不是nil,事务就会回滚
 	_, err := zorm.Transaction(ctx, func(ctx context.Context) (interface{}, error) {
@@ -288,37 +319,6 @@ func TestDelete(t *testing.T) {
 		t.Errorf("错误:%v", err)
 	}
 
-}
-
-//TestInsertSlice 13.测试批量保存Struct对象的Slice
-//如果是自增主键,无法对Struct对象里的主键属性赋值
-func TestInsertSlice(t *testing.T) {
-
-	//需要手动开启事务,匿名函数返回的error如果不是nil,事务就会回滚
-	_, err := zorm.Transaction(ctx, func(ctx context.Context) (interface{}, error) {
-
-		//slice存放的类型是zorm.IEntityStruct!!!,golang目前没有泛型,使用IEntityStruct接口,兼容Struct实体类
-		demoSlice := make([]zorm.IEntityStruct, 0)
-
-		//创建对象1
-		demo1 := newDemoStruct()
-		demo1.UserName = "demo1"
-		//创建对象2
-		demo2 := newDemoStruct()
-		demo2.UserName = "demo2"
-
-		demoSlice = append(demoSlice, &demo1, &demo2)
-
-		//批量保存对象,如果主键是自增,无法保存自增的ID到对象里.
-		_, err := zorm.InsertSlice(ctx, demoSlice)
-
-		//如果返回的err不是nil,事务就会回滚
-		return nil, err
-	})
-	//标记测试失败
-	if err != nil {
-		t.Errorf("错误:%v", err)
-	}
 }
 
 //TestProc 14.测试调用存储过程
