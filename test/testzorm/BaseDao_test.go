@@ -33,7 +33,7 @@ func init() {
 
 	//自定义日志输出格式,把FuncPrintSQL函数重新赋值
 	//log.SetFlags(log.LstdFlags)
-	//FuncPrintSQL = FuncPrintSQL
+	//zorm.FuncPrintSQL = zorm.FuncPrintSQL
 
 	//dbDaoConfig 数据库的配置
 	dbDaoConfig := zorm.DataSourceConfig{
