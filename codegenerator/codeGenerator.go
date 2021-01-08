@@ -163,7 +163,9 @@ func selectTableColumn(ctx context.Context, tableName string) map[string]interfa
 	info["pkName"] = pkName
 	info["tableName"] = tableName
 	structName := tableName
-	structName = strings.Replace(structName, "t_", "", 1)
+	if strings.HasPrefix(structName, "t_") {
+		structName = structName[2:]
+	}
 	structName = camelCaseName(structName) + "Struct"
 	info["structName"] = structName
 	info["pname"] = firstToLower(structName)
