@@ -157,7 +157,7 @@ func FindManagerUserIdByOrgId(ctx context.Context, orgId string) (string, error)
 	finder.Append(" re  WHERE   re.orgId=? and  re.managerType=2   order by re.userId desc   ", orgId)
 
 	managerUserId := ""
-	errQueryStruct := zorm.Query(ctx, finder, &managerUserId)
+	errQueryStruct := zorm.QueryRow(ctx, finder, &managerUserId)
 	if errQueryStruct != nil {
 		return "", errQueryStruct
 	}
@@ -195,7 +195,7 @@ func FindAllUserCountByOrgId(ctx context.Context, orgId string) (int, error) {
 	finder.Append(" org WHERE org.id=re.orgId and org.comcode like ? and  re.managerType>0 ", org.Comcode+"%")
 	//查询总条数
 	count := -1
-	errCount := zorm.Query(ctx, finder, &count)
+	errCount := zorm.QueryRow(ctx, finder, &count)
 	return count, errCount
 }
 

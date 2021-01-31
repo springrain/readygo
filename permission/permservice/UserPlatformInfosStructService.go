@@ -139,7 +139,7 @@ func FindUserPlatformInfosStructById(ctx context.Context, id string) (*permstruc
 	//根据Id查询
 	finder := zorm.NewSelectFinder(permstruct.UserPlatformInfosStructTableName).Append(" WHERE id=?", id)
 	userPlatformInfosStruct := permstruct.UserPlatformInfosStruct{}
-	errFindUserPlatformInfosStructById := zorm.Query(ctx, finder, &userPlatformInfosStruct)
+	errFindUserPlatformInfosStructById := zorm.QueryRow(ctx, finder, &userPlatformInfosStruct)
 
 	//记录错误
 	if errFindUserPlatformInfosStructById != nil {

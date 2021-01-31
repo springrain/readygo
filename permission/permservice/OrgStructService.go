@@ -225,7 +225,7 @@ func FindOrgStructById(ctx context.Context, id string) (*permstruct.OrgStruct, e
 	//根据Id查询
 	finder := zorm.NewSelectFinder(permstruct.OrgStructTableName).Append(" WHERE id=?", id)
 
-	errFindOrgStructById := zorm.Query(ctx, finder, &orgStruct)
+	errFindOrgStructById := zorm.QueryRow(ctx, finder, &orgStruct)
 
 	//记录错误
 	if errFindOrgStructById != nil {
@@ -409,7 +409,7 @@ func newOrgComcode(ctx context.Context, id string, pid string) (string, error) {
 
 	comcode := ""
 	finder := zorm.NewSelectFinder(permstruct.OrgStructTableName, "comcode").Append(" WHERE id=? ", pid)
-	errComcode := zorm.Query(ctx, finder, &comcode)
+	errComcode := zorm.QueryRow(ctx, finder, &comcode)
 	if errComcode != nil {
 		return "", errComcode
 	}

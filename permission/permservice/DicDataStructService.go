@@ -139,7 +139,7 @@ func FindDicDataStructById(ctx context.Context, id string) (*permstruct.DicDataS
 	//根据Id查询
 	finder := zorm.NewSelectFinder(permstruct.DicDataStructTableName).Append(" WHERE id=?", id)
 	dicDataStruct := permstruct.DicDataStruct{}
-	errFindDicDataStructById := zorm.Query(ctx, finder, &dicDataStruct)
+	errFindDicDataStructById := zorm.QueryRow(ctx, finder, &dicDataStruct)
 
 	//记录错误
 	if errFindDicDataStructById != nil {
