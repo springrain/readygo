@@ -39,9 +39,9 @@ func init() {
 	dbDaoConfig := zorm.DataSourceConfig{
 		//DSN 数据库的连接字符串
 		DSN: "root:root@tcp(127.0.0.1:3306)/readygo?charset=utf8&parseTime=true",
-		//数据库驱动名称:mysql,postgres,oci8,sqlserver,sqlite3,dm,kingbase 和DBType对应,处理数据库有多个驱动
+		//数据库驱动名称:mysql,postgres,oci8,sqlserver,sqlite3,dm,kingbase,aci 和DBType对应,处理数据库有多个驱动
 		DriverName: "mysql",
-		//数据库类型(方言判断依据):mysql,postgresql,oracle,mssql,sqlite,dm,kingbase 和 DriverName 对应,处理数据库有多个驱动
+		//数据库类型(方言判断依据):mysql,postgresql,oracle,mssql,sqlite,dm,kingbase,shentong 和 DriverName 对应,处理数据库有多个驱动
 		DBType: "mysql",
 		//MaxOpenConns 数据库最大连接数 默认50
 		MaxOpenConns: 50,
@@ -140,8 +140,8 @@ func TestInsertEntityMap(t *testing.T) {
 	}
 }
 
-//TestQuery 05.测试查询一个struct对象
-func TestQuery(t *testing.T) {
+//TestQueryRow 05.测试查询一个struct对象
+func TestQueryRow(t *testing.T) {
 
 	//声明一个对象的指针,用于承载返回的数据
 	demo := &demoStruct{}
@@ -155,7 +155,7 @@ func TestQuery(t *testing.T) {
 	finder.Append("WHERE id=? and active in(?)", "41b2aa4f-379a-4319-8af9-08472b6e514e", []int{0, 1})
 
 	//执行查询
-	err := zorm.Query(ctx, finder, demo)
+	err := zorm.QueryRow(ctx, finder, demo)
 
 	if err != nil { //标记测试失败
 		t.Errorf("错误:%v", err)
@@ -164,8 +164,8 @@ func TestQuery(t *testing.T) {
 	fmt.Println(demo)
 }
 
-//TestQueryMap 06.测试查询map接收结果,用于不太适合struct的场景,比较灵活
-func TestQueryMap(t *testing.T) {
+//TestQueryRowMap 06.测试查询map接收结果,用于不太适合struct的场景,比较灵活
+func TestQueryRowMap(t *testing.T) {
 
 	//构造查询用的finder
 	finder := zorm.NewSelectFinder(demoStructTableName) // select * from t_demo
@@ -181,8 +181,8 @@ func TestQueryMap(t *testing.T) {
 	fmt.Println(resultMap)
 }
 
-//TestQuerySlice 07.测试查询对象列表
-func TestQuerySlice(t *testing.T) {
+//TestQuery 07.测试查询对象列表
+func TestQuery(t *testing.T) {
 	//创建用于接收结果的slice
 	list := make([]*demoStruct, 0)
 
@@ -202,8 +202,8 @@ func TestQuerySlice(t *testing.T) {
 	fmt.Println("总条数:", page.TotalCount, "  列表:", list)
 }
 
-//TestQueryMapSlice 08.测试查询map列表,用于不方便使用struct的场景,一条记录是一个map对象
-func TestQueryMapSlice(t *testing.T) {
+//TestQueryMap 08.测试查询map列表,用于不方便使用struct的场景,一条记录是一个map对象
+func TestQueryMap(t *testing.T) {
 	//构造查询用的finder
 	finder := zorm.NewSelectFinder(demoStructTableName) // select * from t_demo
 
@@ -329,7 +329,7 @@ func TestDelete(t *testing.T) {
 func TestProc(t *testing.T) {
 	demo := &demoStruct{}
 	finder := zorm.NewFinder().Append("call testproc(?) ", "u_10001")
-	zorm.Query(ctx, finder, demo)
+	zorm.QueryRow(ctx, finder, demo)
 	fmt.Println(demo)
 }
 
@@ -337,7 +337,7 @@ func TestProc(t *testing.T) {
 func TestFunc(t *testing.T) {
 	userName := ""
 	finder := zorm.NewFinder().Append("select testfunc(?) ", "u_10001")
-	zorm.Query(ctx, finder, &userName)
+	zorm.QueryRow(ctx, finder, &userName)
 	fmt.Println(userName)
 }
 
