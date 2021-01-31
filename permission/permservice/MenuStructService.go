@@ -268,7 +268,7 @@ func FindMenuStructList(ctx context.Context, finder *zorm.Finder, page *zorm.Pag
 	}
 
 	menuStructList := make([]permstruct.MenuStruct, 0)
-	errFindMenuStructList := zorm.QuerySlice(ctx, finder, &menuStructList, page)
+	errFindMenuStructList := zorm.Query(ctx, finder, &menuStructList, page)
 
 	//记录错误
 	if errFindMenuStructList != nil {
@@ -299,7 +299,7 @@ func FindMenuIdByPid(ctx context.Context, pid string, page *zorm.Page) ([]string
 
 	f_select.Append(" order by sortno desc ")
 	menuIds := make([]string, 0)
-	errQueryList := zorm.QuerySlice(ctx, f_select, &menuIds, page)
+	errQueryList := zorm.Query(ctx, f_select, &menuIds, page)
 	if errQueryList != nil {
 		return menuIds, errQueryList
 	}
@@ -323,7 +323,7 @@ func FindAllMenuTree(ctx context.Context) ([]permstruct.MenuStruct, error) {
 
 	finder := zorm.NewSelectFinder(permstruct.MenuStructTableName).Append(" WHERE active=1 order by sortno desc ")
 
-	errQueryList := zorm.QuerySlice(ctx, finder, &menus, nil)
+	errQueryList := zorm.Query(ctx, finder, &menus, nil)
 	if errQueryList != nil {
 		return nil, errQueryList
 	}

@@ -162,7 +162,7 @@ func FindDicDataStructList(ctx context.Context, finder *zorm.Finder, page *zorm.
 	}
 
 	dicDataStructList := make([]permstruct.DicDataStruct, 0)
-	errFindDicDataStructList := zorm.QuerySlice(ctx, finder, &dicDataStructList, page)
+	errFindDicDataStructList := zorm.Query(ctx, finder, &dicDataStructList, page)
 
 	//记录错误
 	if errFindDicDataStructList != nil {

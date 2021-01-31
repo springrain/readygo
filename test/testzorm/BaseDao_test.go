@@ -172,7 +172,7 @@ func TestQueryMap(t *testing.T) {
 	//finder.Append 第一个参数是语句,后面的参数是对应的值,值的顺序要正确.语句统一使用?,zorm会处理数据库的差异
 	finder.Append("WHERE id=? and active in(?)", "41b2aa4f-379a-4319-8af9-08472b6e514e", []int{0, 1})
 	//执行查询
-	resultMap, err := zorm.QueryMap(ctx, finder)
+	resultMap, err := zorm.QueryRowMap(ctx, finder)
 
 	if err != nil { //标记测试失败
 		t.Errorf("错误:%v", err)
@@ -194,7 +194,7 @@ func TestQuerySlice(t *testing.T) {
 	page.PageSize = 20 //每页20条,默认是20
 
 	//执行查询
-	err := zorm.QuerySlice(ctx, finder, &list, page)
+	err := zorm.Query(ctx, finder, &list, page)
 	if err != nil { //标记测试失败
 		t.Errorf("错误:%v", err)
 	}
@@ -211,7 +211,7 @@ func TestQueryMapSlice(t *testing.T) {
 	page := zorm.NewPage()
 
 	//执行查询
-	listMap, err := zorm.QueryMapSlice(ctx, finder, page)
+	listMap, err := zorm.QueryMap(ctx, finder, page)
 	if err != nil { //标记测试失败
 		t.Errorf("错误:%v", err)
 	}
@@ -352,7 +352,7 @@ func TestOther(t *testing.T) {
 
 	finder := zorm.NewSelectFinder(demoStructTableName)
 	//把新产生的newCtx传递到zorm的函数
-	list, _ := zorm.QueryMapSlice(newCtx, finder, nil)
+	list, _ := zorm.QueryMap(newCtx, finder, nil)
 	fmt.Println(list)
 
 	//场景2.单个数据库的读写分离.设置读写分离的策略函数.

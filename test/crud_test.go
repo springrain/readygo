@@ -63,7 +63,7 @@ func TestQuey(t *testing.T) {
 
 	background := context.Background()
 
-	err := zorm.QuerySlice(background, finder, &users, page)
+	err := zorm.Query(background, finder, &users, page)
 
 	fmt.Println(users)
 
@@ -80,7 +80,7 @@ func TestNull(t *testing.T) {
 
 	finder.Append("select * from t_user limit 1")
 
-	queryMap, err := zorm.QueryMap(nil, finder)
+	queryMap, err := zorm.QueryRowMap(nil, finder)
 
 	if err != nil {
 		t.Errorf("TestNull：%v", err)
@@ -94,7 +94,7 @@ func TestCount(t *testing.T) {
 
 	finder.Append("select count(*) as c from ").Append(permstruct.WxCpconfigStructTableName)
 
-	queryMap, err := zorm.QueryMap(context.Background(), finder)
+	queryMap, err := zorm.QueryRowMap(context.Background(), finder)
 
 	if err != nil {
 		t.Errorf("TestCount错误：%v", err)

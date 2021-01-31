@@ -178,7 +178,7 @@ func FindRoleStructList(ctx context.Context, finder *zorm.Finder, page *zorm.Pag
 	}
 
 	roleStructList := make([]permstruct.RoleStruct, 0)
-	errFindRoleStructList := zorm.QuerySlice(ctx, finder, &roleStructList, page)
+	errFindRoleStructList := zorm.Query(ctx, finder, &roleStructList, page)
 
 	//记录错误
 	if errFindRoleStructList != nil {

@@ -175,7 +175,7 @@ func FindUserStructList(ctx context.Context, finder *zorm.Finder, page *zorm.Pag
 	}
 
 	userStructList := make([]permstruct.UserStruct, 0)
-	errFindUserStructList := zorm.QuerySlice(ctx, finder, &userStructList, page)
+	errFindUserStructList := zorm.Query(ctx, finder, &userStructList, page)
 
 	//记录错误
 	if errFindUserStructList != nil {

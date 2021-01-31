@@ -162,7 +162,7 @@ func FindUserPlatformInfosStructList(ctx context.Context, finder *zorm.Finder, p
 	}
 
 	userPlatformInfosStructList := make([]permstruct.UserPlatformInfosStruct, 0)
-	errFindUserPlatformInfosStructList := zorm.QuerySlice(ctx, finder, &userPlatformInfosStructList, page)
+	errFindUserPlatformInfosStructList := zorm.Query(ctx, finder, &userPlatformInfosStructList, page)
 
 	//记录错误
 	if errFindUserPlatformInfosStructList != nil {

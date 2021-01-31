@@ -30,7 +30,7 @@ func TestQuery(t *testing.T) {
 
 		ctx := context.Background()
 
-		queryMap, err := zorm.QueryMap(ctx, finder)
+		queryMap, err := zorm.QueryRowMap(ctx, finder)
 
 		if err != nil {
 			t.Errorf("TestNull：%v", err)

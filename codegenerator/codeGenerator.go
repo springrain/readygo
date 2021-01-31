@@ -69,7 +69,7 @@ func selectAllTable() []string {
 	finder := zorm.NewFinder()
 	finder.Append("select table_name from information_schema.TABLES where  TABLE_SCHEMA =?", dbName)
 	tableNames := []string{}
-	zorm.QuerySlice(nil, finder, &tableNames, nil)
+	zorm.Query(nil, finder, &tableNames, nil)
 	return tableNames
 }
 
@@ -93,7 +93,7 @@ func selectTableColumn(ctx context.Context, tableName string) map[string]interfa
 	// select * from information_schema.COLUMNS where table_schema ='readygo' and table_name='t_user';
 	finder2.Append("select COLUMN_NAME,DATA_TYPE,IS_NULLABLE,COLUMN_COMMENT from information_schema.COLUMNS where  TABLE_SCHEMA =? and TABLE_NAME=? and COLUMN_NAME not like ?  order by ORDINAL_POSITION asc", dbName, tableName, "bak%")
 
-	maps, _ := zorm.QueryMapSlice(ctx, finder2, nil)
+	maps, _ := zorm.QueryMap(ctx, finder2, nil)
 
 	for _, m := range maps {
 		dataType := m["DATA_TYPE"].(string)

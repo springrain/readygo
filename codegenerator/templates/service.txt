@@ -160,7 +160,7 @@ func Find{{.structName}}List(ctx context.Context, finder *zorm.Finder, page *zor
 	}
 
 	{{.pname}}List := make([]{{.packageName}}.{{.structName}}, 0)
-	errFind{{.structName}}List := zorm.QuerySlice(ctx, finder, &{{.pname}}List, page)
+	errFind{{.structName}}List := zorm.Query(ctx, finder, &{{.pname}}List, page)
 
 	//记录错误
 	if errFind{{.structName}}List != nil {

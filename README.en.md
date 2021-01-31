@@ -89,7 +89,7 @@ func (entity *UserOrgStruct) GetPKColumnName() string {
 	finder.Append(" order by id asc ")
 	page := zorm.NewPage()
 	var users = make([]permstruct.UserStruct, 0)
-	err := zorm.QuerySlice(context.Background(), finder, &users, page)
+	err := zorm.Query(context.Background(), finder, &users, page)
     ```
 7.  事务传播
     ```go
@@ -119,7 +119,7 @@ func (entity *UserOrgStruct) GetPKColumnName() string {
 	finder.Append("   WHERE re.userId=?    order by re.managerType desc   ", userId)
 
 	userOrgs := make([]permstruct.UserOrgStruct, 0)
-	errQueryList := zorm.QuerySlice(ctx, finder, &userOrgs, page)
+	errQueryList := zorm.Query(ctx, finder, &userOrgs, page)
 	if errQueryList != nil {
 		return nil, errQueryList
 	}

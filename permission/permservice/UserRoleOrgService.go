@@ -17,7 +17,7 @@ func FindUserIdByOrgId(ctx context.Context, orgId string, page *zorm.Page) ([]st
 	finder := zorm.NewFinder().Append("SELECT re.userId FROM ").Append(permstruct.UserOrgStructTableName)
 	finder.Append(" re where  re.orgId=? and re.managerType>0 order by re.managerType desc ", orgId)
 	userIds := make([]string, 0)
-	errQueryList := zorm.QuerySlice(ctx, finder, &userIds, page)
+	errQueryList := zorm.Query(ctx, finder, &userIds, page)
 	if errQueryList != nil {
 		return nil, errQueryList
 	}
@@ -49,7 +49,7 @@ func FindAllUserIdByOrgId(ctx context.Context, orgId string, page *zorm.Page) ([
 	finder.Append(" org WHERE org.id=re.orgId and org.comcode like ? and re.managerType>0   order by re.userId asc ", comcode+"%")
 
 	userIds := make([]string, 0)
-	errQueryList := zorm.QuerySlice(ctx, finder, &userIds, page)
+	errQueryList := zorm.Query(ctx, finder, &userIds, page)
 	if errQueryList != nil {
 		return nil, errQueryList
 	}
@@ -78,7 +78,7 @@ func FindOrgIdByUserId(ctx context.Context, userId string, page *zorm.Page) ([]s
 	finder.Append("   WHERE re.userId=?    order by re.managerType desc   ", userId)
 
 	orgIds := make([]string, 0)
-	errQueryList := zorm.QuerySlice(ctx, finder, &orgIds, page)
+	errQueryList := zorm.Query(ctx, finder, &orgIds, page)
 	if errQueryList != nil {
 		return nil, errQueryList
 	}
@@ -107,7 +107,7 @@ func FindUserOrgByUserId(ctx context.Context, userId string, page *zorm.Page) ([
 	finder.Append("   WHERE re.userId=?    order by re.managerType desc   ", userId)
 
 	userOrgs := make([]permstruct.UserOrgStruct, 0)
-	errQueryList := zorm.QuerySlice(ctx, finder, &userOrgs, page)
+	errQueryList := zorm.Query(ctx, finder, &userOrgs, page)
 	if errQueryList != nil {
 		return nil, errQueryList
 	}
@@ -126,7 +126,7 @@ func FindManagerOrgIdByUserId(ctx context.Context, userId string, page *zorm.Pag
 	finder.Append(" re  WHERE re.userId=?  and re.managerType=2  order by re.orgId desc   ", userId)
 
 	orgIds := make([]string, 0)
-	errQueryList := zorm.QuerySlice(ctx, finder, &orgIds, page)
+	errQueryList := zorm.Query(ctx, finder, &orgIds, page)
 	if errQueryList != nil {
 		return nil, errQueryList
 	}
@@ -208,7 +208,7 @@ func FindRoleOrgByRoleId(ctx context.Context, roleId string, page *zorm.Page) ([
 	finder.Append(" re WHERE re.roleId=? order by re.id desc ", roleId)
 
 	roleOrgs := make([]permstruct.RoleOrgStruct, 0)
-	errQueryList := zorm.QuerySlice(ctx, finder, &roleOrgs, page)
+	errQueryList := zorm.Query(ctx, finder, &roleOrgs, page)
 	if errQueryList != nil {
 		return nil, errQueryList
 	}
@@ -371,7 +371,7 @@ func findOrgByRoleId(ctx context.Context, roleId string, page *zorm.Page) ([]per
 	finder.Append(" re WHERE re.roleId=? order by re.id desc ", roleId)
 
 	roleOrgs := make([]permstruct.RoleOrgStruct, 0)
-	errQueryList := zorm.QuerySlice(ctx, finder, &roleOrgs, page)
+	errQueryList := zorm.Query(ctx, finder, &roleOrgs, page)
 	if errQueryList != nil {
 		return nil, errQueryList
 	}

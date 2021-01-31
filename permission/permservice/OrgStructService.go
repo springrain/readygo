@@ -251,7 +251,7 @@ func FindOrgStructList(ctx context.Context, finder *zorm.Finder, page *zorm.Page
 	}
 
 	orgStructList := make([]permstruct.OrgStruct, 0)
-	errFindOrgStructList := zorm.QuerySlice(ctx, finder, &orgStructList, page)
+	errFindOrgStructList := zorm.Query(ctx, finder, &orgStructList, page)
 
 	//记录错误
 	if errFindOrgStructList != nil {
@@ -282,7 +282,7 @@ func FindOrgTreeByPid(ctx context.Context, pid string) ([]permstruct.OrgStruct, 
 	finder.Append(" order by sortno asc ")
 
 	orgs := make([]permstruct.OrgStruct, 0)
-	errQueryList := zorm.QuerySlice(ctx, finder, &orgs, nil)
+	errQueryList := zorm.Query(ctx, finder, &orgs, nil)
 	if errQueryList != nil {
 		return nil, errQueryList
 	}
@@ -313,7 +313,7 @@ func FindOrgIdByPid(ctx context.Context, pid string) ([]string, error) {
 	finder.Append(" order by sortno asc ")
 
 	orgIds := make([]string, 0)
-	errQueryList := zorm.QuerySlice(ctx, finder, &orgIds, nil)
+	errQueryList := zorm.Query(ctx, finder, &orgIds, nil)
 	if errQueryList != nil {
 		return nil, errQueryList
 	}
