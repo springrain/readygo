@@ -3,27 +3,28 @@ package test
 import (
 	"context"
 	"fmt"
-	"github.com/shopspring/decimal"
 	"readygo/cache"
 	"readygo/permission/permstruct"
 	"strconv"
 	"sync"
 	"testing"
+
+	"github.com/shopspring/decimal"
 )
 
-type Uu struct
-{
-	Name string
+type Uu struct {
+	Name    string
 	Teacher string
-	Amount int
-	o decimal.Decimal
+	Amount  int
+	o       decimal.Decimal
 
 	E decimal.Decimal
 	d string
 }
 
 func init() {
-	cache.NewRedisClient(&cache.RedisConfig{
+	var ctx = context.Background()
+	cache.NewRedisClient(ctx, &cache.RedisConfig{
 		Addr: "127.0.0.1:6379",
 	})
 
@@ -38,7 +39,7 @@ func incrWorker(id int, wg *sync.WaitGroup) {
 	incr, _ := cache.RedisINCR(ctx, "permstruct.UserStruct")
 
 	if incr == nil {
-		incr,_ = cache.RedisINCR(ctx, "permstruct.UserStruct")
+		incr, _ = cache.RedisINCR(ctx, "permstruct.UserStruct")
 	}
 	fmt.Println(id, incr)
 
@@ -63,18 +64,16 @@ func TestINCR(t *testing.T) {
 
 }
 
-
-func TestDemo(t *testing.T){
+func TestDemo(t *testing.T) {
 
 	ctx := context.Background()
 
 	incr, err := cache.RedisINCR(ctx, "permstruct.UserStruct")
 
-	fmt.Println(incr,err)
+	fmt.Println(incr, err)
 }
 
-
-func TestStruct(t *testing.T){
+func TestStruct(t *testing.T) {
 
 	var u Uu
 	u.Amount = 2
@@ -84,19 +83,16 @@ func TestStruct(t *testing.T){
 
 	u.E = decimal.NewFromFloat(2.333)
 
-	u.d  = "ff"
+	u.d = "ff"
 	ctx := context.Background()
 	err := cache.PutToCache(ctx, "Uu.table", "dd", &u)
 
-	fmt.Println(err,u)
+	fmt.Println(err, u)
 
 	r := &Uu{}
 
-	cache.GetFromCache(ctx,"Uu.table","dd",r)
+	cache.GetFromCache(ctx, "Uu.table", "dd", r)
 
 	fmt.Println(r)
 
 }
-
-
-

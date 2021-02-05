@@ -23,7 +23,7 @@ func TestRedis(t *testing.T) {
 
 	ctx := context.Background()
 	redisConfig := cache.RedisConfig{Addr: "127.0.0.1:6379"}
-	cache.NewRedisClient(&redisConfig)
+	cache.NewRedisClient(ctx, &redisConfig)
 	cache.NewRedisCacheManager()
 	cache.PutToCache(ctx, "cacheName", "testKey", "testValue")
 	a := ""

@@ -32,7 +32,11 @@ var redisClient *redis.Client = nil
 var redisClusterClient *redis.ClusterClient = nil
 
 //NewRedisClient 创建Redis客户端,一个项目认为只连接一个redis即可
-func NewRedisClient(redisConfig *RedisConfig) error {
+func NewRedisClient(ctx context.Context, redisConfig *RedisConfig) error {
+
+	if ctx == nil {
+		return errors.New("ctx不能为nil")
+	}
 
 	if redisConfig == nil {
 		return errors.New("配置文件不能为nil")
@@ -69,7 +73,7 @@ func NewRedisClient(redisConfig *RedisConfig) error {
 		})
 
 		//验证连接有效性
-		_, err := redisClient.Ping().Result()
+		_, err := redisClient.Ping(ctx).Result()
 		if err != nil {
 			return err
 		}
@@ -84,7 +88,7 @@ func NewRedisClient(redisConfig *RedisConfig) error {
 		})
 
 		//验证连接有效性
-		_, err := redisClusterClient.Ping().Result()
+		_, err := redisClusterClient.Ping(ctx).Result()
 		if err != nil {
 			return err
 		}
@@ -260,9 +264,9 @@ func RedisCMDContext(ctx context.Context, args ...interface{}) (interface{}, err
 	var result interface{}
 	var errResult error
 	if redisClient != nil { //单机redis
-		result, errResult = redisClient.DoContext(ctx, args...).Result()
+		result, errResult = redisClient.Do(ctx, args...).Result()
 	} else if redisClusterClient != nil { //集群Redis
-		result, errResult = redisClusterClient.DoContext(ctx, args...).Result()
+		result, errResult = redisClusterClient.Do(ctx, args...).Result()
 	} else {
 		return nil, errors.New("没有redisClient或redisClusterClient实现")
 	}

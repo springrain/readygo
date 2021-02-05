@@ -33,6 +33,8 @@ const (
 	Bisexual
 )
 
+var ctx = context.Background()
+
 func init() {
 
 	dataSourceConfig := zorm.DataSourceConfig{
@@ -44,7 +46,7 @@ func init() {
 	dbDao, _ = zorm.NewDBDao(&dataSourceConfig)
 
 	//	cache.NewMemeryCacheManager()
-	cache.NewRedisClient(&cache.RedisConfig{
+	cache.NewRedisClient(ctx, &cache.RedisConfig{
 		Addr: "127.0.0.1:6379",
 	})
 }
