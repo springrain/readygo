@@ -137,7 +137,7 @@ func Find{{.structName}}ById(ctx context.Context, id string) (*{{.packageName}}.
 	//根据Id查询
 	finder := zorm.NewSelectFinder({{.packageName}}.{{.structName}}TableName).Append(" WHERE id=?", id)
 	{{.pname}} := {{.packageName}}.{{.structName}}{}
-	errFind{{.structName}}ById := zorm.Query(ctx, finder, &{{.pname}})
+	errFind{{.structName}}ById := zorm.QueryRow(ctx, finder, &{{.pname}})
 
 	//记录错误
 	if errFind{{.structName}}ById != nil {
@@ -152,14 +152,14 @@ func Find{{.structName}}ById(ctx context.Context, id string) (*{{.packageName}}.
 
 //Find{{.structName}}List 根据Finder查询{{.tableComment}}列表
 //ctx中如果没有dbConnection,则会使用默认的datasource进行无事务查询
-func Find{{.structName}}List(ctx context.Context, finder *zorm.Finder, page *zorm.Page) ([]{{.packageName}}.{{.structName}}, error) {
+func Find{{.structName}}List(ctx context.Context, finder *zorm.Finder, page *zorm.Page) ([]*{{.packageName}}.{{.structName}}, error) {
 	
 	//finder不能为空
 	if finder == nil {
 		return nil, errors.New("finder不能为空")
 	}
 
-	{{.pname}}List := make([]{{.packageName}}.{{.structName}}, 0)
+	{{.pname}}List := make([]*{{.packageName}}.{{.structName}}, 0)
 	errFind{{.structName}}List := zorm.Query(ctx, finder, &{{.pname}}List, page)
 
 	//记录错误

@@ -81,13 +81,13 @@ func selectTableColumn(ctx context.Context, tableName string) map[string]interfa
 	tableComment := ""
 	finder := zorm.NewFinder()
 	finder.Append("select table_comment from information_schema.TABLES where  TABLE_SCHEMA =? and TABLE_Name=? ", dbName, tableName)
-	zorm.Query(ctx, finder, &tableComment)
+	zorm.QueryRow(ctx, finder, &tableComment)
 
 	//查找主键
 	finderPK := zorm.NewFinder()
 	finderPK.Append("SELECT column_name FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE WHERE TABLE_SCHEMA=? and  table_name=? AND constraint_name=?", dbName, tableName, "PRIMARY")
 	pkName := ""
-	zorm.Query(ctx, finderPK, &pkName)
+	zorm.QueryRow(ctx, finderPK, &pkName)
 
 	finder2 := zorm.NewFinder()
 	// select * from information_schema.COLUMNS where table_schema ='readygo' and table_name='t_user';
