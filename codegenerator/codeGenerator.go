@@ -103,46 +103,46 @@ func selectTableColumn(ctx context.Context, tableName string) map[string]interfa
 		nullable = strings.ToUpper(nullable)
 
 		if dataType == "VARCHAR" || dataType == "NVARCHAR" || dataType == "TEXT" {
-			if nullable == "YES" {
-				dataType = "sql.NullString"
-			} else {
-				dataType = "string"
-			}
+			//if nullable == "YES" {
+			//	dataType = "sql.NullString"
+			//} else {
+			dataType = "string"
+			//}
 
 		} else if dataType == "DATETIME" || dataType == "TIMESTAMP" {
-			if nullable == "YES" {
-				dataType = "sql.NullTime"
-			} else {
-				dataType = "time.Time"
-			}
+			//if nullable == "YES" {
+			//	dataType = "sql.NullTime"
+			//} else {
+			dataType = "time.Time"
+			//}
 
 		} else if dataType == "INT" {
-			if nullable == "YES" {
-				dataType = "sql.NullInt32"
-			} else {
-				dataType = "int"
-			}
+			//if nullable == "YES" {
+			//	dataType = "sql.NullInt32"
+			//} else {
+			dataType = "int"
+			//}
 
 		} else if dataType == "BIGINT" {
-			if nullable == "YES" {
-				dataType = "sql.NullInt64"
-			} else {
-				dataType = "int64"
-			}
+			//if nullable == "YES" {
+			//	dataType = "sql.NullInt64"
+			//} else {
+			dataType = "int64"
+			//}
 
 		} else if dataType == "FLOAT" {
-			if nullable == "YES" {
-				dataType = "sql.NullFloat64"
-			} else {
-				dataType = "float32"
-			}
+			//if nullable == "YES" {
+			//	dataType = "sql.NullFloat64"
+			//} else {
+			dataType = "float32"
+			//}
 
 		} else if dataType == "DOUBLE" {
-			if nullable == "YES" {
-				dataType = "sql.NullFloat64"
-			} else {
-				dataType = "float64"
-			}
+			//if nullable == "YES" {
+			//	dataType = "sql.NullFloat64"
+			//} else {
+			dataType = "float64"
+			//}
 
 		} else if dataType == "DECIMAL" {
 			dataType = "decimal.Decimal"
