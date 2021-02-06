@@ -1,7 +1,10 @@
 package {{.servicePackageName}}
 
 import (
+	"context"
 	"errors"
+	"fmt"
+
 	"gitee.com/chunanyong/zorm"
 )
 
