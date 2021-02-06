@@ -149,7 +149,7 @@ func FindUserStructById(ctx context.Context, id string) (*permstruct.UserStruct,
 
 	//根据Id查询
 	finder := zorm.NewSelectFinder(permstruct.UserStructTableName).Append(" WHERE id=?", id)
-	errFindUserStructById := zorm.QueryRow(ctx, finder, &userStruct)
+	_, errFindUserStructById := zorm.QueryRow(ctx, finder, &userStruct)
 
 	//记录错误
 	if errFindUserStructById != nil {

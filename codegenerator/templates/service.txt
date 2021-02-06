@@ -137,7 +137,7 @@ func Find{{.structName}}ById(ctx context.Context, id string) (*{{.packageName}}.
 	//根据Id查询
 	finder := zorm.NewSelectFinder({{.packageName}}.{{.structName}}TableName).Append(" WHERE id=?", id)
 	{{.pname}} := {{.packageName}}.{{.structName}}{}
-	errFind{{.structName}}ById := zorm.QueryRow(ctx, finder, &{{.pname}})
+	_, errFind{{.structName}}ById := zorm.QueryRow(ctx, finder, &{{.pname}})
 
 	//记录错误
 	if errFind{{.structName}}ById != nil {

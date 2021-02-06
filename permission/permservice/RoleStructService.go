@@ -153,7 +153,7 @@ func FindRoleStructById(ctx context.Context, id string) (*permstruct.RoleStruct,
 	//根据Id查询
 	finder := zorm.NewSelectFinder(permstruct.RoleStructTableName).Append(" WHERE id=?", id)
 
-	errFindRoleStructById := zorm.QueryRow(ctx, finder, &roleStruct)
+	_, errFindRoleStructById := zorm.QueryRow(ctx, finder, &roleStruct)
 
 	//记录错误
 	if errFindRoleStructById != nil {

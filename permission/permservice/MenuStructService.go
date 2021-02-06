@@ -244,7 +244,7 @@ func FindMenuStructById(ctx context.Context, id string) (*permstruct.MenuStruct,
 	//根据Id查询
 	finder := zorm.NewSelectFinder(permstruct.MenuStructTableName).Append(" WHERE id=?", id)
 
-	errFindMenuStructById := zorm.QueryRow(ctx, finder, &menuStruct)
+	_, errFindMenuStructById := zorm.QueryRow(ctx, finder, &menuStruct)
 
 	//记录错误
 	if errFindMenuStructById != nil {
@@ -431,7 +431,7 @@ func newMenuComcode(ctx context.Context, id string, pid string) (string, error) 
 
 	comcode := ""
 	finder := zorm.NewSelectFinder(permstruct.MenuStructTableName, "comcode").Append(" WHERE id=? ", pid)
-	errComcode := zorm.QueryRow(ctx, finder, &comcode)
+	_, errComcode := zorm.QueryRow(ctx, finder, &comcode)
 	if errComcode != nil {
 		return "", errComcode
 	}

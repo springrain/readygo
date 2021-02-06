@@ -6,7 +6,7 @@ require (
 	gitee.com/chunanyong/gouuid v1.3.2
 	gitee.com/chunanyong/gowe v1.1.1
 	gitee.com/chunanyong/logger v1.2.5
-	gitee.com/chunanyong/zorm v1.4.2
+	gitee.com/chunanyong/zorm v1.4.4
 	github.com/gin-gonic/gin v1.6.3
 	github.com/go-redis/redis/v8 v8.4.10
 	github.com/go-sql-driver/mysql v1.5.0
