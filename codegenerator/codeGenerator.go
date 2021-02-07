@@ -102,7 +102,7 @@ func selectTableColumn(ctx context.Context, tableName string) map[string]interfa
 		nullable := m["IS_NULLABLE"].(string)
 		nullable = strings.ToUpper(nullable)
 
-		if dataType == "VARCHAR" || dataType == "NVARCHAR" || dataType == "TEXT" {
+		if dataType == "VARCHAR" || dataType == "NVARCHAR" || dataType == "TEXT" || dataType == "LONGTEXT" {
 			//if nullable == "YES" {
 			//	dataType = "sql.NullString"
 			//} else {
@@ -129,7 +129,8 @@ func selectTableColumn(ctx context.Context, tableName string) map[string]interfa
 			//} else {
 			dataType = "int64"
 			//}
-
+		} else if dataType == "SMALLINT" {
+			dataType = "int32"
 		} else if dataType == "FLOAT" {
 			//if nullable == "YES" {
 			//	dataType = "sql.NullFloat64"
