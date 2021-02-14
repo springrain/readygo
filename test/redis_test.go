@@ -9,7 +9,7 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/shopspring/decimal"
+	"gitee.com/chunanyong/zorm/decimal"
 )
 
 type Uu struct {

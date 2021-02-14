@@ -4,7 +4,7 @@ import (
 	"crypto/md5"
 	"encoding/hex"
 
-	"gitee.com/chunanyong/gouuid"
+	"gitee.com/chunanyong/zorm/gouuid"
 )
 
 // GenerateUUIDString 获取一个UUID字符串
