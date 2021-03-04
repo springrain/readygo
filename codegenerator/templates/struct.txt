@@ -23,6 +23,7 @@ type {{.structName}} struct {
 
 
 //GetTableName 获取表名称
+//IEntityStruct 接口的方法,实体类需要实现!!!
 func (entity *{{.structName}}) GetTableName() string {
 	return {{.structName}}TableName
 }
