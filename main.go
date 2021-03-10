@@ -1,7 +1,7 @@
 /*
  * @Author: your name
  * @Date: 2020-02-25 23:00:00
- * @LastEditTime: 2020-03-12 19:22:35
+ * @LastEditTime: 2021-03-10 17:42:33
  * @LastEditors: Please set LastEditors
  * @Description: In User Settings Edit
  * @FilePath: \readygo\main.go
@@ -10,6 +10,7 @@ package main
 
 import (
 	"net/http"
+	"readygo/api"
 	"readygo/apistruct"
 	"readygo/cache"
 	"readygo/ginext"
@@ -20,6 +21,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 	_ "github.com/go-sql-driver/mysql"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
 //初始化DBDao
@@ -35,6 +38,13 @@ func init() {
 
 	permutil.NewJWEConfig("permission/permcert/private.pem", "readygo", 0)
 }
+
+// @title Swagger Example API
+// @version 1.0
+// @description This is a sample server Petstore server.
+
+// @host 127.0.0.1:8080
+// @BasePath /
 func main() {
 
 	// Creates a router without any middleware by default
@@ -58,38 +68,14 @@ func main() {
 	r.StaticFS("/more_static", http.Dir("my_file_system"))
 	r.StaticFile("/favicon.ico", "./resources/favicon.ico")
 
+	// swagger
+	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+
 	r.GET("/ping", func(c *gin.Context) {
 		c.JSON(200, gin.H{"hello": "world"})
 	})
 
-	r.GET("/login", func(c *gin.Context) {
-		// user := permhandler.TokenUser{
-		// 	Id:    "1001",
-		// 	Name:  "readygo",
-		// 	Role:  "admin",
-		// 	Group: 0,
-		// }
-		//ctx, _ := permhandler.SetCurrentUser(c.Request.Context(), user)
-		//c.Request = c.Request.WithContext(ctx)
-		//cuser, error := permhandler.GetCurrentUser(c.Request.Context())
-		// if error == nil {
-		// 	fmt.Println(cuser)
-		// }
-		token, err := permutil.JWECreateToken("u_10001", nil)
-		if err == nil {
-			c.JSON(200, apistruct.ResponseBodyModel{
-				Status:  200,
-				Message: "",
-				Data:    token,
-			})
-		} else {
-			c.JSON(500, apistruct.ResponseBodyModel{
-				Status:  500,
-				Message: err.Error(),
-				Data:    "",
-			})
-		}
-	})
+	r.GET("/login", api.Login)
 
 	r.GET("/system/menu/tree", func(c *gin.Context) {
 		user, err := permhandler.GetCurrentUserFromContext(c.Request.Context())

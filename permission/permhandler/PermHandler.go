@@ -1,7 +1,7 @@
 /*
  * @Author: your name
  * @Date: 2020-02-26 20:15:09
- * @LastEditTime: 2020-03-12 19:24:31
+ * @LastEditTime: 2021-03-05 17:23:21
  * @LastEditors: Please set LastEditors
  * @Description: In User Settings Edit
  * @FilePath: \readygo\permission\permhandler\PermHandler.go
@@ -53,8 +53,8 @@ func PermHandler() gin.HandlerFunc {
 		uri := getPatternURI(c)
 		logger.Info(uri)
 
-		//如果是不拦截的URL
-		if isExcludePath(uri) {
+		//如果是不拦截的URL  TODO 此处因为权限拦截不支持正则 先放开swagger
+		if isExcludePath(uri) || strings.Contains(uri, "swagger") {
 			c.Next()
 			return
 		}

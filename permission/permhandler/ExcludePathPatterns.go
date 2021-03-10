@@ -1,3 +1,11 @@
+/*
+ * @Author: your name
+ * @Date: 2021-03-04 11:36:07
+ * @LastEditTime: 2021-03-05 17:21:03
+ * @LastEditors: Please set LastEditors
+ * @Description: In User Settings Edit
+ * @FilePath: \readygo\permission\permhandler\ExcludePathPatterns.go
+ */
 package permhandler
 
 //bug(springrain) 需要支持url的正则表达式
@@ -10,6 +18,7 @@ var userDefaultPathPatterns map[string]bool
 func init() {
 	excludePathPatterns = make(map[string]bool)
 	AddExcluePath("/login")
+	AddExcluePath("/swagger/")
 }
 
 // AddExcluePath 添加排除目录
