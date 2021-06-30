@@ -5,6 +5,9 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// Creates a router without any middleware by default
+var GinEngine *gin.Engine = gin.New()
+
 // 三位数错误编码为复用http原本含义
 // 五位数错误编码为应用自定义错误
 // 五开头的五位数错误编码为服务器端错误，比如数据库操作失败

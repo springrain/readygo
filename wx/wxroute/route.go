@@ -1,14 +1,16 @@
 package wxroute
 
 import (
+	"readygo/ginext"
 	"readygo/wx/wxapi"
 )
 
 // NewRouter 路由配置
 func init() {
 	//GinEngine := gin.Default()
+	r := ginext.GinEngine
 	// 路由
-	v1 := GinEngine.Group("/api/wx/v1")
+	v1 := r.Group("/api/wx/v1")
 	{
 		v1.POST("ping", wxapi.Ping)
 

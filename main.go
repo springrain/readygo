@@ -25,9 +25,6 @@ import (
 	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
-// Creates a router without any middleware by default
-var GinEngine *gin.Engine = gin.New()
-
 //初始化
 func init() {
 	// 初始化Gin引擎
@@ -48,25 +45,25 @@ func init() {
 // initGinEngine 初始化Gin引擎
 func initGinEngine() {
 
-	//GinEngine = gin.New()
+	r := ginext.GinEngine
 
 	// Global middleware
 	// Logger middleware will write the logs to gin.DefaultWriter even if you set with GIN_MODE=release.
 	// By default gin.DefaultWriter = os.Stdout
-	GinEngine.Use(ginext.GinLogger())
+	r.Use(ginext.GinLogger())
 	//r.Use(gin.Logger())
 
 	// Recovery middleware recovers from any panics and writes a 500 if there was one.
-	GinEngine.Use(ginext.GinRecovery())
+	r.Use(ginext.GinRecovery())
 	//r.Use(gin.Recovery())
 
 	//加载自定义的权限过滤器
-	GinEngine.Use(permhandler.PermHandler())
+	r.Use(permhandler.PermHandler())
 
 	//css js等静态文件
-	GinEngine.Static("/assets", "./assets")
-	GinEngine.StaticFS("/more_static", http.Dir("my_file_system"))
-	GinEngine.StaticFile("/favicon.ico", "./resources/favicon.ico")
+	r.Static("/assets", "./assets")
+	r.StaticFS("/more_static", http.Dir("my_file_system"))
+	r.StaticFile("/favicon.ico", "./resources/favicon.ico")
 }
 
 // @title Swagger Example API
@@ -76,17 +73,18 @@ func initGinEngine() {
 // @host 127.0.0.1:8080
 // @BasePath /
 func main() {
+	r := ginext.GinEngine
 
 	// swagger
-	GinEngine.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
-	GinEngine.GET("/ping", func(c *gin.Context) {
+	r.GET("/ping", func(c *gin.Context) {
 		c.JSON(200, gin.H{"hello": "world"})
 	})
 
-	GinEngine.GET("/login", api.Login)
+	r.GET("/login", api.Login)
 
-	GinEngine.GET("/system/menu/tree", func(c *gin.Context) {
+	r.GET("/system/menu/tree", func(c *gin.Context) {
 		user, err := permhandler.GetCurrentUserFromContext(c.Request.Context())
 		// token := c.GetHeader(JWTTokenName)
 		// userid, err := permutil.GetInfoFromToken(token, &user)
@@ -105,5 +103,5 @@ func main() {
 		}
 	})
 
-	GinEngine.Run(":8080") // listen and serve on 0.0.0.0:8080 (for windows "localhost:8080")
+	r.Run(":8080") // listen and serve on 0.0.0.0:8080 (for windows "localhost:8080")
 }
