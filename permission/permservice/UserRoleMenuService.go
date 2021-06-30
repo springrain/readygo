@@ -32,7 +32,7 @@ func FindRoleByUserId(ctx context.Context, userId string, page *zorm.Page) ([]pe
 	//按照 r.privateOrg,r.sortno desc  先处理角色私有部门的权限
 	finder := zorm.NewFinder()
 	finder.Append("SELECT r.* from ").Append(permstruct.RoleStructTableName).Append(" r,")
-	finder.Append(permstruct.UserRoleStructTableName).Append("  re where re.userId=? and re.roleId=r.id and r.active=1 order by r.privateOrg,r.sortno desc", userId)
+	finder.Append(permstruct.UserRoleStructTableName).Append("  re where re.userId=? and re.roleId=r.id and r.active=1 order by r.privateOrg desc,r.sortno desc", userId)
 
 	//查询列表
 	errQueryList := zorm.Query(ctx, finder, &roles, page)
