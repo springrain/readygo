@@ -25,9 +25,15 @@ import (
 	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
-//初始化DBDao
-func init() {
+// Creates a router without any middleware by default
+var GinEngine *gin.Engine = gin.New()
 
+//初始化
+func init() {
+	// 初始化Gin引擎
+	initGinEngine()
+
+	//初始化DBDao
 	dbDaoConfig := zorm.DataSourceConfig{
 		DSN:        "root:root@tcp(127.0.0.1:3306)/readygo?charset=utf8&parseTime=true",
 		DriverName: "mysql",
@@ -39,6 +45,30 @@ func init() {
 	permutil.NewJWEConfig("permission/permcert/private.pem", "readygo", 0)
 }
 
+// initGinEngine 初始化Gin引擎
+func initGinEngine() {
+
+	//GinEngine = gin.New()
+
+	// Global middleware
+	// Logger middleware will write the logs to gin.DefaultWriter even if you set with GIN_MODE=release.
+	// By default gin.DefaultWriter = os.Stdout
+	GinEngine.Use(ginext.GinLogger())
+	//r.Use(gin.Logger())
+
+	// Recovery middleware recovers from any panics and writes a 500 if there was one.
+	GinEngine.Use(ginext.GinRecovery())
+	//r.Use(gin.Recovery())
+
+	//加载自定义的权限过滤器
+	GinEngine.Use(permhandler.PermHandler())
+
+	//css js等静态文件
+	GinEngine.Static("/assets", "./assets")
+	GinEngine.StaticFS("/more_static", http.Dir("my_file_system"))
+	GinEngine.StaticFile("/favicon.ico", "./resources/favicon.ico")
+}
+
 // @title Swagger Example API
 // @version 1.0
 // @description This is a sample server Petstore server.
@@ -47,37 +77,16 @@ func init() {
 // @BasePath /
 func main() {
 
-	// Creates a router without any middleware by default
-	r := gin.New()
-
-	// Global middleware
-	// Logger middleware will write the logs to gin.DefaultWriter even if you set with GIN_MODE=release.
-	// By default gin.DefaultWriter = os.Stdout
-	r.Use(ginext.GinLogger())
-	//r.Use(gin.Logger())
-
-	// Recovery middleware recovers from any panics and writes a 500 if there was one.
-	r.Use(ginext.GinRecovery())
-	//r.Use(gin.Recovery())
-
-	//加载自定义的权限过滤器
-	r.Use(permhandler.PermHandler())
-
-	//css js等静态文件
-	r.Static("/assets", "./assets")
-	r.StaticFS("/more_static", http.Dir("my_file_system"))
-	r.StaticFile("/favicon.ico", "./resources/favicon.ico")
-
 	// swagger
-	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+	GinEngine.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
-	r.GET("/ping", func(c *gin.Context) {
+	GinEngine.GET("/ping", func(c *gin.Context) {
 		c.JSON(200, gin.H{"hello": "world"})
 	})
 
-	r.GET("/login", api.Login)
+	GinEngine.GET("/login", api.Login)
 
-	r.GET("/system/menu/tree", func(c *gin.Context) {
+	GinEngine.GET("/system/menu/tree", func(c *gin.Context) {
 		user, err := permhandler.GetCurrentUserFromContext(c.Request.Context())
 		// token := c.GetHeader(JWTTokenName)
 		// userid, err := permutil.GetInfoFromToken(token, &user)
@@ -96,5 +105,5 @@ func main() {
 		}
 	})
 
-	r.Run(":8080") // listen and serve on 0.0.0.0:8080 (for windows "localhost:8080")
+	GinEngine.Run(":8080") // listen and serve on 0.0.0.0:8080 (for windows "localhost:8080")
 }

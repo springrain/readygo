@@ -1,32 +1,23 @@
 package wxroute
 
 import (
-	_ "gitee.com/chunanyong/gowe"
-	"github.com/gin-gonic/gin"
 	"readygo/wx/wxapi"
- )
+)
 
 // NewRouter 路由配置
-func NewRouter() *gin.Engine {
-	r := gin.Default()
-
+func init() {
+	//GinEngine := gin.Default()
 	// 路由
-	v1 := r.Group("/api/wx/v1")
+	v1 := GinEngine.Group("/api/wx/v1")
 	{
 		v1.POST("ping", wxapi.Ping)
 
 		v1.POST("WxMaCode2Session", wxapi.WxMaCode2Session)
-		v1.POST("WxPayUnifiedOrder",wxapi.WxPayUnifiedOrder)
-		v1.POST("WxPayNotifyPay",wxapi.WxPayNotifyPay)
+		v1.POST("WxPayUnifiedOrder", wxapi.WxPayUnifiedOrder)
+		v1.POST("WxPayNotifyPay", wxapi.WxPayNotifyPay)
 
-		v1.POST("WxPayAppSign",wxapi.WxPayAppSign)
-		v1.GET("WxMaSubscribeMessageSend",wxapi.WxMaSubscribeMessageSend)
-
-
-
-
-
-
+		v1.POST("WxPayAppSign", wxapi.WxPayAppSign)
+		v1.GET("WxMaSubscribeMessageSend", wxapi.WxMaSubscribeMessageSend)
 
 		//// 用户登录
 		//v1.POST("user/register", UserRegister)
@@ -46,6 +37,4 @@ func NewRouter() *gin.Engine {
 		//}
 	}
 
-
-	return r
 }
