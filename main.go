@@ -15,6 +15,7 @@ import (
 	"readygo/cache"
 	"readygo/ginext"
 	"readygo/permission/permhandler"
+	"readygo/permission/permstruct"
 	"readygo/permission/permutil"
 
 	"gitee.com/chunanyong/zorm"
@@ -85,7 +86,7 @@ func main() {
 	r.GET("/login", api.Login)
 
 	r.GET("/system/menu/tree", func(c *gin.Context) {
-		user, err := permhandler.GetCurrentUserFromContext(c.Request.Context())
+		user, err := permstruct.GetCurrentUserFromContext(c.Request.Context())
 		// token := c.GetHeader(JWTTokenName)
 		// userid, err := permutil.GetInfoFromToken(token, &user)
 		if err == nil {

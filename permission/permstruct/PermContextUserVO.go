@@ -4,14 +4,13 @@
  * @LastEditTime: 2020-03-12 12:50:04
  * @LastEditors: Please set LastEditors
  * @Description: In User Settings Edit
- * @FilePath: \readygo\permission\permservice\PermContext.go
+ * @FilePath: \readygo\permission\permstruct\PermContextUserVO.go
  */
-package permservice
+package permstruct
 
 import (
 	"context"
 	"errors"
-	"readygo/permission/permstruct"
 )
 
 // wrapCurrentUserKey 上下文Key类型
@@ -40,18 +39,18 @@ func getCurrentUserFromCtx(ctx context.Context) (interface{}, error) {
 }
 
 // BindContextCurrentUser 设置当前登录用户到上下文
-func BindContextCurrentUser(ctx context.Context, userVO permstruct.UserVOStruct) (context.Context, error) {
+func BindContextCurrentUser(ctx context.Context, userVO UserVOStruct) (context.Context, error) {
 	return setCurrentUserToCtx(ctx, userVO)
 }
 
 // GetCurrentUserFromContext 从上下文获取登录用户信息
-func GetCurrentUserFromContext(ctx context.Context) (permstruct.UserVOStruct, error) {
-	var user permstruct.UserVOStruct
+func GetCurrentUserFromContext(ctx context.Context) (UserVOStruct, error) {
+	var user UserVOStruct
 	ctxUser, error := getCurrentUserFromCtx(ctx)
 	if error != nil {
 		return user, error
 	}
-	if user, ok := ctxUser.(permstruct.UserVOStruct); ok {
+	if user, ok := ctxUser.(UserVOStruct); ok {
 		return user, nil
 	}
 	return user, errors.New("没有用户的登录信息")

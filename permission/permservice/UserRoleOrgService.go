@@ -220,7 +220,7 @@ func FindRoleOrgByRoleId(ctx context.Context, roleId string, page *zorm.Page) ([
 //WrapOrgIdFinderByFinder 拼接当前登录人的权限Finder对象,查询的表中必须有 orgId,createUserId
 // 查询当前登录人,访问菜单时的部门数据权限,并封装到现有的Finder里.
 func WrapOrgIdFinderByFinder(ctx context.Context, finder *zorm.Finder, orgIdColumn string, createUserIdColumn string) (*zorm.Finder, error) {
-	userVO, err := GetCurrentUserFromContext(ctx)
+	userVO, err := permstruct.GetCurrentUserFromContext(ctx)
 	if err != nil {
 		return finder, err
 	}

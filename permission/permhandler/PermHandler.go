@@ -173,7 +173,7 @@ func PermHandler() gin.HandlerFunc {
 		}
 
 		// 设置当前登录用户到上下文
-		ctx, _ = permservice.BindContextCurrentUser(c.Request.Context(), userVO)
+		ctx, _ = permstruct.BindContextCurrentUser(c.Request.Context(), userVO)
 		//重新覆盖ctx
 		c.Request = c.Request.WithContext(ctx)
 		c.Next()
