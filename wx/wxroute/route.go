@@ -6,7 +6,7 @@ import (
 )
 
 // NewRouter 路由配置
-func init() {
+func NewRouter() {
 	//GinEngine := gin.Default()
 	r := ginext.GinEngine
 	// 路由

@@ -15,8 +15,10 @@ import (
 	"readygo/cache"
 	"readygo/ginext"
 	"readygo/permission/permhandler"
+	"readygo/permission/permroute"
 	"readygo/permission/permstruct"
 	"readygo/permission/permutil"
+	"readygo/wx/wxroute"
 
 	"gitee.com/chunanyong/zorm"
 
@@ -33,7 +35,7 @@ func init() {
 
 	//初始化DBDao
 	dbDaoConfig := zorm.DataSourceConfig{
-		DSN:        "root:root@tcp(127.0.0.1:3306)/readygo?charset=utf8&parseTime=true",
+		DSN:        "root:a123456@tcp(192.168.31.165:3306)/readygo?charset=utf8&parseTime=true",
 		DriverName: "mysql",
 		PrintSQL:   true,
 	}
@@ -103,6 +105,13 @@ func main() {
 			})
 		}
 	})
+
+	// 权限
+
+	permroute.NewRouter()
+
+	// 微信
+	wxroute.NewRouter()
 
 	r.Run(":8080") // listen and serve on 0.0.0.0:8080 (for windows "localhost:8080")
 }
