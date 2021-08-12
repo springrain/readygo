@@ -4,9 +4,9 @@
  * @LastEditTime: 2020-03-12 12:50:04
  * @LastEditors: Please set LastEditors
  * @Description: In User Settings Edit
- * @FilePath: \readygo\permission\permhandler\PermContext.go
+ * @FilePath: \readygo\permission\permservice\PermContext.go
  */
-package permhandler
+package permservice
 
 import (
 	"context"
@@ -39,8 +39,8 @@ func getCurrentUserFromCtx(ctx context.Context) (interface{}, error) {
 	return userInfo, nil
 }
 
-// bindContextCurrentUser 设置当前登录用户到上下文
-func bindContextCurrentUser(ctx context.Context, userVO permstruct.UserVOStruct) (context.Context, error) {
+// BindContextCurrentUser 设置当前登录用户到上下文
+func BindContextCurrentUser(ctx context.Context, userVO permstruct.UserVOStruct) (context.Context, error) {
 	return setCurrentUserToCtx(ctx, userVO)
 }
 
