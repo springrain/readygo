@@ -3,6 +3,8 @@ package permservice
 import (
 	"context"
 	"errors"
+
+	"readygo/permission/permhandler"
 	"readygo/permission/permstruct"
 	"strconv"
 
@@ -227,9 +229,9 @@ func WrapOrgIdFinderByFinder(ctx context.Context, finder *zorm.Finder, orgIdColu
 	//获取私有的权限部门 角色ID
 	privateOrgRoleId := userVO.PrivateOrgRoleId
 	if len(privateOrgRoleId) > 0 { //如果是私有部门权限的角色ID
-		wrapOrgIdFinder, err = wrapOrgIdFinderByPrivateOrgRoleId(ctx, privateOrgRoleId, userVO.UserId)
+		wrapOrgIdFinder, err = WrapOrgIdFinderByPrivateOrgRoleId(ctx, privateOrgRoleId, userVO.UserId)
 	} else {
-		wrapOrgIdFinder, err = wrapOrgIdFinderByUserRole(ctx, userVO.UserId)
+		wrapOrgIdFinder, err = WrapOrgIdFinderByUserId(ctx, userVO.UserId)
 	}
 
 	if orgIdColumn == "" {
@@ -242,7 +244,11 @@ func WrapOrgIdFinderByFinder(ctx context.Context, finder *zorm.Finder, orgIdColu
 	if wrapOrgIdFinder == nil || err != nil {
 		finder.Append(" AND "+createUserIdColumn+"=?", userVO.UserId)
 	} else {
-		finder.Append(" AND " + orgIdColumn + " in ( ").AppendFinder(wrapOrgIdFinder).Append(")")
+		finder, err = finder.Append(" AND " + orgIdColumn + " in ( ").AppendFinder(wrapOrgIdFinder)
+		if err != nil {
+			return finder, err
+		}
+		finder.Append(")")
 	}
 
 	return finder, err
