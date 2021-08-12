@@ -216,6 +216,38 @@ func FindRoleOrgByRoleId(ctx context.Context, roleId string, page *zorm.Page) ([
 	return roleOrgs, nil
 }
 
+//WrapOrgIdFinderByFinder 拼接当前登录人的权限Finder对象,查询的表中必须有 orgId,createUserId
+// 查询当前登录人,访问菜单时的部门数据权限,并封装到现有的Finder里.
+func WrapOrgIdFinderByFinder(ctx context.Context, finder *zorm.Finder, orgIdColumn string, createUserIdColumn string) (*zorm.Finder, error) {
+	userVO, err := permhandler.GetCurrentUserFromContext(ctx)
+	if err != nil {
+		return finder, err
+	}
+	var wrapOrgIdFinder *zorm.Finder = nil
+	//获取私有的权限部门 角色ID
+	privateOrgRoleId := userVO.PrivateOrgRoleId
+	if len(privateOrgRoleId) > 0 { //如果是私有部门权限的角色ID
+		wrapOrgIdFinder, err = wrapOrgIdFinderByPrivateOrgRoleId(ctx, privateOrgRoleId, userVO.UserId)
+	} else {
+		wrapOrgIdFinder, err = wrapOrgIdFinderByUserRole(ctx, userVO.UserId)
+	}
+
+	if orgIdColumn == "" {
+		orgIdColumn = "orgId"
+	}
+	if createUserIdColumn == "" {
+		createUserIdColumn = "createUserId"
+	}
+
+	if wrapOrgIdFinder == nil || err != nil {
+		finder.Append(" AND "+createUserIdColumn+"=?", userVO.UserId)
+	} else {
+		finder.Append(" AND " + orgIdColumn + " in ( ").AppendFinder(wrapOrgIdFinder).Append(")")
+	}
+
+	return finder, err
+}
+
 //WrapOrgIdFinderByUserId 查询用户有权限管理的所有部门,包括角色关联分配产生的部门权限.分装成Finder的形式用于关联查询的finder实体类
 // 1.获取用户所有的 []permstruct.UserRoleStruct,包含主管的部门和角色分配的部门,不包括角色私有部门
 // 2.wrapOrgIdFinderByUserRole(list) 生成完整的Finder对象.
