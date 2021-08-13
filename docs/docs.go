@@ -28,7 +28,7 @@ var doc = `{
             "get": {
                 "description": "接口详细描述信息",
                 "tags": [
-                    "用户信息   //swagger API分类标签",
+                    "登陆   //swagger API分类标签",
                     "同一个tag为一组"
                 ],
                 "summary": "接口概要说明",

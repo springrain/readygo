@@ -26,6 +26,6 @@ paths:
             type: string
       summary: 接口概要说明
       tags:
-      - 用户信息   //swagger API分类标签
+      - 登陆   //swagger API分类标签
       - 同一个tag为一组
 swagger: "2.0"

@@ -25,6 +25,17 @@ const (
 	CodeParamErr = 40001
 )
 
+// ErrorResult 响应错误
+type ErrorResult struct {
+	Error ErrorItem `json:"error"` // 错误项
+}
+
+// ErrorItem 响应错误项
+type ErrorItem struct {
+	Code    int    `json:"code"`    // 错误码
+	Message string `json:"message"` // 错误信息
+}
+
 // ResponseData 返回数据包装器
 type ResponseData struct {
 	//业务状态代码 // 异常 1, 成功 0,默认成功0,业务代码见说明
@@ -41,6 +52,7 @@ type ResponseData struct {
 	Page zorm.Page `json:"page,omitempty"`
 	//查询条件的struct回传
 	QueryStruct interface{} `json:"queryStruct,omitempty"`
+	ERR         error       // 响应错误
 }
 
 // TrackedErrorResponse 有追踪信息的错误响应

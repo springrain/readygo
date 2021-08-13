@@ -21,7 +21,7 @@ import (
 // Login 登录方法
 // @Summary 接口概要说明
 // @Description 接口详细描述信息
-// @Tags 用户信息   //swagger API分类标签, 同一个tag为一组
+// @Tags 登陆
 // @Param id path int true "ID"
 // @Param name query string false "name"
 // @Success 200 {string} string "ok"
