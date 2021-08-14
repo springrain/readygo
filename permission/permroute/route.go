@@ -1,17 +1,14 @@
 package permroute
 
 import (
-	"readygo/ginext"
 	"readygo/permission/permapi"
+
+	"github.com/gin-gonic/gin"
 )
 
-func init() {
-	NewRouter()
-}
-
-// NewRouter 路由配置
-func NewRouter() {
-	r := ginext.GinEngine()
+// RegisterPermRoute 路由配置
+func RegisterPermRoute(r *gin.Engine) {
+	//r := ginext.GinEngine()
 
 	// 路由
 	v1 := r.Group("/api/perm/v1")

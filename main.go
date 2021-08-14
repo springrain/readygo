@@ -16,8 +16,10 @@ import (
 	"readygo/ginext"
 	"readygo/permission/permapi"
 	"readygo/permission/permhandler"
+	"readygo/permission/permroute"
 	"readygo/permission/permstruct"
 	"readygo/permission/permutil"
+	"readygo/wx/wxroute"
 
 	"gitee.com/chunanyong/zorm"
 
@@ -97,6 +99,9 @@ func initGinEngine() {
 			})
 		}
 	})
+
+	permroute.RegisterPermRoute(r)
+	wxroute.RegisterWXRoute(r)
 
 }
 
