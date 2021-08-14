@@ -6,7 +6,11 @@ import (
 )
 
 // Creates a router without any middleware by default
-var GinEngine *gin.Engine = gin.New()
+var ginEngine *gin.Engine = gin.New()
+
+func GinEngine() *gin.Engine {
+	return ginEngine
+}
 
 // 三位数错误编码为复用http原本含义
 // 五位数错误编码为应用自定义错误

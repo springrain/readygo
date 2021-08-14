@@ -1,15 +1,18 @@
 package wxroute
 
 import (
+	"readygo/ginext"
 	"readygo/wx/wxapi"
-
-	"github.com/gin-gonic/gin"
 )
 
-// NewRouter 路由配置
-func NewRouter(r *gin.Engine) {
-	//GinEngine := gin.Default()
+func init() {
+	NewRouter()
+}
 
+// NewRouter 路由配置
+func NewRouter() {
+	//GinEngine := gin.Default()
+	r := ginext.GinEngine()
 	// 路由
 	v1 := r.Group("/api/wx/v1")
 	{

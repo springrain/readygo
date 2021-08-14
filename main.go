@@ -16,10 +16,8 @@ import (
 	"readygo/ginext"
 	"readygo/permission/permapi"
 	"readygo/permission/permhandler"
-	"readygo/permission/permroute"
 	"readygo/permission/permstruct"
 	"readygo/permission/permutil"
-	"readygo/wx/wxroute"
 
 	"gitee.com/chunanyong/zorm"
 
@@ -42,12 +40,15 @@ func init() {
 	cache.NewMemeryCacheManager()
 
 	permutil.NewJWEConfig("permission/permcert/private.pem", "readygo", 0)
+
+	//初始化initGinEngine
+	initGinEngine()
 }
 
 // initGinEngine 初始化Gin引擎
 func initGinEngine() {
 
-	r := ginext.GinEngine
+	r := ginext.GinEngine()
 
 	// Global middleware
 	// Logger middleware will write the logs to gin.DefaultWriter even if you set with GIN_MODE=release.
@@ -97,13 +98,6 @@ func initGinEngine() {
 		}
 	})
 
-	// 权限
-
-	permroute.NewRouter(r)
-
-	// 微信
-	wxroute.NewRouter(r)
-	r.Run(":7080") // listen and serve on 0.0.0.0:8080 (for windows "localhost:8080")
 }
 
 // @title Swagger Example API
@@ -113,8 +107,7 @@ func initGinEngine() {
 // @host 127.0.0.1:8080
 // @BasePath /
 func main() {
-
-	// 初始化Gin引擎
-	initGinEngine()
+	r := ginext.GinEngine()
+	r.Run(":7080") // listen and serve on 0.0.0.0:8080 (for windows "localhost:8080")
 
 }
