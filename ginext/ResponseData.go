@@ -1,6 +1,9 @@
 package ginext
 
 import (
+	"reflect"
+	"unsafe"
+
 	"gitee.com/chunanyong/zorm"
 	"github.com/gin-gonic/gin"
 )
@@ -10,6 +13,26 @@ var ginEngine *gin.Engine = gin.New()
 
 func GinEngine() *gin.Engine {
 	return ginEngine
+}
+
+// SetContextPath 设置项目名前缀contextPath,因为gin暂时不支持直接修改RouterGroup的basePath,使用unsafe.Pointer修改
+//需要在路由初始化前调用
+func SetContextPath(contextPath string) {
+	if contextPath == "" {
+		return
+	}
+	//获取引擎
+	r := GinEngine()
+	//因为Engine匿名注入了RouterGroup,所以直接获取Engine的反射对象
+	valueOf := reflect.ValueOf(r).Elem()
+	//获取RouterGroup的basePath属性反射值对象
+	basePath := valueOf.FieldByName("basePath")
+	//获取basePath的UnsafeAddr
+	p := unsafe.Pointer(basePath.UnsafeAddr())
+	//重新赋值basePath的反射值,NewAt默认返回的是指针,使用Elem获取反射值对象
+	basePath = reflect.NewAt(basePath.Type(), p).Elem()
+	//设置反射值
+	basePath.Set(reflect.ValueOf(contextPath))
 }
 
 // 三位数错误编码为复用http原本含义

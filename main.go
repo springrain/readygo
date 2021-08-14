@@ -50,7 +50,10 @@ func init() {
 // initGinEngine 初始化Gin引擎
 func initGinEngine() {
 
+	//获取引擎
 	r := ginext.GinEngine()
+	//设置前缀,需要在路由初始化前调用
+	ginext.SetContextPath("/readygo/")
 
 	// Global middleware
 	// Logger middleware will write the logs to gin.DefaultWriter even if you set with GIN_MODE=release.
