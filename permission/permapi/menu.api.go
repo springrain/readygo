@@ -9,7 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// UserQueryParam 查询条件
+// MenuQueryParam 查询条件
 type MenuQueryParam struct {
 	Page       *zorm.Page
 	UserName   string   `form:"userName"`   // 用户名
@@ -19,7 +19,7 @@ type MenuQueryParam struct {
 }
 
 // Query 查询数据
-func Query(c *gin.Context) {
+func QueryMenu(c *gin.Context) {
 	ctx := c.Request.Context()
 	var params MenuQueryParam
 	if err := ginext.ParseQuery(c, &params); err != nil {

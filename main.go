@@ -14,6 +14,7 @@ import (
 	"readygo/apistruct"
 	"readygo/cache"
 	"readygo/ginext"
+	"readygo/permission/permapi"
 	"readygo/permission/permhandler"
 	"readygo/permission/permroute"
 	"readygo/permission/permstruct"
@@ -86,8 +87,10 @@ func main() {
 	})
 
 	r.GET("/login", api.Login)
+	r.POST("/Captcha", permapi.Captcha)
 
 	r.GET("/system/menu/tree", func(c *gin.Context) {
+
 		user, err := permstruct.GetCurrentUserFromContext(c.Request.Context())
 		// token := c.GetHeader(JWTTokenName)
 		// userid, err := permutil.GetInfoFromToken(token, &user)
@@ -108,10 +111,10 @@ func main() {
 
 	// 权限
 
-	permroute.NewRouter()
+	permroute.NewRouter(r)
 
 	// 微信
-	wxroute.NewRouter()
+	wxroute.NewRouter(r)
 
-	r.Run(":8080") // listen and serve on 0.0.0.0:8080 (for windows "localhost:8080")
+	r.Run(":7080") // listen and serve on 0.0.0.0:8080 (for windows "localhost:8080")
 }

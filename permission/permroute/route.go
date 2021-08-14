@@ -7,14 +7,14 @@ import (
 )
 
 // NewRouter 路由配置
-func NewRouter() *gin.Engine {
-	r := gin.Default()
+func NewRouter(r *gin.Engine) {
 
 	// 路由
 	v1 := r.Group("/api/perm/v1")
 	{
 		v1.POST("ping", permapi.Ping)
-		v1.POST("Captcha", permapi.Captcha)
+
+		v1.POST("menulist", permapi.QueryMenu)
 
 		//// 用户登录
 		//v1.POST("user/register", UserRegister)
@@ -34,5 +34,4 @@ func NewRouter() *gin.Engine {
 		//}
 	}
 
-	return r
 }
