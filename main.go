@@ -31,8 +31,6 @@ import (
 
 //初始化
 func init() {
-	// 初始化Gin引擎
-	initGinEngine()
 
 	//初始化DBDao
 	dbDaoConfig := zorm.DataSourceConfig{
@@ -68,16 +66,6 @@ func initGinEngine() {
 	r.Static("/assets", "./assets")
 	r.StaticFS("/more_static", http.Dir("my_file_system"))
 	r.StaticFile("/favicon.ico", "./resources/favicon.ico")
-}
-
-// @title Swagger Example API
-// @version 1.0
-// @description This is a sample server Petstore server.
-
-// @host 127.0.0.1:8080
-// @BasePath /
-func main() {
-	r := ginext.GinEngine
 
 	// swagger
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
@@ -115,6 +103,18 @@ func main() {
 
 	// 微信
 	wxroute.NewRouter(r)
-
 	r.Run(":7080") // listen and serve on 0.0.0.0:8080 (for windows "localhost:8080")
+}
+
+// @title Swagger Example API
+// @version 1.0
+// @description This is a sample server Petstore server.
+
+// @host 127.0.0.1:8080
+// @BasePath /
+func main() {
+
+	// 初始化Gin引擎
+	initGinEngine()
+
 }
