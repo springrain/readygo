@@ -24,9 +24,9 @@ func SetContextPath(contextPath string) {
 	//获取引擎
 	r := GinEngine()
 	//因为Engine匿名注入了RouterGroup,所以直接获取Engine的反射对象
-	valueOf := reflect.ValueOf(r).Elem()
+	engine := reflect.ValueOf(r).Elem()
 	//获取RouterGroup的basePath属性反射值对象
-	basePath := valueOf.FieldByName("basePath")
+	basePath := engine.FieldByName("basePath")
 	//获取basePath的UnsafeAddr
 	p := unsafe.Pointer(basePath.UnsafeAddr())
 	//重新赋值basePath的反射值,NewAt默认返回的是指针,使用Elem获取反射值对象
