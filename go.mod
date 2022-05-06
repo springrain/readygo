@@ -5,7 +5,7 @@ go 1.14
 require (
 	gitee.com/chunanyong/gowe v1.1.2
 	gitee.com/chunanyong/logger v1.2.5
-	gitee.com/chunanyong/zorm v1.5.4
+	gitee.com/chunanyong/zorm v1.5.5
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751
 	github.com/gin-gonic/gin v1.7.7
 	github.com/go-redis/redis/v8 v8.11.5
