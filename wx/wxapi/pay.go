@@ -27,6 +27,7 @@ func init() {
 	}
 
 }
+
 //支付结果通知
 func WxPayNotifyPay(c *gin.Context) {
 	//
@@ -43,6 +44,7 @@ func WxPayNotifyPay(c *gin.Context) {
 	})
 
 }
+
 //统一下单
 func WxPayAppSign(c *gin.Context) {
 
@@ -67,7 +69,7 @@ func WxPayUnifiedOrder(c *gin.Context) {
 
 	body := &gowe.WxPayUnifiedOrderBody{
 		Body:       "人参果",
-		OutTradeNo: strings.Replace(zorm.FuncGenerateStringID(), "-", "", -1), // zorm.FuncGenerateStringID(),
+		OutTradeNo: strings.Replace(zorm.FuncGenerateStringID(c), "-", "", -1),
 		TotalFee:   gowe.ServiceTypeNormalDomestic,
 
 		SpbillCreateIP: "127.0.0.1",

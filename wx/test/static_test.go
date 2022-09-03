@@ -9,10 +9,9 @@ import (
 
 func TestUUID(t *testing.T) {
 
-	uuid := zorm.FuncGenerateStringID()
+	uuid := zorm.FuncGenerateStringID(nil)
 	strings.Replace(uuid, "-", "", -1)
 
 	t.Log(len(strings.Replace(uuid, "-", "", -1)))
 
 }
-

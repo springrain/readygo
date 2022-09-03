@@ -34,7 +34,7 @@ func Captcha(c *gin.Context) {
 //生成验证码的key和base64的值
 func newCaptchaKeyB64() (string, string, error) {
 	//获取一个uuid字符串
-	key := zorm.FuncGenerateStringID()
+	key := zorm.FuncGenerateStringID(nil)
 
 	//10秒为计算单位,计算当前值
 	tenSeconds := time.Now().Unix() / 10

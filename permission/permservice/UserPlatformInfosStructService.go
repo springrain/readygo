@@ -29,7 +29,7 @@ func SaveUserPlatformInfosStruct(ctx context.Context, userPlatformInfosStruct *p
 
 		//赋值主键Id
 		if len(userPlatformInfosStruct.Id) < 1 {
-			userPlatformInfosStruct.Id = zorm.FuncGenerateStringID()
+			userPlatformInfosStruct.Id = zorm.FuncGenerateStringID(ctx)
 		}
 
 		_, errSaveUserPlatformInfosStruct := zorm.Insert(ctx, userPlatformInfosStruct)

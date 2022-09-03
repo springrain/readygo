@@ -39,18 +39,18 @@ func init() {
 	dbDaoConfig := zorm.DataSourceConfig{
 		//DSN 数据库的连接字符串
 		DSN: "root:root@tcp(127.0.0.1:3306)/readygo?charset=utf8&parseTime=true",
-		//数据库驱动名称:mysql,postgres,oci8,sqlserver,sqlite3,dm,kingbase,aci 和DBType对应,处理数据库有多个驱动
+		//DriverName 数据库驱动名称:mysql,postgres,oci8,sqlserver,sqlite3,go_ibm_db,clickhouse,dm,kingbase,aci,taosSql|taosRestful 和Dialect对应
 		DriverName: "mysql",
-		//数据库类型(方言判断依据):mysql,postgresql,oracle,mssql,sqlite,dm,kingbase,shentong 和 DriverName 对应,处理数据库有多个驱动
-		DBType: "mysql",
+		//Dialect 数据库方言:mysql,postgresql,oracle,mssql,sqlite,db2,clickhouse,dm,kingbase,shentong,tdengine 和 DriverName 对应
+		Dialect: "mysql",
 		//MaxOpenConns 数据库最大连接数 默认50
 		MaxOpenConns: 50,
 		//MaxIdleConns 数据库最大空闲连接数 默认50
 		MaxIdleConns: 50,
 		//ConnMaxLifetimeSecond 连接存活秒时间. 默认600(10分钟)后连接被销毁重建.避免数据库主动断开连接,造成死连接.MySQL默认wait_timeout 28800秒(8小时)
 		ConnMaxLifetimeSecond: 600,
-		//PrintSQL 打印SQL.会使用FuncPrintSQL记录SQL
-		PrintSQL: true,
+		//SlowSQLMillis 慢sql的时间阈值,单位毫秒.小于0是禁用SQL语句输出;等于0是只输出SQL语句,不计算执行时间;大于0是计算SQL执行时间,并且>=SlowSQLMillis值
+		SlowSQLMillis: 0,
 		//DefaultTxOptions 事务隔离级别的默认配置,默认为nil
 		//DefaultTxOptions: nil,
 		//DefaultTxOptions: &sql.TxOptions{Isolation: sql.LevelDefault},
@@ -128,7 +128,7 @@ func TestInsertEntityMap(t *testing.T) {
 
 		//Set 设置数据库的字段值
 		//如果主键是自增或者序列,不要entityMap.Set主键的值
-		entityMap.Set("id", zorm.FuncGenerateStringID())
+		entityMap.Set("id", zorm.FuncGenerateStringID(ctx))
 		entityMap.Set("userName", "entityMap-userName")
 		entityMap.Set("password", "entityMap-password")
 		entityMap.Set("createTime", time.Now())
@@ -374,7 +374,7 @@ func TestOther(t *testing.T) {
 }
 
 //单个数据库的读写分离的策略 rwType=0 read,rwType=1 write
-func myReadWriteStrategy(rwType int) *zorm.DBDao {
+func myReadWriteStrategy(ctx context.Context, rwType int) (*zorm.DBDao, error) {
 	//根据自己的业务场景,返回需要的读写dao,每次需要数据库的连接的时候,会调用这个函数
-	return dbDao
+	return dbDao, nil
 }

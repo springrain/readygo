@@ -30,7 +30,7 @@ func SaveUserStruct(ctx context.Context, userStruct *permstruct.UserStruct) erro
 
 		//赋值主键Id
 		if len(userStruct.Id) < 1 {
-			userStruct.Id = zorm.FuncGenerateStringID()
+			userStruct.Id = zorm.FuncGenerateStringID(ctx)
 		}
 
 		_, errSaveUserStruct := zorm.Insert(ctx, userStruct)

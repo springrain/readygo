@@ -31,7 +31,7 @@ func SaveMenuStruct(ctx context.Context, menuStruct *permstruct.MenuStruct) erro
 
 		//赋值ID主键
 		if len(menuStruct.Id) < 1 {
-			menuStruct.Id = zorm.FuncGenerateStringID()
+			menuStruct.Id = zorm.FuncGenerateStringID(ctx)
 		}
 
 		//获取新的comcode

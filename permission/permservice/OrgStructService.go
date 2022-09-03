@@ -29,7 +29,7 @@ func SaveOrgStruct(ctx context.Context, orgStruct *permstruct.OrgStruct) error {
 
 		//赋值主键Id
 		if len(orgStruct.Id) < 1 {
-			orgStruct.Id = zorm.FuncGenerateStringID()
+			orgStruct.Id = zorm.FuncGenerateStringID(ctx)
 		}
 
 		//获取新的comcode
@@ -335,7 +335,7 @@ func UpdateOrgManagerUserId(ctx context.Context, orgId string, managerUserId str
 			return nil, errUpdateFinder
 		}
 		userOrg := permstruct.UserOrgStruct{}
-		userOrg.Id = zorm.FuncGenerateStringID()
+		userOrg.Id = zorm.FuncGenerateStringID(ctx)
 		userOrg.OrgId = orgId
 		userOrg.UserId = managerUserId
 		userOrg.ManagerType = 2
