@@ -1,20 +1,19 @@
-package ginext
+package webext
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"io/ioutil"
 	"net"
 	"net/http"
-	"net/http/httputil"
 	"os"
 	"runtime"
 	"strings"
 	"time"
 
-	"github.com/gin-gonic/gin"
-
-	"gitee.com/chunanyong/logger"
+	"github.com/cloudwego/hertz/pkg/app"
+	"github.com/cloudwego/hertz/pkg/common/hlog"
 )
 
 const (
@@ -35,8 +34,8 @@ var (
 	slash     = []byte("/")
 )
 
-func GinRecovery() gin.HandlerFunc {
-	return func(c *gin.Context) {
+func WebRecovery() app.HandlerFunc {
+	return func(ctx context.Context, c *app.RequestContext) {
 		defer func() {
 			if err := recover(); err != nil {
 				// Check for a broken connection, as it is not really a
@@ -51,20 +50,16 @@ func GinRecovery() gin.HandlerFunc {
 				}
 
 				stack := stack(3)
-				httpRequest, _ := httputil.DumpRequest(c.Request, false)
-				headers := strings.Split(string(httpRequest), "\r\n")
-				for idx, header := range headers {
-					current := strings.Split(header, ":")
-					if current[0] == "Authorization" {
-						headers[idx] = current[0] + ": *"
-					}
-				}
+				httpRequest := c.Request.Body()
+
 				if brokenPipe {
-					logger.Panic(err.(error), logger.String("httpRequest", string(httpRequest)), logger.String("reset", reset))
+					//logger.Panic(err.(error), logger.String("httpRequest", string(httpRequest)), logger.String("reset", reset))
+					hlog.CtxErrorf(ctx, "{err:%v,httpRequest:%v,reset:%v}", err, httpRequest, reset)
 					//logger.Printf("%s\n%s%s", err, string(httpRequest), reset)
 				} else {
 					//logger.Printf("[Recovery] %s panic recovered:\n%s\n%s%s",timeFormat(time.Now()), err, stack, reset)
-					logger.Panic(err.(error), logger.ByteString("stack", stack), logger.String("reset", reset))
+					//logger.Panic(err.(error), logger.ByteString("stack", stack), logger.String("reset", reset))
+					hlog.CtxErrorf(ctx, "{err:%v,stack:%v,reset:%v}", err, stack, reset)
 				}
 
 				// If the connection is dead, we can't write a status to it.
@@ -76,7 +71,7 @@ func GinRecovery() gin.HandlerFunc {
 				}
 			}
 		}()
-		c.Next()
+		c.Next(ctx)
 	}
 }
 
@@ -94,7 +89,8 @@ func stack(skip int) []byte {
 		}
 		// Print this much at least.  If we can't find the source, it won't show.
 		//fmt.Fprintf(buf, "%s:%d (0x%x)\n", file, line, pc)
-		logger.Panic(errors.New("[GIN]GinRecovery-->stack"), logger.String("file", file), logger.Int("line", line), logger.Uintptr("pc", pc))
+		//logger.Panic(errors.New("[GIN]WebRecovery-->stack"), logger.String("file", file), logger.Int("line", line), logger.Uintptr("pc", pc))
+		hlog.Errorf("{err:%v,file:%v,line:%v,pc:%v}", errors.New("[GIN]WebRecovery-->stack"), file, line, pc)
 		if file != lastFile {
 			data, err := ioutil.ReadFile(file)
 			if err != nil {
@@ -104,7 +100,8 @@ func stack(skip int) []byte {
 			lastFile = file
 		}
 		//fmt.Fprintf(buf, "\t%s: %s\n", function(pc), source(lines, line))
-		logger.Panic(errors.New("[GIN]GinRecovery-->stack"), logger.ByteString("pc", function(pc)), logger.ByteString("lines", source(lines, line)))
+		//logger.Panic(errors.New("[GIN]WebRecovery-->stack"), logger.ByteString("pc", function(pc)), logger.ByteString("lines", source(lines, line)))
+		hlog.Errorf("{err:%v,lines:%v,pc:%v}", errors.New("[GIN]WebRecovery-->stack"), source(lines, line), pc)
 	}
 	return buf.Bytes()
 }

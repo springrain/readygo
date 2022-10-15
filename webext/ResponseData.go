@@ -1,18 +1,18 @@
-package ginext
+package webext
 
 import (
 	"reflect"
 	"unsafe"
 
 	"gitee.com/chunanyong/zorm"
-	"github.com/gin-gonic/gin"
+	"github.com/cloudwego/hertz/pkg/app/server"
 )
 
 // Creates a router without any middleware by default
-var ginEngine *gin.Engine = gin.New()
+var webEngine = server.Default(server.WithHostPorts(":7080"))
 
-func GinEngine() *gin.Engine {
-	return ginEngine
+func WebEngine() *server.Hertz {
+	return webEngine
 }
 
 // SetContextPath 设置项目名前缀contextPath,因为gin暂时不支持直接修改RouterGroup的basePath,使用unsafe.Pointer修改
@@ -22,9 +22,9 @@ func SetContextPath(contextPath string) {
 		return
 	}
 	//获取引擎
-	r := GinEngine()
+	h := WebEngine()
 	//因为Engine匿名注入了RouterGroup,所以直接获取Engine的反射对象
-	engine := reflect.ValueOf(r).Elem()
+	engine := reflect.ValueOf(h).Elem()
 	//获取RouterGroup的basePath属性反射值对象
 	basePath := engine.FieldByName("basePath")
 	//获取basePath的UnsafeAddr
@@ -112,10 +112,12 @@ func ErrorReponseData(errCode int, message string, err error) ResponseData {
 		StatusCode: errCode,
 		Message:    message,
 	}
-	// 生产环境隐藏底层报错
-	if err != nil && gin.Mode() != gin.ReleaseMode {
-		res.Message = err.Error()
-	}
+	/*
+		// 生产环境隐藏底层报错
+		if err != nil && gin.Mode() != gin.ReleaseMode {
+			res.Message = err.Error()
+		}
+	*/
 	return res
 }
 

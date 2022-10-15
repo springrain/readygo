@@ -7,9 +7,8 @@ import (
 	"readygo/cache"
 	"readygo/permission/permstruct"
 
-	"gitee.com/chunanyong/logger"
-
 	"gitee.com/chunanyong/zorm"
+	"github.com/cloudwego/hertz/pkg/common/hlog"
 )
 
 //SaveRoleStruct 保存角色
@@ -47,7 +46,7 @@ func SaveRoleStruct(ctx context.Context, roleStruct *permstruct.RoleStruct) erro
 	//记录错误
 	if errSaveRoleStruct != nil {
 		errSaveRoleStruct := fmt.Errorf("permservice.SaveRoleStruct错误:%w", errSaveRoleStruct)
-		logger.Error(errSaveRoleStruct)
+		hlog.Error(errSaveRoleStruct)
 		return errSaveRoleStruct
 	}
 
@@ -84,7 +83,7 @@ func UpdateRoleStruct(ctx context.Context, roleStruct *permstruct.RoleStruct) er
 	//记录错误
 	if errUpdateRoleStruct != nil {
 		errUpdateRoleStruct := fmt.Errorf("permservice.UpdateRoleStruct错误:%w", errUpdateRoleStruct)
-		logger.Error(errUpdateRoleStruct)
+		hlog.Error(errUpdateRoleStruct)
 		return errUpdateRoleStruct
 	}
 
@@ -125,7 +124,7 @@ func DeleteRoleStructById(ctx context.Context, id string) error {
 	//记录错误
 	if errDeleteRoleStruct != nil {
 		errDeleteRoleStruct := fmt.Errorf("permservice.DeleteRoleStruct错误:%w", errDeleteRoleStruct)
-		logger.Error(errDeleteRoleStruct)
+		hlog.Error(errDeleteRoleStruct)
 		return errDeleteRoleStruct
 	}
 
@@ -158,7 +157,7 @@ func FindRoleStructById(ctx context.Context, id string) (*permstruct.RoleStruct,
 	//记录错误
 	if errFindRoleStructById != nil {
 		errFindRoleStructById := fmt.Errorf("permservice.FindRoleStructById错误:%w", errFindRoleStructById)
-		logger.Error(errFindRoleStructById)
+		hlog.Error(errFindRoleStructById)
 		return nil, errFindRoleStructById
 	}
 
@@ -183,7 +182,7 @@ func FindRoleStructList(ctx context.Context, finder *zorm.Finder, page *zorm.Pag
 	//记录错误
 	if errFindRoleStructList != nil {
 		errFindRoleStructList := fmt.Errorf("permservice.FindRoleStructList错误:%w", errFindRoleStructList)
-		logger.Error(errFindRoleStructList)
+		hlog.Error(errFindRoleStructList)
 		return nil, errFindRoleStructList
 	}
 

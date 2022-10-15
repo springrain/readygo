@@ -9,24 +9,25 @@
 package main
 
 import (
+	"context"
 	"net/http"
+	"os"
 	"readygo/api"
 	"readygo/apistruct"
 	"readygo/cache"
-	"readygo/ginext"
 	"readygo/permission/permapi"
-	"readygo/permission/permhandler"
 	"readygo/permission/permroute"
 	"readygo/permission/permstruct"
 	"readygo/permission/permutil"
+	"readygo/webext"
 	"readygo/wx/wxroute"
 
 	"gitee.com/chunanyong/zorm"
 
-	"github.com/gin-gonic/gin"
+	"github.com/cloudwego/hertz/pkg/app"
+	"github.com/cloudwego/hertz/pkg/common/hlog"
+	"github.com/cloudwego/hertz/pkg/common/utils"
 	_ "github.com/go-sql-driver/mysql"
-	swaggerFiles "github.com/swaggo/files"
-	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
 //初始化
@@ -34,7 +35,7 @@ func init() {
 
 	//初始化DBDao
 	dbDaoConfig := zorm.DataSourceConfig{
-		DSN: "root:a123456@tcp(192.168.31.165:3306)/readygo?charset=utf8&parseTime=true",
+		DSN: "root:root@tcp(127.0.0.1:3306)/readygo?charset=utf8&parseTime=true",
 		//DriverName 数据库驱动名称:mysql,postgres,oci8,sqlserver,sqlite3,go_ibm_db,clickhouse,dm,kingbase,aci,taosSql|taosRestful 和Dialect对应
 		DriverName: "mysql",
 		//Dialect 数据库方言:mysql,postgresql,oracle,mssql,sqlite,db2,clickhouse,dm,kingbase,shentong,tdengine 和 DriverName 对应
@@ -53,68 +54,74 @@ func init() {
 
 	permutil.NewJWEConfig("permission/permcert/private.pem", "readygo", 0)
 
-	//初始化initGinEngine
-	initGinEngine()
+	//初始化initWebEngine
+	initWebEngine()
 }
 
-// initGinEngine 初始化Gin引擎
-func initGinEngine() {
+// initWebEngine 初始化Web引擎
+func initWebEngine() {
 
 	//获取引擎
-	r := ginext.GinEngine()
+	h := webext.WebEngine()
 	//设置前缀,需要在路由初始化前调用
-	ginext.SetContextPath("/readygo/")
+	webext.SetContextPath("/readygo/")
 
 	// Global middleware
 	// Logger middleware will write the logs to gin.DefaultWriter even if you set with GIN_MODE=release.
 	// By default gin.DefaultWriter = os.Stdout
-	r.Use(ginext.GinLogger())
+	h.Use(webext.WebLogger())
 	//r.Use(gin.Logger())
 
+	f, err := os.OpenFile("./logs/readygo.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		panic(err)
+	}
+	defer f.Close()
+	hlog.SetOutput(f)
+
 	// Recovery middleware recovers from any panics and writes a 500 if there was one.
-	r.Use(ginext.GinRecovery())
-	//r.Use(gin.Recovery())
+	//h.Use(webext.WebRecovery())
 
 	//加载自定义的权限过滤器
-	r.Use(permhandler.PermHandler())
+	//h.Use(permhandler.PermHandler())
 
 	//css js等静态文件
-	r.Static("/assets", "./assets")
-	r.StaticFS("/more_static", http.Dir("my_file_system"))
-	r.StaticFile("/favicon.ico", "./resources/favicon.ico")
+	h.Static("/assets", "./assets")
+	h.StaticFS("/more_static", &app.FS{Root: "my_file_system", GenerateIndexPages: true})
+	h.StaticFile("/favicon.ico", "./resources/favicon.ico")
 
 	// swagger
-	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+	//h.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
-	r.GET("/ping", func(c *gin.Context) {
-		c.JSON(200, gin.H{"hello": "world"})
+	h.GET("/ping", func(ctx context.Context, c *app.RequestContext) {
+		c.JSON(200, utils.H{"hello": "world"})
 	})
 
-	r.GET("/login", api.Login)
-	r.POST("/Captcha", permapi.Captcha)
+	h.GET("/login", api.Login)
+	h.POST("/Captcha", permapi.Captcha)
 
-	r.GET("/system/menu/tree", func(c *gin.Context) {
+	h.GET("/system/menu/tree", func(ctx context.Context, c *app.RequestContext) {
 
-		user, err := permstruct.GetCurrentUserFromContext(c.Request.Context())
+		user, err := permstruct.GetCurrentUserFromContext(ctx)
 		// token := c.GetHeader(JWTTokenName)
 		// userid, err := permutil.GetInfoFromToken(token, &user)
 		if err == nil {
 			c.JSON(http.StatusOK, apistruct.ResponseBodyModel{
 				Status:  200,
 				Message: "",
-				Data:    gin.H{"userid": user.UserId, "extInfo": user},
+				Data:    utils.H{"userid": user.UserId, "extInfo": user},
 			})
 		} else {
 			c.JSON(http.StatusServiceUnavailable, apistruct.ResponseBodyModel{
 				Status:  500,
 				Message: err.Error(),
-				Data:    gin.H{"msg": err.Error()},
+				Data:    utils.H{"msg": err.Error()},
 			})
 		}
 	})
 
-	permroute.RegisterPermRoute(r)
-	wxroute.RegisterWXRoute(r)
+	permroute.RegisterPermRoute(h)
+	wxroute.RegisterWXRoute(h)
 
 }
 
@@ -122,10 +129,10 @@ func initGinEngine() {
 // @version 1.0
 // @description This is a sample server Petstore server.
 
-// @host 127.0.0.1:8080
+// @host 127.0.0.1:7080
 // @BasePath /
 func main() {
-	r := ginext.GinEngine()
-	r.Run(":7080") // listen and serve on 0.0.0.0:8080 (for windows "localhost:8080")
+	h := webext.WebEngine()
+	h.Spin()
 
 }

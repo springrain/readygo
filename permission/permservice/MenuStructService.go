@@ -7,7 +7,7 @@ import (
 	"readygo/cache"
 	"readygo/permission/permstruct"
 
-	"gitee.com/chunanyong/logger"
+	"github.com/cloudwego/hertz/pkg/common/hlog"
 
 	"gitee.com/chunanyong/zorm"
 )
@@ -56,7 +56,7 @@ func SaveMenuStruct(ctx context.Context, menuStruct *permstruct.MenuStruct) erro
 	//记录错误
 	if errSaveMenuStruct != nil {
 		errSaveMenuStruct := fmt.Errorf("permservice.SaveMenuStruct错误:%w", errSaveMenuStruct)
-		logger.Error(errSaveMenuStruct)
+		hlog.Error(errSaveMenuStruct)
 		return errSaveMenuStruct
 	}
 
@@ -150,7 +150,7 @@ func UpdateMenuStruct(ctx context.Context, menuStruct *permstruct.MenuStruct) er
 	//记录错误
 	if errUpdateMenuStruct != nil {
 		errUpdateMenuStruct := fmt.Errorf("permservice.UpdateMenuStruct错误:%w", errUpdateMenuStruct)
-		logger.Error(errUpdateMenuStruct)
+		hlog.Error(errUpdateMenuStruct)
 		return errUpdateMenuStruct
 	}
 
@@ -215,7 +215,7 @@ func DeleteMenuStructById(ctx context.Context, id string) error {
 	//记录错误
 	if errDeleteMenuStruct != nil {
 		errDeleteMenuStruct := fmt.Errorf("permservice.DeleteMenuStruct错误:%w", errDeleteMenuStruct)
-		logger.Error(errDeleteMenuStruct)
+		hlog.Error(errDeleteMenuStruct)
 		return errDeleteMenuStruct
 	}
 
@@ -249,7 +249,7 @@ func FindMenuStructById(ctx context.Context, id string) (*permstruct.MenuStruct,
 	//记录错误
 	if errFindMenuStructById != nil {
 		errFindMenuStructById := fmt.Errorf("permservice.FindMenuStructById错误:%w", errFindMenuStructById)
-		logger.Error(errFindMenuStructById)
+		hlog.Error(errFindMenuStructById)
 		return nil, errFindMenuStructById
 	}
 	//放入缓存
@@ -273,7 +273,7 @@ func FindMenuStructList(ctx context.Context, finder *zorm.Finder, page *zorm.Pag
 	//记录错误
 	if errFindMenuStructList != nil {
 		errFindMenuStructList := fmt.Errorf("permservice.FindMenuStructList错误:%w", errFindMenuStructList)
-		logger.Error(errFindMenuStructList)
+		hlog.Error(errFindMenuStructList)
 		return nil, errFindMenuStructList
 	}
 

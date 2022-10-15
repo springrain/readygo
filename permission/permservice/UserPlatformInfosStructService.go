@@ -6,9 +6,8 @@ import (
 	"fmt"
 	"readygo/permission/permstruct"
 
-	"gitee.com/chunanyong/logger"
-
 	"gitee.com/chunanyong/zorm"
+	"github.com/cloudwego/hertz/pkg/common/hlog"
 )
 
 //SaveUserPlatformInfosStruct 保存用户平台信息表
@@ -46,7 +45,7 @@ func SaveUserPlatformInfosStruct(ctx context.Context, userPlatformInfosStruct *p
 	//记录错误
 	if errSaveUserPlatformInfosStruct != nil {
 		errSaveUserPlatformInfosStruct := fmt.Errorf("permservice.SaveUserPlatformInfosStruct错误:%w", errSaveUserPlatformInfosStruct)
-		logger.Error(errSaveUserPlatformInfosStruct)
+		hlog.Error(errSaveUserPlatformInfosStruct)
 		return errSaveUserPlatformInfosStruct
 	}
 
@@ -83,7 +82,7 @@ func UpdateUserPlatformInfosStruct(ctx context.Context, userPlatformInfosStruct 
 	//记录错误
 	if errUpdateUserPlatformInfosStruct != nil {
 		errUpdateUserPlatformInfosStruct := fmt.Errorf("permservice.UpdateUserPlatformInfosStruct错误:%w", errUpdateUserPlatformInfosStruct)
-		logger.Error(errUpdateUserPlatformInfosStruct)
+		hlog.Error(errUpdateUserPlatformInfosStruct)
 		return errUpdateUserPlatformInfosStruct
 	}
 
@@ -121,7 +120,7 @@ func DeleteUserPlatformInfosStructById(ctx context.Context, id string) error {
 	//记录错误
 	if errDeleteUserPlatformInfosStruct != nil {
 		errDeleteUserPlatformInfosStruct := fmt.Errorf("permservice.DeleteUserPlatformInfosStruct错误:%w", errDeleteUserPlatformInfosStruct)
-		logger.Error(errDeleteUserPlatformInfosStruct)
+		hlog.Error(errDeleteUserPlatformInfosStruct)
 		return errDeleteUserPlatformInfosStruct
 	}
 
@@ -144,7 +143,7 @@ func FindUserPlatformInfosStructById(ctx context.Context, id string) (*permstruc
 	//记录错误
 	if errFindUserPlatformInfosStructById != nil {
 		errFindUserPlatformInfosStructById := fmt.Errorf("permservice.FindUserPlatformInfosStructById错误:%w", errFindUserPlatformInfosStructById)
-		logger.Error(errFindUserPlatformInfosStructById)
+		hlog.Error(errFindUserPlatformInfosStructById)
 		return nil, errFindUserPlatformInfosStructById
 	}
 
@@ -167,7 +166,7 @@ func FindUserPlatformInfosStructList(ctx context.Context, finder *zorm.Finder, p
 	//记录错误
 	if errFindUserPlatformInfosStructList != nil {
 		errFindUserPlatformInfosStructList := fmt.Errorf("permservice.FindUserPlatformInfosStructList错误:%w", errFindUserPlatformInfosStructList)
-		logger.Error(errFindUserPlatformInfosStructList)
+		hlog.Error(errFindUserPlatformInfosStructList)
 		return nil, errFindUserPlatformInfosStructList
 	}
 

@@ -1,12 +1,13 @@
 package permapi
 
 import (
-	"readygo/ginext"
+	"context"
 	"readygo/permission/permservice"
 	"readygo/permission/permstruct"
+	"readygo/webext"
 
 	"gitee.com/chunanyong/zorm"
-	"github.com/gin-gonic/gin"
+	"github.com/cloudwego/hertz/pkg/app"
 )
 
 // MenuQueryParam 查询条件
@@ -19,11 +20,10 @@ type MenuQueryParam struct {
 }
 
 // Query 查询数据
-func QueryMenu(c *gin.Context) {
-	ctx := c.Request.Context()
+func QueryMenu(ctx context.Context, c *app.RequestContext) {
 	var params MenuQueryParam
-	if err := ginext.ParseQuery(c, &params); err != nil {
-		ginext.ResError(c, err)
+	if err := webext.ParseQuery(c, &params); err != nil {
+		webext.ResError(c, err)
 		return
 	}
 	finder := zorm.NewFinder()
@@ -31,8 +31,8 @@ func QueryMenu(c *gin.Context) {
 
 	result, err := permservice.FindMenuStructList(ctx, finder, params.Page)
 	if err != nil {
-		ginext.ResError(c, err)
+		webext.ResError(c, err)
 		return
 	}
-	ginext.ResPage(c, result, *params.Page)
+	webext.ResPage(c, result, *params.Page)
 }

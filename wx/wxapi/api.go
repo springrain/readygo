@@ -1,14 +1,15 @@
 package wxapi
 
 import (
+	"context"
 	"fmt"
 	"os"
-	"readygo/ginext"
+	"readygo/webext"
 	"readygo/wx/wxstruct"
 
 	"gitee.com/chunanyong/gowe"
-	"gitee.com/chunanyong/logger"
-	"github.com/gin-gonic/gin"
+	"github.com/cloudwego/hertz/pkg/app"
+	"github.com/cloudwego/hertz/pkg/common/hlog"
 	"github.com/joho/godotenv"
 )
 
@@ -23,14 +24,15 @@ func init() {
 }
 
 // Ping 状态检查页面
-func Ping(c *gin.Context) {
-	c.JSON(200, ginext.ResponseData{
+func Ping(ctx context.Context, c *app.RequestContext) {
+	c.JSON(200, webext.ResponseData{
 		StatusCode: 0,
 		Message:    "Pong",
 	})
 }
+
 // 订阅消息
-func WxMaSubscribeMessageSend(c *gin.Context) {
+func WxMaSubscribeMessageSend(ctx context.Context, c *app.RequestContext) {
 
 	token, _ := gowe.GetAccessToken(WX)
 	WX.AccessToken = token.AccessToken
@@ -52,29 +54,30 @@ func WxMaSubscribeMessageSend(c *gin.Context) {
 		fmt.Println(err.Error())
 	}
 	fmt.Println(send)
-	c.JSON(200, ginext.ResponseData{
+	c.JSON(200, webext.ResponseData{
 		StatusCode: 0,
 		Data:       send,
 	})
 }
+
 //登录凭证校验
-func WxMaCode2Session(c *gin.Context) {
+func WxMaCode2Session(ctx context.Context, c *app.RequestContext) {
 
 	code := c.Query("jsCode")
-	logger.Info(code)
+	hlog.CtxInfof(ctx, code)
 
 	session, err := gowe.WxMaCode2Session(WX, code)
-	logger.Info(session.OpenId)
+	hlog.CtxInfof(ctx, session.OpenId)
 
 	if err != nil {
-		c.JSON(505, ginext.ResponseData{
+		c.JSON(505, webext.ResponseData{
 			StatusCode: 1,
 			Message:    err.Error(),
 		})
 	} else {
 		fmt.Println(session)
 
-		c.JSON(200, ginext.ResponseData{
+		c.JSON(200, webext.ResponseData{
 			StatusCode: 0,
 			Message:    session.OpenId,
 		})

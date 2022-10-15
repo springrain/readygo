@@ -6,9 +6,8 @@ import (
 	"fmt"
 	"readygo/permission/permstruct"
 
-	"gitee.com/chunanyong/logger"
-
 	"gitee.com/chunanyong/zorm"
+	"github.com/cloudwego/hertz/pkg/common/hlog"
 )
 
 //SaveDicDataStruct 保存公共字典
@@ -46,7 +45,7 @@ func SaveDicDataStruct(ctx context.Context, dicDataStruct *permstruct.DicDataStr
 	//记录错误
 	if errSaveDicDataStruct != nil {
 		errSaveDicDataStruct := fmt.Errorf("permservice.SaveDicDataStruct错误:%w", errSaveDicDataStruct)
-		logger.Error(errSaveDicDataStruct)
+		hlog.Error(errSaveDicDataStruct)
 		return errSaveDicDataStruct
 	}
 
@@ -83,7 +82,7 @@ func UpdateDicDataStruct(ctx context.Context, dicDataStruct *permstruct.DicDataS
 	//记录错误
 	if errUpdateDicDataStruct != nil {
 		errUpdateDicDataStruct := fmt.Errorf("permservice.UpdateDicDataStruct错误:%w", errUpdateDicDataStruct)
-		logger.Error(errUpdateDicDataStruct)
+		hlog.Error(errUpdateDicDataStruct)
 		return errUpdateDicDataStruct
 	}
 
@@ -121,7 +120,7 @@ func DeleteDicDataStructById(ctx context.Context, id string) error {
 	//记录错误
 	if errDeleteDicDataStruct != nil {
 		errDeleteDicDataStruct := fmt.Errorf("permservice.DeleteDicDataStruct错误:%w", errDeleteDicDataStruct)
-		logger.Error(errDeleteDicDataStruct)
+		hlog.Error(errDeleteDicDataStruct)
 		return errDeleteDicDataStruct
 	}
 
@@ -144,7 +143,7 @@ func FindDicDataStructById(ctx context.Context, id string) (*permstruct.DicDataS
 	//记录错误
 	if errFindDicDataStructById != nil {
 		errFindDicDataStructById := fmt.Errorf("permservice.FindDicDataStructById错误:%w", errFindDicDataStructById)
-		logger.Error(errFindDicDataStructById)
+		hlog.Error(errFindDicDataStructById)
 		return nil, errFindDicDataStructById
 	}
 
@@ -167,7 +166,7 @@ func FindDicDataStructList(ctx context.Context, finder *zorm.Finder, page *zorm.
 	//记录错误
 	if errFindDicDataStructList != nil {
 		errFindDicDataStructList := fmt.Errorf("permservice.FindDicDataStructList错误:%w", errFindDicDataStructList)
-		logger.Error(errFindDicDataStructList)
+		hlog.Error(errFindDicDataStructList)
 		return nil, errFindDicDataStructList
 	}
 

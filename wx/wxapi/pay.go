@@ -1,16 +1,16 @@
 package wxapi
 
 import (
+	"context"
 	"fmt"
-	"io/ioutil"
 	"os"
-	"readygo/ginext"
+	"readygo/webext"
 	"readygo/wx/wxstruct"
 	"strings"
 
 	"gitee.com/chunanyong/gowe"
 	"gitee.com/chunanyong/zorm"
-	"github.com/gin-gonic/gin"
+	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/joho/godotenv"
 )
 
@@ -29,12 +29,12 @@ func init() {
 }
 
 //支付结果通知
-func WxPayNotifyPay(c *gin.Context) {
+func WxPayNotifyPay(ctx context.Context, c *app.RequestContext) {
 	//
 	//var body gowe.WxPayNotifyPayBody
 	//c.Bind(&body)
 
-	body, _ := ioutil.ReadAll(c.Request.Body)
+	body := c.Request.Body()
 
 	gowe.WxPayNotifyPay(WXPay, body, func(wxPayNotifyPayBody gowe.WxPayNotifyPayBody) error {
 
@@ -46,10 +46,10 @@ func WxPayNotifyPay(c *gin.Context) {
 }
 
 //统一下单
-func WxPayAppSign(c *gin.Context) {
+func WxPayAppSign(ctx context.Context, c *app.RequestContext) {
 
 	body := make(map[string]string, 0)
-	c.BindJSON(&body)
+	c.Bind(&body)
 
 	fmt.Println(body)
 
@@ -57,19 +57,19 @@ func WxPayAppSign(c *gin.Context) {
 
 	body["paySign"] = paySign
 
-	c.JSON(200, ginext.ResponseData{
+	c.JSON(200, webext.ResponseData{
 		StatusCode: 0,
 		Data:       body,
 	})
 }
 
-func WxPayUnifiedOrder(c *gin.Context) {
+func WxPayUnifiedOrder(ctx context.Context, c *app.RequestContext) {
 
 	openid := c.Query("openid")
 
 	body := &gowe.WxPayUnifiedOrderBody{
 		Body:       "人参果",
-		OutTradeNo: strings.Replace(zorm.FuncGenerateStringID(c), "-", "", -1),
+		OutTradeNo: strings.Replace(zorm.FuncGenerateStringID(ctx), "-", "", -1),
 		TotalFee:   gowe.ServiceTypeNormalDomestic,
 
 		SpbillCreateIP: "127.0.0.1",
@@ -81,12 +81,12 @@ func WxPayUnifiedOrder(c *gin.Context) {
 	order, err := gowe.WxPayUnifiedOrder(WXPay, body)
 
 	if err != nil {
-		c.JSON(505, ginext.ResponseData{
+		c.JSON(505, webext.ResponseData{
 			StatusCode: 1,
 			Message:    err.Error(),
 		})
 	} else {
-		c.JSON(200, ginext.ResponseData{
+		c.JSON(200, webext.ResponseData{
 			StatusCode: 0,
 			Data:       order,
 		})

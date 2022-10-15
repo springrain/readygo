@@ -3,12 +3,12 @@ package permroute
 import (
 	"readygo/permission/permapi"
 
-	"github.com/gin-gonic/gin"
+	"github.com/cloudwego/hertz/pkg/app/server"
 )
 
 // RegisterPermRoute 路由配置
-func RegisterPermRoute(r *gin.Engine) {
-	//r := ginext.GinEngine()
+func RegisterPermRoute(r *server.Hertz) {
+	//r := webext.WebEngine()
 
 	// 路由
 	v1 := r.Group("/api/perm/v1")

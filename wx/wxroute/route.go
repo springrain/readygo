@@ -3,13 +3,13 @@ package wxroute
 import (
 	"readygo/wx/wxapi"
 
-	"github.com/gin-gonic/gin"
+	"github.com/cloudwego/hertz/pkg/app/server"
 )
 
 // RegisterWXRoute 路由配置
-func RegisterWXRoute(r *gin.Engine) {
-	//GinEngine := gin.Default()
-	//r := ginext.GinEngine()
+func RegisterWXRoute(r *server.Hertz) {
+	//WebEngine := gin.Default()
+	//r := webext.WebEngine()
 	// 路由
 	v1 := r.Group("/api/wx/v1")
 	{

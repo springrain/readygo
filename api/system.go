@@ -10,12 +10,13 @@
 package api
 
 import (
+	"context"
 	"readygo/apistruct"
 	"readygo/permission/permutil"
 
-	"github.com/gin-gonic/gin"
-
 	_ "readygo/docs" // swagger使用
+
+	"github.com/cloudwego/hertz/pkg/app"
 )
 
 // Login 登录方法
@@ -26,7 +27,7 @@ import (
 // @Param name query string false "name"
 // @Success 200 {string} string "ok"
 // @Router /test/{id} [get]    //路由信息，一定要写上
-func Login(c *gin.Context) {
+func Login(ctx context.Context, c *app.RequestContext) {
 	token, err := permutil.JWECreateToken("u_10001", nil)
 	if err == nil {
 		c.JSON(200, apistruct.ResponseBodyModel{

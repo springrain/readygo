@@ -1,23 +1,24 @@
 package permapi
 
 import (
-	"readygo/ginext"
+	"context"
 	"readygo/util"
 	"readygo/util/captcha"
+	"readygo/webext"
 	"strconv"
 	"time"
 
 	"gitee.com/chunanyong/zorm"
-	"github.com/gin-gonic/gin"
+	"github.com/cloudwego/hertz/pkg/app"
 )
 
 // Login 登录
-func Login(c *gin.Context) {
+func Login(ctx context.Context, c *app.RequestContext) {
 
 }
 
 //Captcha 获取验证码
-func Captcha(c *gin.Context) {
+func Captcha(ctx context.Context, c *app.RequestContext) {
 	//获取base64的图片验证码
 	captchaKey, base64, err := newCaptchaKeyB64()
 	if err != nil {
@@ -26,7 +27,7 @@ func Captcha(c *gin.Context) {
 	data := make(map[string]string)
 	data["captchaKey"] = captchaKey
 	data["captchaImg"] = base64
-	res := ginext.SuccessReponseData(data, "")
+	res := webext.SuccessReponseData(data, "")
 
 	c.JSON(200, res)
 }

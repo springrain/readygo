@@ -1,14 +1,15 @@
 package permapi
 
 import (
-	"readygo/ginext"
+	"context"
+	"readygo/webext"
 
-	"github.com/gin-gonic/gin"
+	"github.com/cloudwego/hertz/pkg/app"
 )
 
 // Ping 状态检查页面
-func Ping(c *gin.Context) {
-	c.JSON(200, ginext.ResponseData{
+func Ping(ctx context.Context, c *app.RequestContext) {
+	c.JSON(200, webext.ResponseData{
 		StatusCode: 0,
 		Message:    "Pong",
 	})

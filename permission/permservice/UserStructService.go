@@ -7,9 +7,8 @@ import (
 	"readygo/cache"
 	"readygo/permission/permstruct"
 
-	"gitee.com/chunanyong/logger"
-
 	"gitee.com/chunanyong/zorm"
+	"github.com/cloudwego/hertz/pkg/common/hlog"
 )
 
 //SaveUserStruct 保存用户
@@ -47,7 +46,7 @@ func SaveUserStruct(ctx context.Context, userStruct *permstruct.UserStruct) erro
 	//记录错误
 	if errSaveUserStruct != nil {
 		errSaveUserStruct := fmt.Errorf("permservice.SaveUserStruct错误:%w", errSaveUserStruct)
-		logger.Error(errSaveUserStruct)
+		hlog.Error(errSaveUserStruct)
 		return errSaveUserStruct
 	}
 
@@ -84,7 +83,7 @@ func UpdateUserStruct(ctx context.Context, userStruct *permstruct.UserStruct) er
 	//记录错误
 	if errUpdateUserStruct != nil {
 		errUpdateUserStruct := fmt.Errorf("permservice.UpdateUserStruct错误:%w", errUpdateUserStruct)
-		logger.Error(errUpdateUserStruct)
+		hlog.Error(errUpdateUserStruct)
 		return errUpdateUserStruct
 	}
 	//清理缓存
@@ -123,7 +122,7 @@ func DeleteUserStructById(ctx context.Context, id string) error {
 	//记录错误
 	if errDeleteUserStruct != nil {
 		errDeleteUserStruct := fmt.Errorf("permservice.DeleteUserStruct错误:%w", errDeleteUserStruct)
-		logger.Error(errDeleteUserStruct)
+		hlog.Error(errDeleteUserStruct)
 		return errDeleteUserStruct
 	}
 
@@ -154,7 +153,7 @@ func FindUserStructById(ctx context.Context, id string) (*permstruct.UserStruct,
 	//记录错误
 	if errFindUserStructById != nil {
 		errFindUserStructById := fmt.Errorf("permservice.FindUserStructById错误:%w", errFindUserStructById)
-		logger.Error(errFindUserStructById)
+		hlog.Error(errFindUserStructById)
 		return nil, errFindUserStructById
 	}
 
@@ -180,7 +179,7 @@ func FindUserStructList(ctx context.Context, finder *zorm.Finder, page *zorm.Pag
 	//记录错误
 	if errFindUserStructList != nil {
 		errFindUserStructList := fmt.Errorf("permservice.FindUserStructList错误:%w", errFindUserStructList)
-		logger.Error(errFindUserStructList)
+		hlog.Error(errFindUserStructList)
 		return nil, errFindUserStructList
 	}
 

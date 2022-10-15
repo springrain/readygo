@@ -43,7 +43,7 @@ func Save{{.structName}}(ctx context.Context, {{.pname}} *{{.packageName}}.{{.st
 	//记录错误
 	if errSave{{.structName}} != nil {
 		errSave{{.structName}} := fmt.Errorf("{{.servicePackageName}}.Save{{.structName}}错误:%w", errSave{{.structName}})
-		logger.Error(errSave{{.structName}})
+		hlog.Error(errSave{{.structName}})
 		return errSave{{.structName}}
 	}
 
@@ -82,7 +82,7 @@ func Update{{.structName}}(ctx context.Context, {{.pname}} *{{.packageName}}.{{.
 	//记录错误
 	if errUpdate{{.structName}} != nil {
 		errUpdate{{.structName}} := fmt.Errorf("{{.servicePackageName}}.Update{{.structName}}错误:%w", errUpdate{{.structName}})
-		logger.Error(errUpdate{{.structName}})
+		hlog.Error(errUpdate{{.structName}})
 		return errUpdate{{.structName}}
 	}
 
@@ -120,7 +120,7 @@ func UpdateNotZero{{.structName}}(ctx context.Context, {{.pname}} *{{.packageNam
 	//记录错误
 	if errUpdate{{.structName}} != nil {
 		errUpdate{{.structName}} := fmt.Errorf("{{.servicePackageName}}.UpdateNotZero{{.structName}}错误:%w", errUpdate{{.structName}})
-		logger.Error(errUpdate{{.structName}})
+		hlog.Error(errUpdate{{.structName}})
 		return errUpdate{{.structName}}
 	}
 
@@ -160,7 +160,7 @@ func Delete{{.structName}}ById(ctx context.Context, id string) error {
     //记录错误
 	if errDelete{{.structName}} != nil {
 		errDelete{{.structName}} := fmt.Errorf("{{.servicePackageName}}.Delete{{.structName}}错误:%w", errDelete{{.structName}})
-		logger.Error(errDelete{{.structName}})
+		hlog.Error(errDelete{{.structName}})
 		return errDelete{{.structName}}
 	}
 
@@ -183,7 +183,7 @@ func Find{{.structName}}ById(ctx context.Context, id string) (*{{.packageName}}.
 	//记录错误
 	if errFind{{.structName}}ById != nil {
 		errFind{{.structName}}ById := fmt.Errorf("{{.servicePackageName}}.Find{{.structName}}ById错误:%w", errFind{{.structName}}ById)
-		logger.Error(errFind{{.structName}}ById)
+		hlog.Error(errFind{{.structName}}ById)
 		return nil, errFind{{.structName}}ById
 	}
 
@@ -211,7 +211,7 @@ func Find{{.structName}}List(ctx context.Context, finder *zorm.Finder, page *zor
 	//记录错误
 	if errFind{{.structName}}List != nil {
 		errFind{{.structName}}List := fmt.Errorf("{{.servicePackageName}}.Find{{.structName}}List错误:%w", errFind{{.structName}}List)
-		logger.Error(errFind{{.structName}}List)
+		hlog.Error(errFind{{.structName}}List)
 		return nil, errFind{{.structName}}List
 	}
 

@@ -7,8 +7,8 @@ import (
 	"readygo/cache"
 	"readygo/permission/permstruct"
 
-	"gitee.com/chunanyong/logger"
 	"gitee.com/chunanyong/zorm"
+	"github.com/cloudwego/hertz/pkg/common/hlog"
 )
 
 //SaveOrgStruct 保存部门
@@ -54,7 +54,7 @@ func SaveOrgStruct(ctx context.Context, orgStruct *permstruct.OrgStruct) error {
 	//记录错误
 	if errSaveOrgStruct != nil {
 		errSaveOrgStruct := fmt.Errorf("permservice.SaveOrgStruct错误:%w", errSaveOrgStruct)
-		logger.Error(errSaveOrgStruct)
+		hlog.Error(errSaveOrgStruct)
 		return errSaveOrgStruct
 	}
 
@@ -139,7 +139,7 @@ func UpdateOrgStruct(ctx context.Context, orgStruct *permstruct.OrgStruct) error
 	//记录错误
 	if errUpdateOrgStruct != nil {
 		errUpdateOrgStruct := fmt.Errorf("permservice.UpdateOrgStruct错误:%w", errUpdateOrgStruct)
-		logger.Error(errUpdateOrgStruct)
+		hlog.Error(errUpdateOrgStruct)
 		return errUpdateOrgStruct
 	}
 	// 清除缓存
@@ -195,7 +195,7 @@ func DeleteOrgStructById(ctx context.Context, id string) error {
 	//记录错误
 	if errDeleteOrgStruct != nil {
 		errDeleteOrgStruct := fmt.Errorf("permservice.DeleteOrgStruct错误:%w", errDeleteOrgStruct)
-		logger.Error(errDeleteOrgStruct)
+		hlog.Error(errDeleteOrgStruct)
 		return errDeleteOrgStruct
 	}
 	//清理缓存
@@ -230,7 +230,7 @@ func FindOrgStructById(ctx context.Context, id string) (*permstruct.OrgStruct, e
 	//记录错误
 	if errFindOrgStructById != nil {
 		errFindOrgStructById := fmt.Errorf("permservice.FindOrgStructById错误:%w", errFindOrgStructById)
-		logger.Error(errFindOrgStructById)
+		hlog.Error(errFindOrgStructById)
 		return nil, errFindOrgStructById
 	}
 
@@ -256,7 +256,7 @@ func FindOrgStructList(ctx context.Context, finder *zorm.Finder, page *zorm.Page
 	//记录错误
 	if errFindOrgStructList != nil {
 		errFindOrgStructList := fmt.Errorf("permservice.FindOrgStructList错误:%w", errFindOrgStructList)
-		logger.Error(errFindOrgStructList)
+		hlog.Error(errFindOrgStructList)
 		return nil, errFindOrgStructList
 	}
 
@@ -350,7 +350,7 @@ func UpdateOrgManagerUserId(ctx context.Context, orgId string, managerUserId str
 	//记录错误
 	if errUpdateOrgManagerUserId != nil {
 		errUpdateOrgStruct := fmt.Errorf("permservice.DeleteOrgStruct错误:%w", errUpdateOrgManagerUserId)
-		logger.Error(errUpdateOrgStruct)
+		hlog.Error(errUpdateOrgStruct)
 		return errUpdateOrgStruct
 	}
 

@@ -9,6 +9,7 @@
 package permhandler
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"readygo/apistruct"
@@ -17,17 +18,16 @@ import (
 	"readygo/permission/permutil"
 	"strings"
 
-	"github.com/gin-gonic/gin"
-
-	"gitee.com/chunanyong/logger"
+	"github.com/cloudwego/hertz/pkg/app"
+	"github.com/cloudwego/hertz/pkg/common/hlog"
 )
 
 //JWTTokenName jwt的token名称
 var JWTTokenName = "READYGOTOKEN"
 
 //PermHandler 权限过滤器
-func PermHandler() gin.HandlerFunc {
-	return func(c *gin.Context) {
+func PermHandler() app.HandlerFunc {
+	return func(ctx context.Context, c *app.RequestContext) {
 
 		//处理跨域
 		c.Header("Access-Control-Allow-Origin", "*")
@@ -36,7 +36,7 @@ func PermHandler() gin.HandlerFunc {
 		c.Header("Access-Control-Expose-Headers", "Content-Length, Access-Control-Allow-Origin, Access-Control-Allow-Headers, Content-Type")
 		c.Header("Access-Control-Allow-Credentials", "true")
 
-		method := c.Request.Method
+		method := string(c.Request.Method())
 		//放行所有OPTIONS方法
 		if method == "OPTIONS" {
 			c.AbortWithStatus(http.StatusNoContent)
@@ -48,14 +48,13 @@ func PermHandler() gin.HandlerFunc {
 		// }
 
 		responseBody := apistruct.ResponseBodyModel{}
-		ctx := c.Request.Context()
 		//请求的uri
-		uri := getPatternURI(c)
-		logger.Info(uri)
+		uri := string(c.Request.URI().Path())
+		hlog.Info(uri)
 
 		//如果是不拦截的URL  TODO 此处因为权限拦截不支持正则 先放开swagger
 		if isExcludePath(uri) || strings.Contains(uri, "swagger") {
-			c.Next()
+			c.Next(ctx)
 			return
 		}
 
@@ -63,7 +62,7 @@ func PermHandler() gin.HandlerFunc {
 		// 前后端分离之后,后台的菜单实际只管理了数据,并不管理前端的菜单层次结构.
 
 		user := permstruct.UserVOStruct{}
-		token := c.GetHeader(JWTTokenName)
+		token := string(c.GetHeader(JWTTokenName))
 		if token == "" {
 			responseBody.Status = http.StatusUnauthorized
 			responseBody.Message = "缺少Token"
@@ -82,7 +81,7 @@ func PermHandler() gin.HandlerFunc {
 
 		//如果用户默认有的权限
 		if isUserDefaultPath(uri) {
-			c.Next()
+			c.Next(ctx)
 			return
 		}
 
@@ -113,7 +112,7 @@ func PermHandler() gin.HandlerFunc {
 		//TODO 这里需要添加权限判断逻辑
 		// 不知道 u_10001什么意思
 		// if userID == "u_10001" {
-		// 	c.Next()
+		// 	c.Next(ctx)
 		// 	return
 		// }
 		// 获取权限拥有的菜单信息
@@ -173,16 +172,10 @@ func PermHandler() gin.HandlerFunc {
 		// }
 
 		// 设置当前登录用户到上下文
-		ctx, _ = permstruct.BindContextCurrentUser(c.Request.Context(), userVO)
+		ctx, _ = permstruct.BindContextCurrentUser(ctx, userVO)
 		//重新覆盖ctx
-		c.Request = c.Request.WithContext(ctx)
-		c.Next()
+		c.Next(ctx)
 	}
-}
-
-// getPatternURI 获取格式化路径
-func getPatternURI(c *gin.Context) string {
-	return c.Request.RequestURI
 }
 
 /*
