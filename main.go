@@ -16,6 +16,7 @@ import (
 	"readygo/apistruct"
 	"readygo/cache"
 	"readygo/permission/permapi"
+	"readygo/permission/permhandler"
 	"readygo/permission/permroute"
 	"readygo/permission/permstruct"
 	"readygo/permission/permutil"
@@ -83,7 +84,7 @@ func initWebEngine() {
 	//h.Use(webext.WebRecovery())
 
 	//加载自定义的权限过滤器
-	//h.Use(permhandler.PermHandler())
+	h.Use(permhandler.PermHandler())
 
 	//css js等静态文件
 	h.Static("/assets", "./assets")
