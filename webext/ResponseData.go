@@ -2,6 +2,7 @@ package webext
 
 import (
 	"reflect"
+	"strings"
 	"unsafe"
 
 	"gitee.com/chunanyong/zorm"
@@ -20,6 +21,9 @@ func WebEngine() *server.Hertz {
 func SetContextPath(contextPath string) {
 	if contextPath == "" {
 		return
+	}
+	if !strings.HasSuffix(contextPath, "/") {
+		contextPath = contextPath + "/"
 	}
 	//获取引擎
 	h := WebEngine()
