@@ -41,7 +41,7 @@ func init() {
 	}
 }
 
-//itemChar captcha item of unicode characters
+// itemChar captcha item of unicode characters
 type itemChar struct {
 	bgColor color.Color
 	width   int
@@ -49,7 +49,7 @@ type itemChar struct {
 	nrgba   *image.NRGBA
 }
 
-//NewCaptchaB64string 生成指定内容的base64字符串
+// NewCaptchaB64string 生成指定内容的base64字符串
 func NewCaptchaB64string(w int, h int, context string) (string, error) {
 	captcha := newItemChar(w, h, bgColor)
 	captcha.drawHollowLine()
@@ -60,7 +60,7 @@ func NewCaptchaB64string(w int, h int, context string) (string, error) {
 	return captcha.encodeB64string(), err
 }
 
-//newItemChar creates a captcha item of characters
+// newItemChar creates a captcha item of characters
 func newItemChar(w int, h int, bgColor color.RGBA) *itemChar {
 	d := itemChar{width: w, height: h}
 	m := image.NewNRGBA(image.Rect(0, 0, w, h))
@@ -69,16 +69,15 @@ func newItemChar(w int, h int, bgColor color.RGBA) *itemChar {
 	return &d
 }
 
-//drawHollowLine draw strong and bold white line.
+// drawHollowLine draw strong and bold white line.
 func (item *itemChar) drawHollowLine() *itemChar {
-
 	first := item.width / 20
 	end := first * 19
 
 	lineColor := randLightColor()
 
 	x1 := float64(rand.Intn(first))
-	//y1 := float64(rand.Intn(y)+y);
+	// y1 := float64(rand.Intn(y)+y);
 
 	x2 := float64(rand.Intn(first) + end)
 
@@ -106,17 +105,17 @@ func (item *itemChar) drawHollowLine() *itemChar {
 	return item
 }
 
-//drawSineLine draw a sine line.
+// drawSineLine draw a sine line.
 func (item *itemChar) drawSineLine() *itemChar {
 	var py float64
 
-	//振幅
+	// 振幅
 	a := rand.Intn(item.height / 2)
 
-	//Y轴方向偏移量
+	// Y轴方向偏移量
 	b := random(int64(-item.height/4), int64(item.height/4))
 
-	//X轴方向偏移量
+	// X轴方向偏移量
 	f := random(int64(-item.height/4), int64(item.height/4))
 	// 周期
 	var t float64
@@ -141,7 +140,7 @@ func (item *itemChar) drawSineLine() *itemChar {
 			i := item.height / 5
 			for i > 0 {
 				item.nrgba.Set(px+i, int(py), c)
-				//fmt.Println(px + i,int(py) )
+				// fmt.Println(px + i,int(py) )
 				i--
 			}
 		}
@@ -150,9 +149,8 @@ func (item *itemChar) drawSineLine() *itemChar {
 	return item
 }
 
-//drawSlimLine draw n slim-random-color lines.
+// drawSlimLine draw n slim-random-color lines.
 func (item *itemChar) drawSlimLine(num int) *itemChar {
-
 	first := item.width / 10
 	end := first * 9
 
@@ -211,7 +209,6 @@ func (item *itemChar) drawBeeline(point1 point, point2 point, lineColor color.RG
 }
 
 func (item *itemChar) drawNoise(noiseText string) error {
-
 	c := freetype.NewContext()
 	c.SetDPI(imageStringDpi)
 
@@ -226,7 +223,7 @@ func (item *itemChar) drawNoise(noiseText string) error {
 		fontSize := rawFontSize/2 + float64(rand.Intn(5))
 		c.SetSrc(image.NewUniform(randLightColor()))
 		c.SetFontSize(fontSize)
-		//c.SetFont(randFontFrom(fonts))
+		// c.SetFont(randFontFrom(fonts))
 		pt := freetype.Pt(rw, rh)
 		if _, err := c.DrawString(string(char), pt); err != nil {
 			log.Println(err)
@@ -235,10 +232,9 @@ func (item *itemChar) drawNoise(noiseText string) error {
 	return nil
 }
 
-//drawText draw captcha string to image.把文字写入图像验证码
+// drawText draw captcha string to image.把文字写入图像验证码
 
 func (item *itemChar) drawText(text string) error {
-
 	c := freetype.NewContext()
 	c.SetDPI(imageStringDpi)
 	c.SetClip(item.nrgba.Bounds())
@@ -256,10 +252,10 @@ func (item *itemChar) drawText(text string) error {
 		fontSize := float64(item.height) / (1 + float64(rand.Intn(7))/float64(9))
 		c.SetSrc(image.NewUniform(randDeepColor()))
 		c.SetFontSize(fontSize)
-		//useFont := randFontFrom(fonts)
-		//c.SetFont(randFontFrom(fonts))
+		// useFont := randFontFrom(fonts)
+		// c.SetFont(randFontFrom(fonts))
 		x := int(fontWidth)*i + int(fontWidth)/int(fontSize)
-		//todo y 坐标要修复
+		// todo y 坐标要修复
 		y := 0 + rand.Intn(item.height/2) + int(fontSize/2)
 		pt := freetype.Pt(x, y)
 		if _, err := c.DrawString(string(s), pt); err != nil {
@@ -269,7 +265,7 @@ func (item *itemChar) drawText(text string) error {
 	return nil
 }
 
-//binaryEncoding encodes an image to PNG and returns a byte slice.
+// binaryEncoding encodes an image to PNG and returns a byte slice.
 func (item *itemChar) binaryEncoding() []byte {
 	var buf bytes.Buffer
 	if err := png.Encode(&buf, item.nrgba); err != nil {

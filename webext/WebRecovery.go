@@ -53,12 +53,12 @@ func WebRecovery() app.HandlerFunc {
 				httpRequest := c.Request.Body()
 
 				if brokenPipe {
-					//logger.Panic(err.(error), logger.String("httpRequest", string(httpRequest)), logger.String("reset", reset))
+					// logger.Panic(err.(error), logger.String("httpRequest", string(httpRequest)), logger.String("reset", reset))
 					hlog.CtxErrorf(ctx, "{err:%v,httpRequest:%v,reset:%v}", err, httpRequest, reset)
-					//logger.Printf("%s\n%s%s", err, string(httpRequest), reset)
+					// logger.Printf("%s\n%s%s", err, string(httpRequest), reset)
 				} else {
-					//logger.Printf("[Recovery] %s panic recovered:\n%s\n%s%s",timeFormat(time.Now()), err, stack, reset)
-					//logger.Panic(err.(error), logger.ByteString("stack", stack), logger.String("reset", reset))
+					// logger.Printf("[Recovery] %s panic recovered:\n%s\n%s%s",timeFormat(time.Now()), err, stack, reset)
+					// logger.Panic(err.(error), logger.ByteString("stack", stack), logger.String("reset", reset))
 					hlog.CtxErrorf(ctx, "{err:%v,stack:%v,reset:%v}", err, stack, reset)
 				}
 
@@ -88,8 +88,8 @@ func stack(skip int) []byte {
 			break
 		}
 		// Print this much at least.  If we can't find the source, it won't show.
-		//fmt.Fprintf(buf, "%s:%d (0x%x)\n", file, line, pc)
-		//logger.Panic(errors.New("[GIN]WebRecovery-->stack"), logger.String("file", file), logger.Int("line", line), logger.Uintptr("pc", pc))
+		// fmt.Fprintf(buf, "%s:%d (0x%x)\n", file, line, pc)
+		// logger.Panic(errors.New("[GIN]WebRecovery-->stack"), logger.String("file", file), logger.Int("line", line), logger.Uintptr("pc", pc))
 		hlog.Errorf("{err:%v,file:%v,line:%v,pc:%v}", errors.New("[GIN]WebRecovery-->stack"), file, line, pc)
 		if file != lastFile {
 			data, err := ioutil.ReadFile(file)
@@ -99,8 +99,8 @@ func stack(skip int) []byte {
 			lines = bytes.Split(data, []byte{'\n'})
 			lastFile = file
 		}
-		//fmt.Fprintf(buf, "\t%s: %s\n", function(pc), source(lines, line))
-		//logger.Panic(errors.New("[GIN]WebRecovery-->stack"), logger.ByteString("pc", function(pc)), logger.ByteString("lines", source(lines, line)))
+		// fmt.Fprintf(buf, "\t%s: %s\n", function(pc), source(lines, line))
+		// logger.Panic(errors.New("[GIN]WebRecovery-->stack"), logger.ByteString("pc", function(pc)), logger.ByteString("lines", source(lines, line)))
 		hlog.Errorf("{err:%v,lines:%v,pc:%v}", errors.New("[GIN]WebRecovery-->stack"), source(lines, line), pc)
 	}
 	return buf.Bytes()
@@ -141,6 +141,6 @@ func function(pc uintptr) []byte {
 }
 
 func timeFormat(t time.Time) string {
-	var timeString = t.Format("2006-01-02 15:04:05")
+	timeString := t.Format("2006-01-02 15:04:05")
 	return timeString
 }

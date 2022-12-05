@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+
 	"readygo/cache"
 	"readygo/permission/permstruct"
 
@@ -11,28 +12,26 @@ import (
 	"github.com/cloudwego/hertz/pkg/common/hlog"
 )
 
-//SaveOrgStruct 保存部门
-//如果入参ctx中没有dbConnection,使用defaultDao开启事务并最后提交
-//如果入参ctx有dbConnection且没有事务,调用dbConnection.begin()开启事务并最后提交
-//如果入参ctx有dbConnection且有事务,只使用不提交,有开启方提交事务
-//但是如果遇到错误或者异常,虽然不是事务的开启方,也会回滚事务,让事务尽早回滚
+// SaveOrgStruct 保存部门
+// 如果入参ctx中没有dbConnection,使用defaultDao开启事务并最后提交
+// 如果入参ctx有dbConnection且没有事务,调用dbConnection.begin()开启事务并最后提交
+// 如果入参ctx有dbConnection且有事务,只使用不提交,有开启方提交事务
+// 但是如果遇到错误或者异常,虽然不是事务的开启方,也会回滚事务,让事务尽早回滚
 func SaveOrgStruct(ctx context.Context, orgStruct *permstruct.OrgStruct) error {
-
 	// orgStruct对象指针不能为空
 	if orgStruct == nil {
 		return errors.New("orgStruct对象指针不能为空")
 	}
-	//匿名函数return的error如果不为nil,事务就会回滚
+	// 匿名函数return的error如果不为nil,事务就会回滚
 	_, errSaveOrgStruct := zorm.Transaction(ctx, func(ctx context.Context) (interface{}, error) {
+		// 事务下的业务代码开始
 
-		//事务下的业务代码开始
-
-		//赋值主键Id
+		// 赋值主键Id
 		if len(orgStruct.Id) < 1 {
 			orgStruct.Id = zorm.FuncGenerateStringID(ctx)
 		}
 
-		//获取新的comcode
+		// 获取新的comcode
 		comcode, errComcode := newOrgComcode(ctx, orgStruct.Id, orgStruct.Pid)
 		if errComcode != nil {
 			return nil, errComcode
@@ -47,11 +46,10 @@ func SaveOrgStruct(ctx context.Context, orgStruct *permstruct.OrgStruct) error {
 		}
 
 		return nil, nil
-		//事务下的业务代码结束
-
+		// 事务下的业务代码结束
 	})
 
-	//记录错误
+	// 记录错误
 	if errSaveOrgStruct != nil {
 		errSaveOrgStruct := fmt.Errorf("permservice.SaveOrgStruct错误:%w", errSaveOrgStruct)
 		hlog.Error(errSaveOrgStruct)
@@ -61,13 +59,12 @@ func SaveOrgStruct(ctx context.Context, orgStruct *permstruct.OrgStruct) error {
 	return nil
 }
 
-//UpdateOrgStruct 更新部门
-//如果入参ctx中没有dbConnection,使用defaultDao开启事务并最后提交
-//如果入参ctx有dbConnection且没有事务,调用dbConnection.begin()开启事务并最后提交
-//如果入参ctx有dbConnection且有事务,只使用不提交,有开启方提交事务
-//但是如果遇到错误或者异常,虽然不是事务的开启方,也会回滚事务,让事务尽早回滚
+// UpdateOrgStruct 更新部门
+// 如果入参ctx中没有dbConnection,使用defaultDao开启事务并最后提交
+// 如果入参ctx有dbConnection且没有事务,调用dbConnection.begin()开启事务并最后提交
+// 如果入参ctx有dbConnection且有事务,只使用不提交,有开启方提交事务
+// 但是如果遇到错误或者异常,虽然不是事务的开启方,也会回滚事务,让事务尽早回滚
 func UpdateOrgStruct(ctx context.Context, orgStruct *permstruct.OrgStruct) error {
-
 	// orgStruct对象指针或主键Id不能为空
 	if orgStruct == nil || len(orgStruct.Id) < 1 {
 		return errors.New("orgStruct对象指针或主键Id不能为空")
@@ -92,9 +89,8 @@ func UpdateOrgStruct(ctx context.Context, orgStruct *permstruct.OrgStruct) error
 		return errChildrenIds
 	}
 
-	//匿名函数return的error如果不为nil,事务就会回滚
+	// 匿名函数return的error如果不为nil,事务就会回滚
 	_, errUpdateOrgStruct := zorm.Transaction(ctx, func(ctx context.Context) (interface{}, error) {
-
 		orgStruct.Comcode = newComcode
 		_, errUpdateOrgStruct := zorm.Update(ctx, orgStruct)
 
@@ -107,7 +103,7 @@ func UpdateOrgStruct(ctx context.Context, orgStruct *permstruct.OrgStruct) error
 		}
 
 		// 编码改变,级联更新所有的子部门
-		//没有子部门
+		// 没有子部门
 		if len(childrenIds) < 1 {
 			return nil, nil
 		}
@@ -122,7 +118,7 @@ func UpdateOrgStruct(ctx context.Context, orgStruct *permstruct.OrgStruct) error
 				return nil, errComcode
 			}
 
-			//更新 comCode
+			// 更新 comCode
 			comcodeFinder := zorm.NewUpdateFinder(permstruct.OrgStructTableName).Append(" comcode=? WHERE id=? ", updateComcode, orgId)
 			_, errComcodeFinder := zorm.UpdateFinder(ctx, comcodeFinder)
 			if errComcodeFinder != nil {
@@ -132,11 +128,10 @@ func UpdateOrgStruct(ctx context.Context, orgStruct *permstruct.OrgStruct) error
 		}
 
 		return nil, nil
-		//事务下的业务代码结束
-
+		// 事务下的业务代码结束
 	})
 
-	//记录错误
+	// 记录错误
 	if errUpdateOrgStruct != nil {
 		errUpdateOrgStruct := fmt.Errorf("permservice.UpdateOrgStruct错误:%w", errUpdateOrgStruct)
 		hlog.Error(errUpdateOrgStruct)
@@ -146,18 +141,17 @@ func UpdateOrgStruct(ctx context.Context, orgStruct *permstruct.OrgStruct) error
 	for _, orgId := range childrenIds {
 		go cache.EvictKey(ctx, baseInfoCacheKey, "FindOrgStructById_"+orgId)
 	}
-	//go cache.EvictKey(baseInfoCacheKey, "FindOrgStructById_"+orgStruct.Id)
+	// go cache.EvictKey(baseInfoCacheKey, "FindOrgStructById_"+orgStruct.Id)
 	return nil
 }
 
-//DeleteOrgStructById 根据Id删除部门
-//如果入参ctx中没有dbConnection,使用defaultDao开启事务并最后提交
-//如果入参ctx有dbConnection且没有事务,调用dbConnection.begin()开启事务并最后提交
-//如果入参ctx有dbConnection且有事务,只使用不提交,有开启方提交事务
-//但是如果遇到错误或者异常,虽然不是事务的开启方,也会回滚事务,让事务尽早回滚
+// DeleteOrgStructById 根据Id删除部门
+// 如果入参ctx中没有dbConnection,使用defaultDao开启事务并最后提交
+// 如果入参ctx有dbConnection且没有事务,调用dbConnection.begin()开启事务并最后提交
+// 如果入参ctx有dbConnection且有事务,只使用不提交,有开启方提交事务
+// 但是如果遇到错误或者异常,虽然不是事务的开启方,也会回滚事务,让事务尽早回滚
 func DeleteOrgStructById(ctx context.Context, id string) error {
-
-	//id不能为空
+	// id不能为空
 	if len(id) < 1 {
 		return errors.New("id不能为空")
 	}
@@ -175,10 +169,9 @@ func DeleteOrgStructById(ctx context.Context, id string) error {
 		return errByPid
 	}
 
-	//匿名函数return的error如果不为nil,事务就会回滚
+	// 匿名函数return的error如果不为nil,事务就会回滚
 	_, errDeleteOrgStruct := zorm.Transaction(ctx, func(ctx context.Context) (interface{}, error) {
-
-		//事务下的业务代码开始
+		// 事务下的业务代码开始
 
 		finder := zorm.NewUpdateFinder(permstruct.OrgStructTableName).Append("  active=0  WHERE comcode like ? ", org.Comcode+"%")
 		_, errDeleteOrgStruct := zorm.UpdateFinder(ctx, finder)
@@ -188,64 +181,61 @@ func DeleteOrgStructById(ctx context.Context, id string) error {
 		}
 
 		return nil, nil
-		//事务下的业务代码结束
-
+		// 事务下的业务代码结束
 	})
 
-	//记录错误
+	// 记录错误
 	if errDeleteOrgStruct != nil {
 		errDeleteOrgStruct := fmt.Errorf("permservice.DeleteOrgStruct错误:%w", errDeleteOrgStruct)
 		hlog.Error(errDeleteOrgStruct)
 		return errDeleteOrgStruct
 	}
-	//清理缓存
+	// 清理缓存
 	for _, orgId := range orgIds {
-		//清理缓存
+		// 清理缓存
 		go cache.EvictKey(ctx, baseInfoCacheKey, "FindOrgStructById_"+orgId)
 	}
-	//go cache.EvictKey(baseInfoCacheKey, "FindOrgStructById_"+id)
+	// go cache.EvictKey(baseInfoCacheKey, "FindOrgStructById_"+id)
 	go cache.ClearCache(ctx, qxCacheKey)
 	return nil
 }
 
-//FindOrgStructById 根据Id查询部门信息
-//ctx中如果没有dbConnection,则会使用默认的datasource进行无事务查询
+// FindOrgStructById 根据Id查询部门信息
+// ctx中如果没有dbConnection,则会使用默认的datasource进行无事务查询
 func FindOrgStructById(ctx context.Context, id string) (*permstruct.OrgStruct, error) {
-	//id不能为空
+	// id不能为空
 	if len(id) < 1 {
 		return nil, errors.New("id不能为空")
 	}
 	orgStruct := permstruct.OrgStruct{}
 	cacheKey := "FindOrgStructById_" + id
 	cache.GetFromCache(ctx, baseInfoCacheKey, cacheKey, &orgStruct)
-	if len(orgStruct.Id) > 0 { //缓存中有值
+	if len(orgStruct.Id) > 0 { // 缓存中有值
 		return &orgStruct, nil
 	}
 
-	//根据Id查询
+	// 根据Id查询
 	finder := zorm.NewSelectFinder(permstruct.OrgStructTableName).Append(" WHERE id=?", id)
 
 	_, errFindOrgStructById := zorm.QueryRow(ctx, finder, &orgStruct)
 
-	//记录错误
+	// 记录错误
 	if errFindOrgStructById != nil {
 		errFindOrgStructById := fmt.Errorf("permservice.FindOrgStructById错误:%w", errFindOrgStructById)
 		hlog.Error(errFindOrgStructById)
 		return nil, errFindOrgStructById
 	}
 
-	//放入缓存
+	// 放入缓存
 	cache.PutToCache(ctx, baseInfoCacheKey, cacheKey, orgStruct)
 
 	return &orgStruct, nil
-
 }
 
-//FindOrgStructList 根据Finder查询部门列表
-//ctx中如果没有dbConnection,则会使用默认的datasource进行无事务查询
+// FindOrgStructList 根据Finder查询部门列表
+// ctx中如果没有dbConnection,则会使用默认的datasource进行无事务查询
 func FindOrgStructList(ctx context.Context, finder *zorm.Finder, page *zorm.Page) ([]permstruct.OrgStruct, error) {
-
-	//finder不能为空
+	// finder不能为空
 	if finder == nil {
 		return nil, errors.New("finder不能为空")
 	}
@@ -253,7 +243,7 @@ func FindOrgStructList(ctx context.Context, finder *zorm.Finder, page *zorm.Page
 	orgStructList := make([]permstruct.OrgStruct, 0)
 	errFindOrgStructList := zorm.Query(ctx, finder, &orgStructList, page)
 
-	//记录错误
+	// 记录错误
 	if errFindOrgStructList != nil {
 		errFindOrgStructList := fmt.Errorf("permservice.FindOrgStructList错误:%w", errFindOrgStructList)
 		hlog.Error(errFindOrgStructList)
@@ -263,11 +253,10 @@ func FindOrgStructList(ctx context.Context, finder *zorm.Finder, page *zorm.Page
 	return orgStructList, nil
 }
 
-//FindOrgTreeByPid 根据pid查询组织树形的组织结构
+// FindOrgTreeByPid 根据pid查询组织树形的组织结构
 func FindOrgTreeByPid(ctx context.Context, pid string) ([]permstruct.OrgStruct, error) {
-
 	finder := zorm.NewSelectFinder(permstruct.OrgStructTableName).Append("WHERE active=1 ")
-	if len(pid) > 0 { //不是根目录
+	if len(pid) > 0 { // 不是根目录
 		org, errById := FindOrgStructById(ctx, pid)
 		if errById != nil {
 			return nil, errById
@@ -287,18 +276,16 @@ func FindOrgTreeByPid(ctx context.Context, pid string) ([]permstruct.OrgStruct, 
 		return nil, errQueryList
 	}
 
-	//菜单变成树形结构
+	// 菜单变成树形结构
 	orgs = orgList2Tree(orgs)
 
 	return orgs, nil
-
 }
 
-//FindOrgIdByPid 根据pid查询子部门的Id
+// FindOrgIdByPid 根据pid查询子部门的Id
 func FindOrgIdByPid(ctx context.Context, pid string) ([]string, error) {
-
 	finder := zorm.NewSelectFinder(permstruct.OrgStructTableName, "id").Append("WHERE active=1 ")
-	if len(pid) > 0 { //不是根目录
+	if len(pid) > 0 { // 不是根目录
 		org, errById := FindOrgStructById(ctx, pid)
 		if errById != nil {
 			return nil, errById
@@ -318,16 +305,14 @@ func FindOrgIdByPid(ctx context.Context, pid string) ([]string, error) {
 		return nil, errQueryList
 	}
 	return orgIds, nil
-
 }
 
 // UpdateOrgManagerUserId 更新部门主管
 func UpdateOrgManagerUserId(ctx context.Context, orgId string, managerUserId string) error {
-
 	if len(orgId) < 1 || len(managerUserId) < 1 {
 		return errors.New("orgId或者managerUserId不能为空")
 	}
-	//匿名函数return的error如果不为nil,事务就会回滚
+	// 匿名函数return的error如果不为nil,事务就会回滚
 	_, errUpdateOrgManagerUserId := zorm.Transaction(ctx, func(ctx context.Context) (interface{}, error) {
 		finder := zorm.NewDeleteFinder(permstruct.UserOrgStructTableName).Append(" WHERE orgId=? and managerType=2 ", orgId)
 		_, errUpdateFinder := zorm.UpdateFinder(ctx, finder)
@@ -347,7 +332,7 @@ func UpdateOrgManagerUserId(ctx context.Context, orgId string, managerUserId str
 		return nil, nil
 	})
 
-	//记录错误
+	// 记录错误
 	if errUpdateOrgManagerUserId != nil {
 		errUpdateOrgStruct := fmt.Errorf("permservice.DeleteOrgStruct错误:%w", errUpdateOrgManagerUserId)
 		hlog.Error(errUpdateOrgStruct)
@@ -355,19 +340,17 @@ func UpdateOrgManagerUserId(ctx context.Context, orgId string, managerUserId str
 	}
 
 	return nil
-
 }
 
 // 将平行的List,变成树形结构
 func orgList2Tree(orgList []permstruct.OrgStruct) []permstruct.OrgStruct {
-
 	if len(orgList) < 1 {
 		return orgList
 	}
 	// 先把数据放到map里,方便取值
 	orgMap := make(map[string]permstruct.OrgStruct)
 
-	//map赋值
+	// map赋值
 	for _, org := range orgList {
 		orgMap[org.Id] = org
 	}
@@ -382,7 +365,7 @@ func orgList2Tree(orgList []permstruct.OrgStruct) []permstruct.OrgStruct {
 			continue
 		}
 
-		//如果有父节点
+		// 如果有父节点
 		children := parent.Children
 		if children == nil {
 			children = make([]permstruct.OrgStruct, 0)
@@ -396,13 +379,12 @@ func orgList2Tree(orgList []permstruct.OrgStruct) []permstruct.OrgStruct {
 
 // newOrgComcode 根据id和pid生成部门的Comcode
 func newOrgComcode(ctx context.Context, id string, pid string) (string, error) {
-
-	//id不能为空
+	// id不能为空
 	if len(id) < 1 {
 		return "", errors.New("id不能为空")
 	}
 
-	//没有上级
+	// 没有上级
 	if len(pid) < 1 {
 		return "," + id + ",", nil
 	}
@@ -414,7 +396,7 @@ func newOrgComcode(ctx context.Context, id string, pid string) (string, error) {
 		return "", errComcode
 	}
 
-	//没有上级
+	// 没有上级
 	if len(comcode) < 1 {
 		return "," + id + ",", nil
 	}

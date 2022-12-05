@@ -21,7 +21,6 @@ var currentUserKey = wrapCurrentUserKey("currentUserKey")
 
 // SetCurrentUserToCtx 将当前用户信息添加到上下文
 func setCurrentUserToCtx(c context.Context, userInfo interface{}) (context.Context, error) {
-
 	if c == nil {
 		return nil, errors.New("context不能为nil")
 	}

@@ -17,7 +17,7 @@ func WebEngine() *server.Hertz {
 }
 
 // SetContextPath 设置项目名前缀contextPath,因为gin暂时不支持直接修改RouterGroup的basePath,使用unsafe.Pointer修改
-//需要在路由初始化前调用
+// 需要在路由初始化前调用
 func SetContextPath(contextPath string) {
 	if contextPath == "" {
 		return
@@ -25,17 +25,17 @@ func SetContextPath(contextPath string) {
 	if !strings.HasSuffix(contextPath, "/") {
 		contextPath = contextPath + "/"
 	}
-	//获取引擎
+	// 获取引擎
 	h := WebEngine()
-	//因为Engine匿名注入了RouterGroup,所以直接获取Engine的反射对象
+	// 因为Engine匿名注入了RouterGroup,所以直接获取Engine的反射对象
 	engine := reflect.ValueOf(h).Elem()
-	//获取RouterGroup的basePath属性反射值对象
+	// 获取RouterGroup的basePath属性反射值对象
 	basePath := engine.FieldByName("basePath")
-	//获取basePath的UnsafeAddr
+	// 获取basePath的UnsafeAddr
 	p := unsafe.Pointer(basePath.UnsafeAddr())
-	//重新赋值basePath的反射值,NewAt默认返回的是指针,使用Elem获取反射值对象
+	// 重新赋值basePath的反射值,NewAt默认返回的是指针,使用Elem获取反射值对象
 	basePath = reflect.NewAt(basePath.Type(), p).Elem()
-	//设置反射值
+	// 设置反射值
 	basePath.Set(reflect.ValueOf(contextPath))
 }
 
@@ -52,7 +52,7 @@ const (
 	CodeDBError = 50001
 	// CodeEncryptError 加密失败
 	CodeEncryptError = 50002
-	//CodeParamErr 各种奇奇怪怪的参数错误
+	// CodeParamErr 各种奇奇怪怪的参数错误
 	CodeParamErr = 40001
 )
 
@@ -69,19 +69,19 @@ type ErrorItem struct {
 
 // ResponseData 返回数据包装器
 type ResponseData struct {
-	//业务状态代码 // 异常 1, 成功 0,默认成功0,业务代码见说明
+	// 业务状态代码 // 异常 1, 成功 0,默认成功0,业务代码见说明
 	StatusCode int `json:"statusCode"`
-	//HttpCode http的状态码
-	//HttpCode int `json:"httpCode,omitempty"`
-	//返回数据
+	// HttpCode http的状态码
+	// HttpCode int `json:"httpCode,omitempty"`
+	// 返回数据
 	Data interface{} `json:"data,omitempty"`
-	//返回的信息内容,配合StatusCode
+	// 返回的信息内容,配合StatusCode
 	Message string `json:"message,omitempty"`
-	//扩展的map,用于处理返回多个值的情况
+	// 扩展的map,用于处理返回多个值的情况
 	ExtMap map[string]interface{} `json:"extMap,omitempty"`
-	//列表的分页对象
+	// 列表的分页对象
 	Page zorm.Page `json:"page,omitempty"`
-	//查询条件的struct回传
+	// 查询条件的struct回传
 	QueryStruct interface{} `json:"queryStruct,omitempty"`
 	ERR         error       // 响应错误
 }

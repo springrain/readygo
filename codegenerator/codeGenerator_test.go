@@ -5,10 +5,9 @@ import (
 )
 
 func TestCodeGenerator(t *testing.T) {
-
 	code("t_user")
-
 }
+
 func TestCodeGeneratorALL(t *testing.T) {
 	tableNames := selectAllTable()
 	for _, tableName := range tableNames {
@@ -16,10 +15,6 @@ func TestCodeGeneratorALL(t *testing.T) {
 	}
 }
 
-
-
 func TestCodeGeneratorDemo(t *testing.T) {
-
-		code("t_demo")
+	code("t_demo")
 }
-

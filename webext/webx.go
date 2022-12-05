@@ -104,6 +104,5 @@ func ResJSON(h *app.RequestContext, status int, v interface{}) {
 }
 
 func ResError(h *app.RequestContext, err error) {
-
 	ResJSON(h, 0, err.Error())
 }

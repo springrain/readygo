@@ -3,13 +3,14 @@ package test
 import (
 	"context"
 	"fmt"
-	"readygo/cache"
-	"readygo/permission/permservice"
-	"readygo/permission/permstruct"
 	"strconv"
 	"sync"
 	"testing"
 	"time"
+
+	"readygo/cache"
+	"readygo/permission/permservice"
+	"readygo/permission/permstruct"
 
 	"gitee.com/chunanyong/zorm"
 	_ "github.com/go-sql-driver/mysql"
@@ -17,7 +18,7 @@ import (
 
 var dbDao *zorm.DBDao
 
-//性别枚举
+// 性别枚举
 type Gander int
 
 func (g Gander) String() string {
@@ -25,31 +26,30 @@ func (g Gander) String() string {
 }
 
 const (
-	//男的
+	// 男的
 	Male = iota
-	//女的
+	// 女的
 	Female
-	//跨性别
+	// 跨性别
 	Bisexual
 )
 
 var ctx = context.Background()
 
 func init() {
-
 	dataSourceConfig := zorm.DataSourceConfig{
 		DSN: "root:root@tcp(127.0.0.1:3306)/readygo?charset=utf8&parseTime=true",
-		//DriverName 数据库驱动名称:mysql,postgres,oci8,sqlserver,sqlite3,go_ibm_db,clickhouse,dm,kingbase,aci,taosSql|taosRestful 和Dialect对应
+		// DriverName 数据库驱动名称:mysql,postgres,oci8,sqlserver,sqlite3,go_ibm_db,clickhouse,dm,kingbase,aci,taosSql|taosRestful 和Dialect对应
 		DriverName: "mysql",
-		//Dialect 数据库方言:mysql,postgresql,oracle,mssql,sqlite,db2,clickhouse,dm,kingbase,shentong,tdengine 和 DriverName 对应
+		// Dialect 数据库方言:mysql,postgresql,oracle,mssql,sqlite,db2,clickhouse,dm,kingbase,shentong,tdengine 和 DriverName 对应
 		Dialect: "mysql",
-		//MaxOpenConns 数据库最大连接数 默认50
+		// MaxOpenConns 数据库最大连接数 默认50
 		MaxOpenConns: 50,
-		//MaxIdleConns 数据库最大空闲连接数 默认50
+		// MaxIdleConns 数据库最大空闲连接数 默认50
 		MaxIdleConns: 50,
-		//ConnMaxLifetimeSecond 连接存活秒时间. 默认600(10分钟)后连接被销毁重建.避免数据库主动断开连接,造成死连接.MySQL默认wait_timeout 28800秒(8小时)
+		// ConnMaxLifetimeSecond 连接存活秒时间. 默认600(10分钟)后连接被销毁重建.避免数据库主动断开连接,造成死连接.MySQL默认wait_timeout 28800秒(8小时)
 		ConnMaxLifetimeSecond: 600,
-		//SlowSQLMillis 慢sql的时间阈值,单位毫秒.小于0是禁用SQL语句输出;等于0是只输出SQL语句,不计算执行时间;大于0是计算SQL执行时间,并且>=SlowSQLMillis值
+		// SlowSQLMillis 慢sql的时间阈值,单位毫秒.小于0是禁用SQL语句输出;等于0是只输出SQL语句,不计算执行时间;大于0是计算SQL执行时间,并且>=SlowSQLMillis值
 		SlowSQLMillis: 0,
 	}
 	dbDao, _ = zorm.NewDBDao(&dataSourceConfig)
@@ -61,11 +61,9 @@ func init() {
 }
 
 func initDate() {
-
 }
 
 func TestQuey(t *testing.T) {
-
 	finder := zorm.NewSelectFinder(permstruct.UserStructTableName)
 	finder.Append(" order by id ")
 	page := zorm.NewPage()
@@ -79,20 +77,19 @@ func TestQuey(t *testing.T) {
 	fmt.Println(users)
 
 	if err != nil {
-		//标记测试失败
+		// 标记测试失败
 		t.Errorf("TestQuey错误:%v", err)
 	}
 	t.Log("总条数:", page.TotalCount)
 	t.Log(users)
-
 }
+
 func TestNull(t *testing.T) {
 	finder := zorm.NewFinder()
 
 	finder.Append("select * from t_user limit 1")
 
 	queryMap, err := zorm.QueryRowMap(nil, finder)
-
 	if err != nil {
 		t.Errorf("TestNull：%v", err)
 	}
@@ -106,7 +103,6 @@ func TestCount(t *testing.T) {
 	finder.Append("select count(*) as c from ").Append(permstruct.WxCpconfigStructTableName)
 
 	queryMap, err := zorm.QueryRowMap(context.Background(), finder)
-
 	if err != nil {
 		t.Errorf("TestCount错误：%v", err)
 	}
@@ -115,11 +111,9 @@ func TestCount(t *testing.T) {
 }
 
 func worker(id int, wg *sync.WaitGroup) {
-
 	defer wg.Done()
 
 	zorm.Transaction(context.Background(), func(ctx context.Context) (interface{}, error) {
-
 		var u permstruct.UserStruct
 		//
 		u.UserName = "zyf"
@@ -127,15 +121,15 @@ func worker(id int, wg *sync.WaitGroup) {
 		u.UpdateTime = time.Now()
 
 		u.Sex = "男" + string(id)
-		//u.Active = 2/0
+		// u.Active = 2/0
 		incr, _ := cache.RedisINCR(ctx, "permstruct.UserStruct")
 
 		u.Id = strconv.Itoa(int(incr.(int64)))
 
 		_, e2 := zorm.Insert(ctx, &u)
 		if e2 != nil {
-			//标记测试失败
-			//t.Errorf("TestTrancSave错误:%v", e2)
+			// 标记测试失败
+			// t.Errorf("TestTrancSave错误:%v", e2)
 			return nil, e2
 		}
 
@@ -145,15 +139,15 @@ func worker(id int, wg *sync.WaitGroup) {
 
 		fmt.Println(ee)
 
-		//u.UserName = u.UserName + "test" + string(id)
+		// u.UserName = u.UserName + "test" + string(id)
 		u.UserName = strconv.Itoa(id)
 
 		u.UserType = id
 
 		_, e3 := zorm.Update(ctx, &u)
 		if e3 != nil {
-			//标记测试失败
-			//t.Errorf("TestTrancUpdate错误:%v", e3)
+			// 标记测试失败
+			// t.Errorf("TestTrancUpdate错误:%v", e3)
 			return nil, e3
 		}
 
@@ -162,7 +156,6 @@ func worker(id int, wg *sync.WaitGroup) {
 }
 
 func TestTranc(t *testing.T) {
-
 	var wg sync.WaitGroup
 
 	begin := time.Now()
@@ -176,7 +169,6 @@ func TestTranc(t *testing.T) {
 	t.Log(subTime)
 
 	wg.Wait()
-
 }
 
 func TestPrem(t *testing.T) {
@@ -185,7 +177,6 @@ func TestPrem(t *testing.T) {
 		t.Error(err)
 	}
 	t.Log(finder.GetSQL())
-
 }
 
 func TestUpdateNotZero(t *testing.T) {
@@ -198,5 +189,4 @@ func TestUpdateNotZero(t *testing.T) {
 
 		return nil, nil
 	})
-
 }

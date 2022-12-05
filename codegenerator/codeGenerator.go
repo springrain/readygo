@@ -22,30 +22,30 @@ const (
 func init() {
 	dbDaoConfig := zorm.DataSourceConfig{
 		DSN: "root:root@tcp(127.0.0.1:3306)/readygo?charset=utf8&parseTime=true",
-		//DriverName 数据库驱动名称:mysql,postgres,oci8,sqlserver,sqlite3,go_ibm_db,clickhouse,dm,kingbase,aci,taosSql|taosRestful 和Dialect对应
+		// DriverName 数据库驱动名称:mysql,postgres,oci8,sqlserver,sqlite3,go_ibm_db,clickhouse,dm,kingbase,aci,taosSql|taosRestful 和Dialect对应
 		DriverName: "mysql",
-		//Dialect 数据库方言:mysql,postgresql,oracle,mssql,sqlite,db2,clickhouse,dm,kingbase,shentong,tdengine 和 DriverName 对应
+		// Dialect 数据库方言:mysql,postgresql,oracle,mssql,sqlite,db2,clickhouse,dm,kingbase,shentong,tdengine 和 DriverName 对应
 		Dialect: "mysql",
-		//MaxOpenConns 数据库最大连接数 默认50
+		// MaxOpenConns 数据库最大连接数 默认50
 		MaxOpenConns: 50,
-		//MaxIdleConns 数据库最大空闲连接数 默认50
+		// MaxIdleConns 数据库最大空闲连接数 默认50
 		MaxIdleConns: 50,
-		//ConnMaxLifetimeSecond 连接存活秒时间. 默认600(10分钟)后连接被销毁重建.避免数据库主动断开连接,造成死连接.MySQL默认wait_timeout 28800秒(8小时)
+		// ConnMaxLifetimeSecond 连接存活秒时间. 默认600(10分钟)后连接被销毁重建.避免数据库主动断开连接,造成死连接.MySQL默认wait_timeout 28800秒(8小时)
 		ConnMaxLifetimeSecond: 600,
-		//SlowSQLMillis 慢sql的时间阈值,单位毫秒.小于0是禁用SQL语句输出;等于0是只输出SQL语句,不计算执行时间;大于0是计算SQL执行时间,并且>=SlowSQLMillis值
+		// SlowSQLMillis 慢sql的时间阈值,单位毫秒.小于0是禁用SQL语句输出;等于0是只输出SQL语句,不计算执行时间;大于0是计算SQL执行时间,并且>=SlowSQLMillis值
 		SlowSQLMillis: 0,
 	}
 
 	dbDao, _ = zorm.NewDBDao(&dbDaoConfig)
 }
 
-//生成代码
+// 生成代码
 func code(tableName string) {
 	ctx := context.Background()
 
 	info := selectTableColumn(ctx, tableName)
 
-	//创建目录
+	// 创建目录
 	os.MkdirAll("./code/struct", os.ModePerm)
 	os.MkdirAll("./code/service", os.ModePerm)
 
@@ -54,7 +54,7 @@ func code(tableName string) {
 	structFile, _ := os.Create(structFileName)
 	serviceFile, _ := os.Create(serviceFileName)
 
-	//w := bufio.NewWriter(f) // 创建新的 Writer 对象
+	// w := bufio.NewWriter(f) // 创建新的 Writer 对象
 	defer func() {
 		structFile.Close()
 		serviceFile.Close()
@@ -71,10 +71,9 @@ func code(tableName string) {
 		fmt.Println(err2)
 	}
 	serviceTemplate.Execute(serviceFile, info)
-
 }
 
-//获取所有的表名
+// 获取所有的表名
 func selectAllTable() []string {
 	finder := zorm.NewFinder()
 	finder.Append("select table_name from information_schema.TABLES where  TABLE_SCHEMA =?", dbName)
@@ -83,9 +82,8 @@ func selectAllTable() []string {
 	return tableNames
 }
 
-//根据表名查询字段信息和主键名称
+// 根据表名查询字段信息和主键名称
 func selectTableColumn(ctx context.Context, tableName string) map[string]interface{} {
-
 	info := make(map[string]interface{})
 
 	tableComment := ""
@@ -93,7 +91,7 @@ func selectTableColumn(ctx context.Context, tableName string) map[string]interfa
 	finder.Append("select table_comment from information_schema.TABLES where  TABLE_SCHEMA =? and TABLE_Name=? ", dbName, tableName)
 	zorm.QueryRow(ctx, finder, &tableComment)
 
-	//查找主键
+	// 查找主键
 	finderPK := zorm.NewFinder()
 	finderPK.Append("SELECT column_name FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE WHERE TABLE_SCHEMA=? and  table_name=? AND constraint_name=?", dbName, tableName, "PRIMARY")
 	pkName := ""
@@ -118,21 +116,18 @@ func selectTableColumn(ctx context.Context, tableName string) map[string]interfa
 			//} else {
 			dataType = "string"
 			//}
-
 		} else if dataType == "DATETIME" || dataType == "TIMESTAMP" {
 			//if nullable == "YES" {
 			//	dataType = "sql.NullTime"
 			//} else {
 			dataType = "time.Time"
 			//}
-
 		} else if dataType == "INT" {
 			//if nullable == "YES" {
 			//	dataType = "sql.NullInt32"
 			//} else {
 			dataType = "int"
 			//}
-
 		} else if dataType == "BIGINT" {
 			//if nullable == "YES" {
 			//	dataType = "sql.NullInt64"
@@ -147,14 +142,12 @@ func selectTableColumn(ctx context.Context, tableName string) map[string]interfa
 			//} else {
 			dataType = "float32"
 			//}
-
 		} else if dataType == "DOUBLE" {
 			//if nullable == "YES" {
 			//	dataType = "sql.NullFloat64"
 			//} else {
 			dataType = "float64"
 			//}
-
 		} else if dataType == "DECIMAL" {
 			dataType = "decimal.Decimal"
 		}
@@ -163,7 +156,7 @@ func selectTableColumn(ctx context.Context, tableName string) map[string]interfa
 		fieldName := camelCaseName(m["COLUMN_NAME"].(string))
 		m["field"] = fieldName
 
-		//设置主键的struct属性名称
+		// 设置主键的struct属性名称
 		if m["COLUMN_NAME"].(string) == pkName {
 			info["pkField"] = fieldName
 		}
@@ -186,19 +179,19 @@ func selectTableColumn(ctx context.Context, tableName string) map[string]interfa
 	return info
 }
 
-//首字母大写
+// 首字母大写
 func firstToUpper(str string) string {
 	str = strings.ToUpper(string(str[0:1])) + string(str[1:])
 	return str
 }
 
-//首字母小写
+// 首字母小写
 func firstToLower(str string) string {
 	str = strings.ToLower(string(str[0:1])) + string(str[1:])
 	return str
 }
 
-//驼峰
+// 驼峰
 func camelCaseName(name string) string {
 	names := strings.Split(name, "_")
 	structName := ""
@@ -207,5 +200,4 @@ func camelCaseName(name string) string {
 	}
 
 	return structName
-
 }

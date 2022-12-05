@@ -3,11 +3,12 @@ package test
 import (
 	"context"
 	"fmt"
-	"readygo/cache"
-	"readygo/permission/permstruct"
 	"strconv"
 	"sync"
 	"testing"
+
+	"readygo/cache"
+	"readygo/permission/permstruct"
 
 	"gitee.com/chunanyong/zorm/decimal"
 )
@@ -23,7 +24,7 @@ type Uu struct {
 }
 
 func init() {
-	var ctx = context.Background()
+	ctx := context.Background()
 	cache.NewRedisClient(ctx, &cache.RedisConfig{
 		Addr: "127.0.0.1:6379",
 	})
@@ -32,7 +33,6 @@ func init() {
 }
 
 func incrWorker(id int, wg *sync.WaitGroup) {
-
 	defer wg.Done()
 
 	ctx := context.Background()
@@ -48,11 +48,9 @@ func incrWorker(id int, wg *sync.WaitGroup) {
 	user.Id = strconv.Itoa(int(incr.(int64)))
 
 	fmt.Println(user)
-
 }
 
 func TestINCR(t *testing.T) {
-
 	var wg sync.WaitGroup
 
 	for i := 1; i <= 1000; i++ {
@@ -61,11 +59,9 @@ func TestINCR(t *testing.T) {
 	}
 
 	wg.Wait()
-
 }
 
 func TestDemo(t *testing.T) {
-
 	ctx := context.Background()
 
 	incr, err := cache.RedisINCR(ctx, "permstruct.UserStruct")
@@ -74,7 +70,6 @@ func TestDemo(t *testing.T) {
 }
 
 func TestStruct(t *testing.T) {
-
 	var u Uu
 	u.Amount = 2
 	u.Name = "fef"
@@ -94,5 +89,4 @@ func TestStruct(t *testing.T) {
 	cache.GetFromCache(ctx, "Uu.table", "dd", r)
 
 	fmt.Println(r)
-
 }

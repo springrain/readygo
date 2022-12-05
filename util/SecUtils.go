@@ -5,7 +5,7 @@ import (
 	"encoding/hex"
 )
 
-//GenerateMD5 生成md5字符串
+// GenerateMD5 生成md5字符串
 func GenerateMD5(str string) string {
 	ctx := md5.New()
 	ctx.Write([]byte(str))

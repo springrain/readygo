@@ -1,12 +1,11 @@
 package wxstruct
 
 type WxPayConfig struct {
-	Id string
-	AppId string
+	Id     string
+	AppId  string
 	Secret string
-	MchID string
-	Key string
-
+	MchID  string
+	Key    string
 }
 
 func (w WxPayConfig) GetId() string {
@@ -25,9 +24,8 @@ func (w WxPayConfig) GetSecret() string {
 	return w.Secret
 }
 
-
 func (w WxPayConfig) GetCertificateFile() string {
-	return  "../cert/apiclient_cert.pem"
+	return "../cert/apiclient_cert.pem"
 }
 
 func (w WxPayConfig) GetMchId() string {
@@ -59,11 +57,9 @@ func (w WxPayConfig) GetServiceType() int {
 }
 
 func (w WxPayConfig) IsProd() bool {
-	return  true
+	return true
 }
 
 func (w WxPayConfig) IsMch() bool {
 	return false
 }
-
-

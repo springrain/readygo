@@ -8,8 +8,8 @@ import (
 
 // RegisterWXRoute 路由配置
 func RegisterWXRoute(r *server.Hertz) {
-	//WebEngine := gin.Default()
-	//r := webext.WebEngine()
+	// WebEngine := gin.Default()
+	// r := webext.WebEngine()
 	// 路由
 	v1 := r.Group("/api/wx/v1")
 	{
@@ -39,5 +39,4 @@ func RegisterWXRoute(r *server.Hertz) {
 		//	auth.DELETE("user/logout", UserLogout)
 		//}
 	}
-
 }

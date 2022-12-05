@@ -12,24 +12,24 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"strings"
+
 	"readygo/apistruct"
 	"readygo/permission/permservice"
 	"readygo/permission/permstruct"
 	"readygo/permission/permutil"
-	"strings"
 
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/common/hlog"
 )
 
-//JWTTokenName jwt的token名称
+// JWTTokenName jwt的token名称
 var JWTTokenName = "READYGOTOKEN"
 
-//PermHandler 权限过滤器
+// PermHandler 权限过滤器
 func PermHandler() app.HandlerFunc {
 	return func(ctx context.Context, c *app.RequestContext) {
-
-		//处理跨域
+		// 处理跨域
 		c.Header("Access-Control-Allow-Origin", "*")
 		c.Header("Access-Control-Allow-Headers", "Content-Type,AccessToken,X-CSRF-Token, Authorization, Token")
 		c.Header("Access-Control-Allow-Methods", "POST, GET, OPTIONS")
@@ -37,22 +37,22 @@ func PermHandler() app.HandlerFunc {
 		c.Header("Access-Control-Allow-Credentials", "true")
 
 		method := string(c.Request.Method())
-		//放行所有OPTIONS方法
+		// 放行所有OPTIONS方法
 		if method == "OPTIONS" {
 			c.AbortWithStatus(http.StatusNoContent)
 		}
 
-		//装逼一点,禁止所有的GET方法
+		// 装逼一点,禁止所有的GET方法
 		// if method == "GET" {
 		// 	c.AbortWithStatus(http.StatusMethodNotAllowed)
 		// }
 
 		responseBody := apistruct.ResponseBodyModel{}
-		//请求的uri
+		// 请求的uri
 		uri := string(c.Request.URI().Path())
 		hlog.Info(uri)
 
-		//如果是不拦截的URL  TODO 此处因为权限拦截不支持正则 先放开swagger
+		// 如果是不拦截的URL  TODO 此处因为权限拦截不支持正则 先放开swagger
 		if isExcludePath(uri) || strings.Contains(uri, "swagger") {
 			c.Next(ctx)
 			return
@@ -79,7 +79,7 @@ func PermHandler() app.HandlerFunc {
 			return
 		}
 
-		//如果用户默认有的权限
+		// 如果用户默认有的权限
 		if isUserDefaultPath(uri) {
 			c.Next(ctx)
 			return
@@ -109,7 +109,7 @@ func PermHandler() app.HandlerFunc {
 
 		// 注意:缓存的清理,使用缓存,代码组装用户权限的树形结构.
 
-		//TODO 这里需要添加权限判断逻辑
+		// TODO 这里需要添加权限判断逻辑
 		// 不知道 u_10001什么意思
 		// if userID == "u_10001" {
 		// 	c.Next(ctx)
@@ -130,7 +130,7 @@ func PermHandler() app.HandlerFunc {
 			c.AbortWithStatusJSON(responseBody.Status, responseBody)
 			return
 		}
-		//用户是否有uri的权限.循环遍历用户有权限的菜单URL,因为pageUrl是唯一的,可以取出menuId和roleId
+		// 用户是否有uri的权限.循环遍历用户有权限的菜单URL,因为pageUrl是唯一的,可以取出menuId和roleId
 		//	roleID := ""
 		// for _, item := range permMenuList {
 		// 	if item.Pageurl == "" {
@@ -173,7 +173,7 @@ func PermHandler() app.HandlerFunc {
 
 		// 设置当前登录用户到上下文
 		ctx, _ = permstruct.BindContextCurrentUser(ctx, userVO)
-		//重新覆盖ctx
+		// 重新覆盖ctx
 		c.Next(ctx)
 	}
 }

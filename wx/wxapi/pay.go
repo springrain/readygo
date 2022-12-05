@@ -4,9 +4,10 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strings"
+
 	"readygo/webext"
 	"readygo/wx/wxstruct"
-	"strings"
 
 	"gitee.com/chunanyong/gowe"
 	"gitee.com/chunanyong/zorm"
@@ -25,10 +26,9 @@ func init() {
 		MchID:  os.Getenv("WXPayMchID"),
 		Key:    os.Getenv("WXPayKey"),
 	}
-
 }
 
-//支付结果通知
+// 支付结果通知
 func WxPayNotifyPay(ctx context.Context, c *app.RequestContext) {
 	//
 	//var body gowe.WxPayNotifyPayBody
@@ -37,17 +37,14 @@ func WxPayNotifyPay(ctx context.Context, c *app.RequestContext) {
 	body := c.Request.Body()
 
 	gowe.WxPayNotifyPay(WXPay, body, func(wxPayNotifyPayBody gowe.WxPayNotifyPayBody) error {
-
 		fmt.Println(wxPayNotifyPayBody)
 
 		return nil
 	})
-
 }
 
-//统一下单
+// 统一下单
 func WxPayAppSign(ctx context.Context, c *app.RequestContext) {
-
 	body := make(map[string]string, 0)
 	c.Bind(&body)
 
@@ -64,7 +61,6 @@ func WxPayAppSign(ctx context.Context, c *app.RequestContext) {
 }
 
 func WxPayUnifiedOrder(ctx context.Context, c *app.RequestContext) {
-
 	openid := c.Query("openid")
 
 	body := &gowe.WxPayUnifiedOrderBody{
@@ -91,5 +87,4 @@ func WxPayUnifiedOrder(ctx context.Context, c *app.RequestContext) {
 			Data:       order,
 		})
 	}
-
 }

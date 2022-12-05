@@ -11,14 +11,12 @@ import (
 )
 
 func TestNewItemChar(t *testing.T) {
-
 	bgColor := color.RGBA{0, 0, 0, 0}
 	got := newItemChar(48, 30, bgColor)
 	got.drawHollowLine()
 	got.drawText("ab1c")
 
 	fmt.Println(got.encodeB64string())
-
 }
 
 func TestItemChar_drawHollowLine(t *testing.T) {

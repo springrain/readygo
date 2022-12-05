@@ -8,11 +8,11 @@
  */
 package permhandler
 
-//bug(springrain) 需要支持url的正则表达式
-//全局排除的路径
+// bug(springrain) 需要支持url的正则表达式
+// 全局排除的路径
 var excludePathPatterns map[string]bool
 
-//登录用户默认能访问的路径
+// 登录用户默认能访问的路径
 var userDefaultPathPatterns map[string]bool
 
 func init() {

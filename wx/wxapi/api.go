@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+
 	"readygo/webext"
 	"readygo/wx/wxstruct"
 
@@ -33,7 +34,6 @@ func Ping(ctx context.Context, c *app.RequestContext) {
 
 // 订阅消息
 func WxMaSubscribeMessageSend(ctx context.Context, c *app.RequestContext) {
-
 	token, _ := gowe.GetAccessToken(WX)
 	WX.AccessToken = token.AccessToken
 
@@ -49,7 +49,6 @@ func WxMaSubscribeMessageSend(ctx context.Context, c *app.RequestContext) {
 	params.AddData("thing4", "请查看详细信息")
 
 	send, err := gowe.WxMaSubscribeMessageSend(WX, &params)
-
 	if err != nil {
 		fmt.Println(err.Error())
 	}
@@ -60,9 +59,8 @@ func WxMaSubscribeMessageSend(ctx context.Context, c *app.RequestContext) {
 	})
 }
 
-//登录凭证校验
+// 登录凭证校验
 func WxMaCode2Session(ctx context.Context, c *app.RequestContext) {
-
 	code := c.Query("jsCode")
 	hlog.CtxInfof(ctx, code)
 
@@ -82,5 +80,4 @@ func WxMaCode2Session(ctx context.Context, c *app.RequestContext) {
 			Message:    session.OpenId,
 		})
 	}
-
 }

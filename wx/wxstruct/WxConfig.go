@@ -1,15 +1,10 @@
 package wxstruct
 
-
-
-
 type WxConfig struct {
-	Id string
-	AppId string
+	Id          string
+	AppId       string
 	AccessToken string
-	Secret string
-
-
+	Secret      string
 }
 
 func (w WxConfig) GetId() string {

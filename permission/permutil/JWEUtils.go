@@ -13,36 +13,36 @@ import (
 	"gopkg.in/square/go-jose.v2/jwt"
 )
 
-//rsa 私钥
+// rsa 私钥
 var privateKey *rsa.PrivateKey
 
-//rsa公钥
+// rsa公钥
 var publicKey *rsa.PublicKey
 
-//jwe签名
+// jwe签名
 var signer jose.Signer
 
-//jwe加密
+// jwe加密
 var encrypter jose.Encrypter
 
-//expireDuration 过期时间
+// expireDuration 过期时间
 var expireDuration time.Duration
 
-//var jwtSecretByte []byte
+// var jwtSecretByte []byte
 
 var jwtSecret string
 
-//NewJWEConfig 根据配置新建JWE对象
-//jweRSAPrivatePemFilePath 证书路径
-//jwtSecretToken jwt的加密token
-//jweExpireSecond 超时的秒数 默认 24小时=60*60*24
+// NewJWEConfig 根据配置新建JWE对象
+// jweRSAPrivatePemFilePath 证书路径
+// jwtSecretToken jwt的加密token
+// jweExpireSecond 超时的秒数 默认 24小时=60*60*24
 func NewJWEConfig(jweRSAPrivatePemFilePath string, jwtSecretStr string, jweExpireSecond int) error {
 	if jweExpireSecond == 0 {
 		jweExpireSecond = 60 * 60 * 24
 	}
 	expireDuration = time.Second * time.Duration(jweExpireSecond)
 	jwtSecret = jwtSecretStr
-	//加载加密私钥文件
+	// 加载加密私钥文件
 	privateKeyPEMByte, err := ioutil.ReadFile(jweRSAPrivatePemFilePath)
 	if err != nil {
 		return err
@@ -51,29 +51,28 @@ func NewJWEConfig(jweRSAPrivatePemFilePath string, jwtSecretStr string, jweExpir
 	if len(rest) > 0 {
 		return errors.New("Decode key failed!jweRSAPrivatePemFilePath:" + jweRSAPrivatePemFilePath)
 	}
-	//获取私钥
+	// 获取私钥
 	privateKey, err = x509.ParsePKCS1PrivateKey(keyPEMBlock.Bytes)
 	if err != nil {
 		return err
 	}
-	//获取公钥
+	// 获取公钥
 	publicKey = &privateKey.PublicKey
 
-	//创建jose.Signer
-	//修改成每个用户独立的签名秘钥，这里不再统一生成
+	// 创建jose.Signer
+	// 修改成每个用户独立的签名秘钥，这里不再统一生成
 	// signer, err = jose.NewSigner(jose.SigningKey{Algorithm: jose.HS256, Key: jwtSecretByte}, (&jose.SignerOptions{}).WithType("JWT"))
 	// if err != nil {
 	// 	return err
 	// }
-	//创建 jose.Encrypter
+	// 创建 jose.Encrypter
 	encrypter, err = jose.NewEncrypter(jose.A128GCM, jose.Recipient{Algorithm: jose.RSA_OAEP, Key: publicKey}, (&jose.EncrypterOptions{}).WithType("JWT").WithContentType("JWT"))
 	return err
 }
 
-//JWECreateToken 创建Token字符串 id：账户唯一ID extInfo:需要在token中保存的扩展信息
+// JWECreateToken 创建Token字符串 id：账户唯一ID extInfo:需要在token中保存的扩展信息
 func JWECreateToken(id string, extInfo interface{}) (raw string, err error) {
-
-	//设置过期时间
+	// 设置过期时间
 	cl := jwt.Claims{
 		ID:     id,
 		Expiry: jwt.NewNumericDate(time.Now().Add(expireDuration)),
@@ -95,17 +94,16 @@ func JWECreateToken(id string, extInfo interface{}) (raw string, err error) {
 	raw, err = nestedBuilder.CompactSerialize()
 
 	return raw, err
-
 }
 
-//JWEGetInfoFromToken 根据token获取用户id 和 扩展信息  扩展信息extInfo传结构体的指针
+// JWEGetInfoFromToken 根据token获取用户id 和 扩展信息  扩展信息extInfo传结构体的指针
 func JWEGetInfoFromToken(token string, extInfo interface{}) (id string, err error) {
 	tok, err := jwt.ParseSignedAndEncrypted(token)
 	if err != nil {
 		return "", err
 	}
 
-	//解密
+	// 解密
 	nested, err := tok.Decrypt(privateKey)
 	if err != nil {
 		return "", err
@@ -119,21 +117,21 @@ func JWEGetInfoFromToken(token string, extInfo interface{}) (id string, err erro
 	}
 	id = nested.Headers[0].ExtraHeaders["R"].(string)
 
-	//验签并返回Claim对象和扩展对象
+	// 验签并返回Claim对象和扩展对象
 	claim := jwt.Claims{}
-	//fmt.Println(nested.Headers)
-	//先不验证签名获取token信息
+	// fmt.Println(nested.Headers)
+	// 先不验证签名获取token信息
 	if err := nested.UnsafeClaimsWithoutVerification(&claim); err != nil {
 		return "", err
 	}
-	//签名秘钥拼接用户id
+	// 签名秘钥拼接用户id
 	jwtSecretByte := getJwtSecretByte(claim.ID)
-	//验证签名
+	// 验证签名
 	if err := nested.Claims(jwtSecretByte, &claim, extInfo); err != nil {
 		return "", err
 	}
 
-	//验证token有效性 这里暂时只验证了有效期
+	// 验证token有效性 这里暂时只验证了有效期
 	if err := claim.Validate(
 		jwt.Expected{
 			Time: time.Now(),
@@ -144,7 +142,7 @@ func JWEGetInfoFromToken(token string, extInfo interface{}) (id string, err erro
 	return claim.ID, err
 }
 
-//getJwtSecretByte 拼接id,构造secret
+// getJwtSecretByte 拼接id,构造secret
 func getJwtSecretByte(id string) []byte {
 	md5Bytes := md5.Sum([]byte(jwtSecret + id))
 	return md5Bytes[:]

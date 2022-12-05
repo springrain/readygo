@@ -8,7 +8,7 @@ import (
 
 // RegisterPermRoute 路由配置
 func RegisterPermRoute(r *server.Hertz) {
-	//r := webext.WebEngine()
+	// r := webext.WebEngine()
 
 	// 路由
 	v1 := r.Group("/api/perm/v1")
@@ -34,5 +34,4 @@ func RegisterPermRoute(r *server.Hertz) {
 		//	auth.DELETE("user/logout", UserLogout)
 		//}
 	}
-
 }

@@ -12,6 +12,7 @@ import (
 	"context"
 	"net/http"
 	"os"
+
 	"readygo/api"
 	"readygo/apistruct"
 	"readygo/cache"
@@ -31,23 +32,22 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
-//初始化
+// 初始化
 func init() {
-
-	//初始化DBDao
+	// 初始化DBDao
 	dbDaoConfig := zorm.DataSourceConfig{
 		DSN: "root:root@tcp(127.0.0.1:3306)/readygo?charset=utf8&parseTime=true",
-		//DriverName 数据库驱动名称:mysql,postgres,oci8,sqlserver,sqlite3,go_ibm_db,clickhouse,dm,kingbase,aci,taosSql|taosRestful 和Dialect对应
+		// DriverName 数据库驱动名称:mysql,postgres,oci8,sqlserver,sqlite3,go_ibm_db,clickhouse,dm,kingbase,aci,taosSql|taosRestful 和Dialect对应
 		DriverName: "mysql",
-		//Dialect 数据库方言:mysql,postgresql,oracle,mssql,sqlite,db2,clickhouse,dm,kingbase,shentong,tdengine 和 DriverName 对应
+		// Dialect 数据库方言:mysql,postgresql,oracle,mssql,sqlite,db2,clickhouse,dm,kingbase,shentong,tdengine 和 DriverName 对应
 		Dialect: "mysql",
-		//MaxOpenConns 数据库最大连接数 默认50
+		// MaxOpenConns 数据库最大连接数 默认50
 		MaxOpenConns: 50,
-		//MaxIdleConns 数据库最大空闲连接数 默认50
+		// MaxIdleConns 数据库最大空闲连接数 默认50
 		MaxIdleConns: 50,
-		//ConnMaxLifetimeSecond 连接存活秒时间. 默认600(10分钟)后连接被销毁重建.避免数据库主动断开连接,造成死连接.MySQL默认wait_timeout 28800秒(8小时)
+		// ConnMaxLifetimeSecond 连接存活秒时间. 默认600(10分钟)后连接被销毁重建.避免数据库主动断开连接,造成死连接.MySQL默认wait_timeout 28800秒(8小时)
 		ConnMaxLifetimeSecond: 600,
-		//SlowSQLMillis 慢sql的时间阈值,单位毫秒.小于0是禁用SQL语句输出;等于0是只输出SQL语句,不计算执行时间;大于0是计算SQL执行时间,并且>=SlowSQLMillis值
+		// SlowSQLMillis 慢sql的时间阈值,单位毫秒.小于0是禁用SQL语句输出;等于0是只输出SQL语句,不计算执行时间;大于0是计算SQL执行时间,并且>=SlowSQLMillis值
 		SlowSQLMillis: 0,
 	}
 	_, _ = zorm.NewDBDao(&dbDaoConfig)
@@ -55,25 +55,24 @@ func init() {
 
 	permutil.NewJWEConfig("permission/permcert/private.pem", "readygo", 0)
 
-	//初始化initWebEngine
+	// 初始化initWebEngine
 	initWebEngine()
 }
 
 // initWebEngine 初始化Web引擎
 func initWebEngine() {
-
-	//获取引擎
+	// 获取引擎
 	h := webext.WebEngine()
-	//设置前缀,需要在路由初始化前调用
+	// 设置前缀,需要在路由初始化前调用
 	webext.SetContextPath("/readygo/")
 
 	// Global middleware
 	// Logger middleware will write the logs to gin.DefaultWriter even if you set with GIN_MODE=release.
 	// By default gin.DefaultWriter = os.Stdout
 	h.Use(webext.WebLogger())
-	//r.Use(gin.Logger())
+	// r.Use(gin.Logger())
 
-	f, err := os.OpenFile("./logs/readygo.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	f, err := os.OpenFile("./logs/readygo.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644)
 	if err != nil {
 		panic(err)
 	}
@@ -81,18 +80,18 @@ func initWebEngine() {
 	hlog.SetOutput(f)
 
 	// Recovery middleware recovers from any panics and writes a 500 if there was one.
-	//h.Use(webext.WebRecovery())
+	// h.Use(webext.WebRecovery())
 
-	//加载自定义的权限过滤器
+	// 加载自定义的权限过滤器
 	h.Use(permhandler.PermHandler())
 
-	//css js等静态文件
+	// css js等静态文件
 	h.Static("/assets", "./assets")
 	h.StaticFS("/more_static", &app.FS{Root: "my_file_system", GenerateIndexPages: true})
 	h.StaticFile("/favicon.ico", "./resources/favicon.ico")
 
 	// swagger
-	//h.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+	// h.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	h.GET("/ping", func(ctx context.Context, c *app.RequestContext) {
 		c.JSON(200, utils.H{"hello": "world"})
@@ -102,7 +101,6 @@ func initWebEngine() {
 	h.POST("/Captcha", permapi.Captcha)
 
 	h.GET("/system/menu/tree", func(ctx context.Context, c *app.RequestContext) {
-
 		user, err := permstruct.GetCurrentUserFromContext(ctx)
 		// token := c.GetHeader(JWTTokenName)
 		// userid, err := permutil.GetInfoFromToken(token, &user)
@@ -123,7 +121,6 @@ func initWebEngine() {
 
 	permroute.RegisterPermRoute(h)
 	wxroute.RegisterWXRoute(h)
-
 }
 
 // @title Swagger Example API
@@ -135,5 +132,4 @@ func initWebEngine() {
 func main() {
 	h := webext.WebEngine()
 	h.Spin()
-
 }
