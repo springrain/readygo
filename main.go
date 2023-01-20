@@ -64,7 +64,7 @@ func initWebEngine() {
 	// 获取引擎
 	h := webext.WebEngine()
 	// 设置前缀,需要在路由初始化前调用
-	webext.SetContextPath("/readygo/")
+	//webext.SetContextPath("/readygo/")
 
 	// Global middleware
 	// Logger middleware will write the logs to gin.DefaultWriter even if you set with GIN_MODE=release.

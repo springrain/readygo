@@ -10,7 +10,7 @@ import (
 )
 
 // Creates a router without any middleware by default
-var webEngine = server.Default(server.WithHostPorts(":7080"))
+var webEngine = server.Default(server.WithHostPorts(":7080"), server.WithBasePath("/readygo/"))
 
 func WebEngine() *server.Hertz {
 	return webEngine
