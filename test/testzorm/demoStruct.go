@@ -70,7 +70,7 @@ func (entity *demoStruct) GetPKColumnName() string {
 // newDemoStruct 创建一个默认对象
 func newDemoStruct() demoStruct {
 	demo := demoStruct{
-		// 如果Id=="",保存时zorm会调用zorm.FuncGenerateStringID(),默认UUID字符串,也可以自己定义实现方式,例如 zorm.FuncGenerateStringID=funcmyId
+		// 如果Id=="",保存时zorm会调用zorm.FuncGenerateStringID(ctx),默认UUID字符串,也可以自己定义实现方式,例如 zorm.FuncGenerateStringID=funcmyId
 		Id:         zorm.FuncGenerateStringID(nil),
 		UserName:   "defaultUserName",
 		Password:   "defaultPassword",
