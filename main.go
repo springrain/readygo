@@ -16,7 +16,6 @@ import (
 	"readygo/api"
 	"readygo/apistruct"
 	"readygo/cache"
-	"readygo/permission/permapi"
 	"readygo/permission/permhandler"
 	"readygo/permission/permroute"
 	"readygo/permission/permstruct"
@@ -98,7 +97,7 @@ func initWebEngine() {
 	})
 
 	h.GET("/login", api.Login)
-	h.POST("/Captcha", permapi.Captcha)
+	//h.POST("/Captcha", permapi.Captcha)
 
 	h.GET("/system/menu/tree", func(ctx context.Context, c *app.RequestContext) {
 		user, err := permstruct.GetCurrentUserFromContext(ctx)
