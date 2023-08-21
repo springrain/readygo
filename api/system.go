@@ -15,8 +15,6 @@ import (
 	"readygo/apistruct"
 	"readygo/permission/permutil"
 
-	_ "readygo/docs" // swagger使用
-
 	"github.com/cloudwego/hertz/pkg/app"
 )
 

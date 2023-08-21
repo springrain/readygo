@@ -2,14 +2,7 @@ package permapi
 
 import (
 	"context"
-	"strconv"
-	"time"
 
-	"readygo/util"
-	"readygo/util/captcha"
-	"readygo/webext"
-
-	"gitee.com/chunanyong/zorm"
 	"github.com/cloudwego/hertz/pkg/app"
 )
 
@@ -17,6 +10,7 @@ import (
 func Login(ctx context.Context, c *app.RequestContext) {
 }
 
+/*
 // Captcha 获取验证码
 func Captcha(ctx context.Context, c *app.RequestContext) {
 	// 获取base64的图片验证码
@@ -31,6 +25,7 @@ func Captcha(ctx context.Context, c *app.RequestContext) {
 
 	c.JSON(200, res)
 }
+
 
 // 生成验证码的key和base64的值
 func newCaptchaKeyB64() (string, string, error) {
@@ -66,3 +61,4 @@ func verifyCaptcha(captchaKey string, captchaValue string) bool {
 	}
 	return false
 }
+*/
