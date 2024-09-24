@@ -110,7 +110,6 @@ func PermHandler() app.HandlerFunc {
 		// 注意:缓存的清理,使用缓存,代码组装用户权限的树形结构.
 
 		// TODO 这里需要添加权限判断逻辑
-		// 不知道 u_10001什么意思
 		// if userID == "u_10001" {
 		// 	c.Next(ctx)
 		// 	return
@@ -131,32 +130,32 @@ func PermHandler() app.HandlerFunc {
 			return
 		}
 		// 用户是否有uri的权限.循环遍历用户有权限的菜单URL,因为pageUrl是唯一的,可以取出menuId和roleId
-		//	roleID := ""
-		// for _, item := range permMenuList {
-		// 	if item.Pageurl == "" {
-		// 		continue
-		// 	}
-		// 	if strings.ToLower(item.Pageurl) == strings.ToLower(uri) {
-		// 		roleID = item.RoleId
-		// 		break
-		// 	}
-		// }
+		roleID := ""
+		for _, item := range permMenuList {
+			if item.Pageurl == "" {
+				continue
+			}
+			if strings.ToLower(item.Pageurl) == strings.ToLower(uri) {
+				roleID = item.RoleId
+				break
+			}
+		}
 
-		// if roleID == "" {
-		// 	responseBody.Status = http.StatusUnauthorized
-		// 	responseBody.Message = "没有当前操作权限"
-		// 	c.AbortWithStatusJSON(responseBody.Status, responseBody)
-		// 	return
-		// }
+		if roleID == "" {
+			responseBody.Status = http.StatusUnauthorized
+			responseBody.Message = "没有当前操作权限"
+			c.AbortWithStatusJSON(responseBody.Status, responseBody)
+			return
+		}
 
-		// //根据roleId 查询 role
-		// role, err := permservice.FindRoleStructById(ctx, roleID)
-		// if err != nil {
-		// 	responseBody.Status = http.StatusUnauthorized
-		// 	responseBody.Message = fmt.Sprintf("%s%s", "FindRoleStructById失败", err.Error())
-		// 	c.AbortWithStatusJSON(responseBody.Status, responseBody)
-		// 	return
-		// }
+		//根据roleId 查询 role
+		role, err := permservice.FindRoleStructById(ctx, roleID)
+		if err != nil {
+			responseBody.Status = http.StatusUnauthorized
+			responseBody.Message = fmt.Sprintf("%s%s", "FindRoleStructById失败", err.Error())
+			c.AbortWithStatusJSON(responseBody.Status, responseBody)
+			return
+		}
 
 		userVO, err := permservice.FindUserVOStructByUserId(ctx, userID)
 		if err != nil {
@@ -167,9 +166,9 @@ func PermHandler() app.HandlerFunc {
 		}
 
 		// 如果是私有的部门权限,setPrivateOrgRoleId,业务调用SessionUser.getPrivateOrgRoleId,如果不是NULL,就调用IUserRoleOrgService.wrapOrgIdFinderByPrivateOrgRoleId(String roleId,String userId) 获取权限的 Finder
-		// if role.PrivateOrg == 1 {
-		// 	userVO.PrivateOrgRoleId = role.Id
-		// }
+		if role.PrivateOrg == 1 {
+			userVO.PrivateOrgRoleId = role.Id
+		}
 
 		// 设置当前登录用户到上下文
 		ctx, _ = permstruct.BindContextCurrentUser(ctx, userVO)

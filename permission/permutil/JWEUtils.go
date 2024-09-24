@@ -6,11 +6,11 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"errors"
-	"io/ioutil"
+	"os"
 	"time"
 
-	"gopkg.in/square/go-jose.v2"
-	"gopkg.in/square/go-jose.v2/jwt"
+	"github.com/go-jose/go-jose/v4"
+	"github.com/go-jose/go-jose/v4/jwt"
 )
 
 // rsa 私钥
@@ -43,7 +43,7 @@ func NewJWEConfig(jweRSAPrivatePemFilePath string, jwtSecretStr string, jweExpir
 	expireDuration = time.Second * time.Duration(jweExpireSecond)
 	jwtSecret = jwtSecretStr
 	// 加载加密私钥文件
-	privateKeyPEMByte, err := ioutil.ReadFile(jweRSAPrivatePemFilePath)
+	privateKeyPEMByte, err := os.ReadFile(jweRSAPrivatePemFilePath)
 	if err != nil {
 		return err
 	}
@@ -91,14 +91,18 @@ func JWECreateToken(id string, extInfo interface{}) (raw string, err error) {
 	if extInfo != nil {
 		nestedBuilder = nestedBuilder.Claims(extInfo)
 	}
-	raw, err = nestedBuilder.CompactSerialize()
+	raw, err = nestedBuilder.Serialize()
 
 	return raw, err
 }
 
 // JWEGetInfoFromToken 根据token获取用户id 和 扩展信息  扩展信息extInfo传结构体的指针
 func JWEGetInfoFromToken(token string, extInfo interface{}) (id string, err error) {
-	tok, err := jwt.ParseSignedAndEncrypted(token)
+	// github.com/square/go-jose/v2 的写法
+	//tok, err := jwt.ParseSignedAndEncrypted(token)
+	tok, err := jwt.ParseSignedAndEncrypted(token, []jose.KeyAlgorithm{jose.RSA_OAEP},
+		[]jose.ContentEncryption{jose.A128GCM},
+		[]jose.SignatureAlgorithm{jose.HS256})
 	if err != nil {
 		return "", err
 	}
@@ -115,7 +119,8 @@ func JWEGetInfoFromToken(token string, extInfo interface{}) (id string, err erro
 	if _, ok := nested.Headers[0].ExtraHeaders["R"]; !ok {
 		return "", errors.New("缺少Header")
 	}
-	id = nested.Headers[0].ExtraHeaders["R"].(string)
+
+	//id = nested.Headers[0].ExtraHeaders["R"].(string)
 
 	// 验签并返回Claim对象和扩展对象
 	claim := jwt.Claims{}
