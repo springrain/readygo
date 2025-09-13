@@ -1,13 +1,13 @@
 package test
 
 import (
+	"context"
 	"os"
 	"testing"
 
 	"gitee.com/chunanyong/gowe"
 )
 
-//
 type wxconfig struct {
 	id          string
 	appid       string
@@ -20,24 +20,24 @@ var wx = &wxconfig{
 	secret: os.Getenv("SECRET"),
 }
 
-func (w wxconfig) GetId() string {
+func (w wxconfig) GetId(ctx context.Context) string {
 	return w.id
 }
 
-func (w wxconfig) GetAppId() string {
+func (w wxconfig) GetAppId(ctx context.Context) string {
 	return w.appid
 }
 
-func (w wxconfig) GetAccessToken() string {
+func (w wxconfig) GetAccessToken(ctx context.Context) string {
 	return w.accesstoken
 }
 
-func (w wxconfig) GetSecret() string {
+func (w wxconfig) GetSecret(ctx context.Context) string {
 	return w.secret
 }
 
 func TestGetAccessToken(t *testing.T) {
-	token, err := gowe.GetAccessToken(wx)
+	token, err := gowe.GetAccessToken(ctx, wx)
 	if err != nil {
 		t.Log("error:", err)
 	}
@@ -46,14 +46,14 @@ func TestGetAccessToken(t *testing.T) {
 }
 
 func TestGetJsTicket(t *testing.T) {
-	token, err := gowe.GetAccessToken(wx)
+	token, err := gowe.GetAccessToken(ctx, wx)
 	if err != nil {
 		t.Log("error:", err)
 	}
 
 	wx.accesstoken = token.AccessToken
 
-	ticket, err := gowe.GetJsTicket(wx)
+	ticket, err := gowe.GetJsTicket(ctx, wx)
 	if err != nil {
 		t.Log("error:", err)
 	}
@@ -62,14 +62,14 @@ func TestGetJsTicket(t *testing.T) {
 }
 
 func TestGetCardTicket(t *testing.T) {
-	token, err := gowe.GetAccessToken(wx)
+	token, err := gowe.GetAccessToken(ctx, wx)
 	if err != nil {
 		t.Log("error:", err)
 	}
 
 	wx.accesstoken = token.AccessToken
 
-	ticket, err := gowe.GetCardTicket(wx)
+	ticket, err := gowe.GetCardTicket(ctx, wx)
 	if err != nil {
 		t.Log("error:", err)
 	}

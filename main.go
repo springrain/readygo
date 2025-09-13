@@ -17,7 +17,6 @@ import (
 	"readygo/permission/permhandler"
 	"readygo/permission/permroute"
 	"readygo/permission/permstruct"
-	"readygo/permission/permutil"
 	"readygo/webext"
 	"readygo/wx/wxroute"
 
@@ -49,9 +48,6 @@ func init() {
 	}
 	_, _ = zorm.NewDBDao(&dbDaoConfig)
 	cache.NewMemeryCacheManager()
-
-	permutil.NewJWEConfig("permission/permcert/private.pem", "readygo", 0)
-
 	// 初始化initWebEngine
 	initWebEngine()
 }
@@ -69,7 +65,7 @@ func initWebEngine() {
 	h.Use(webext.WebLogger())
 	// r.Use(gin.Logger())
 
-	f, err := os.OpenFile("./logs/readygo.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644)
+	f, err := os.OpenFile("./logs/readygo.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		panic(err)
 	}
@@ -86,9 +82,6 @@ func initWebEngine() {
 	h.Static("/assets", "./assets")
 	h.StaticFS("/more_static", &app.FS{Root: "my_file_system", GenerateIndexPages: true})
 	h.StaticFile("/favicon.ico", "./resources/favicon.ico")
-
-	// swagger
-	// h.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	h.GET("/ping", func(ctx context.Context, c *app.RequestContext) {
 		c.JSON(200, utils.H{"hello": "world"})
@@ -120,12 +113,6 @@ func initWebEngine() {
 	wxroute.RegisterWXRoute(h)
 }
 
-// @title Swagger Example API
-// @version 1.0
-// @description This is a sample server Petstore server.
-
-// @host 127.0.0.1:7080
-// @BasePath /
 func main() {
 	h := webext.WebEngine()
 	h.Spin()

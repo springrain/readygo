@@ -36,7 +36,7 @@ func WxPayNotifyPay(ctx context.Context, c *app.RequestContext) {
 
 	body := c.Request.Body()
 
-	gowe.WxPayNotifyPay(WXPay, body, func(wxPayNotifyPayBody gowe.WxPayNotifyPayBody) error {
+	gowe.WxPayNotifyPay(ctx, WXPay, body, func(wxPayNotifyPayBody gowe.WxPayNotifyPayBody) error {
 		fmt.Println(wxPayNotifyPayBody)
 
 		return nil
@@ -50,7 +50,7 @@ func WxPayAppSign(ctx context.Context, c *app.RequestContext) {
 
 	fmt.Println(body)
 
-	paySign := gowe.WxPayMaSign(WXPay.GetAppId(), body["nonceStr"], body["packages"], body["signType"], body["timeStamp"], WXPay.GetAPIKey())
+	paySign := gowe.WxPayMaSign(WXPay.GetAppId(ctx), body["nonceStr"], body["packages"], body["signType"], body["timeStamp"], WXPay.GetAPIKey(ctx))
 
 	body["paySign"] = paySign
 
@@ -74,7 +74,7 @@ func WxPayUnifiedOrder(ctx context.Context, c *app.RequestContext) {
 		TradeType:      gowe.TradeTypeMiniApp,
 	}
 
-	order, err := gowe.WxPayUnifiedOrder(WXPay, body)
+	order, err := gowe.WxPayUnifiedOrder(ctx, WXPay, body)
 
 	if err != nil {
 		c.JSON(505, webext.ResponseData{

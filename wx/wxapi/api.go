@@ -34,7 +34,7 @@ func Ping(ctx context.Context, c *app.RequestContext) {
 
 // 订阅消息
 func WxMaSubscribeMessageSend(ctx context.Context, c *app.RequestContext) {
-	token, _ := gowe.GetAccessToken(WX)
+	token, _ := gowe.GetAccessToken(ctx, WX)
 	WX.AccessToken = token.AccessToken
 
 	var params gowe.WxMaTemplateMsgSendBody
@@ -48,7 +48,7 @@ func WxMaSubscribeMessageSend(ctx context.Context, c *app.RequestContext) {
 	params.AddData("thing3", "每月20日统一结算")
 	params.AddData("thing4", "请查看详细信息")
 
-	send, err := gowe.WxMaSubscribeMessageSend(WX, &params)
+	send, err := gowe.WxMaSubscribeMessageSend(ctx, WX, &params)
 	if err != nil {
 		fmt.Println(err.Error())
 	}
@@ -64,7 +64,7 @@ func WxMaCode2Session(ctx context.Context, c *app.RequestContext) {
 	code := c.Query("jsCode")
 	hlog.CtxInfof(ctx, code)
 
-	session, err := gowe.WxMaCode2Session(WX, code)
+	session, err := gowe.WxMaCode2Session(ctx, WX, code)
 	hlog.CtxInfof(ctx, session.OpenId)
 
 	if err != nil {

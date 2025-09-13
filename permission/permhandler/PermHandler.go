@@ -16,7 +16,7 @@ import (
 
 	"readygo/permission/permservice"
 	"readygo/permission/permstruct"
-	"readygo/permission/permutil"
+	"readygo/util"
 	"readygo/webext"
 
 	"github.com/cloudwego/hertz/pkg/app"
@@ -29,13 +29,6 @@ var JWTTokenName = "READYGOTOKEN"
 // PermHandler 权限过滤器
 func PermHandler() app.HandlerFunc {
 	return func(ctx context.Context, c *app.RequestContext) {
-		// 处理跨域
-		c.Header("Access-Control-Allow-Origin", "*")
-		c.Header("Access-Control-Allow-Headers", "Content-Type,AccessToken,X-CSRF-Token, Authorization, Token")
-		c.Header("Access-Control-Allow-Methods", "POST, GET, OPTIONS")
-		c.Header("Access-Control-Expose-Headers", "Content-Length, Access-Control-Allow-Origin, Access-Control-Allow-Headers, Content-Type")
-		c.Header("Access-Control-Allow-Credentials", "true")
-
 		method := string(c.Request.Method())
 		// 放行所有OPTIONS方法
 		if method == "OPTIONS" {
@@ -60,8 +53,6 @@ func PermHandler() app.HandlerFunc {
 
 		// 权限的URL不能重复,通过访问的url,根据/api/user/menu返回的数据再遍历一次,获取menuId 和 roleId
 		// 前后端分离之后,后台的菜单实际只管理了数据,并不管理前端的菜单层次结构.
-
-		user := permstruct.UserVOStruct{}
 		token := string(c.GetHeader(JWTTokenName))
 		if token == "" {
 			responseBody.StatusCode = 1 //http.StatusUnauthorized
@@ -71,7 +62,8 @@ func PermHandler() app.HandlerFunc {
 		}
 
 		// 获取Token并检测有效期
-		userID, err := permutil.JWEGetInfoFromToken(token, &user)
+		userID, err := util.UserIdByToken(token)
+		//userID, err := permutil.JWEGetInfoFromToken(token, &user)
 		if err != nil {
 			responseBody.StatusCode = 1 //http.StatusUnauthorized
 			responseBody.Message = fmt.Sprintf("%s%s", "解析Token失败", err.Error())
