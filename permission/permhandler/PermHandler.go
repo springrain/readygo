@@ -135,7 +135,7 @@ func PermHandler() app.HandlerFunc {
 			if item.Pageurl == "" {
 				continue
 			}
-			if strings.ToLower(item.Pageurl) == strings.ToLower(uri) {
+			if strings.EqualFold(item.Pageurl, uri) {
 				roleID = item.RoleId
 				break
 			}
