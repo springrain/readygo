@@ -13,8 +13,6 @@ import (
 	"net/http"
 	"os"
 
-	"readygo/api"
-	"readygo/apistruct"
 	"readygo/cache"
 	"readygo/permission/permhandler"
 	"readygo/permission/permroute"
@@ -96,7 +94,7 @@ func initWebEngine() {
 		c.JSON(200, utils.H{"hello": "world"})
 	})
 
-	h.GET("/login", api.Login)
+	//h.GET("/login", api.Login)
 	//h.POST("/Captcha", permapi.Captcha)
 
 	h.GET("/system/menu/tree", func(ctx context.Context, c *app.RequestContext) {
@@ -104,16 +102,16 @@ func initWebEngine() {
 		// token := c.GetHeader(JWTTokenName)
 		// userid, err := permutil.GetInfoFromToken(token, &user)
 		if err == nil {
-			c.JSON(http.StatusOK, apistruct.ResponseBodyModel{
-				Status:  200,
-				Message: "",
-				Data:    utils.H{"userid": user.UserId, "extInfo": user},
+			c.JSON(http.StatusOK, webext.ResponseData{
+				StatusCode: 0,
+				Message:    "",
+				Data:       utils.H{"userid": user.UserId, "extInfo": user},
 			})
 		} else {
-			c.JSON(http.StatusServiceUnavailable, apistruct.ResponseBodyModel{
-				Status:  500,
-				Message: err.Error(),
-				Data:    utils.H{"msg": err.Error()},
+			c.JSON(http.StatusServiceUnavailable, webext.ResponseData{
+				StatusCode: 1,
+				Message:    err.Error(),
+				Data:       utils.H{"msg": err.Error()},
 			})
 		}
 	})

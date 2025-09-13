@@ -14,10 +14,10 @@ import (
 	"net/http"
 	"strings"
 
-	"readygo/apistruct"
 	"readygo/permission/permservice"
 	"readygo/permission/permstruct"
 	"readygo/permission/permutil"
+	"readygo/webext"
 
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/common/hlog"
@@ -47,13 +47,13 @@ func PermHandler() app.HandlerFunc {
 		// 	c.AbortWithStatus(http.StatusMethodNotAllowed)
 		// }
 
-		responseBody := apistruct.ResponseBodyModel{}
+		responseBody := webext.ResponseData{}
 		// 请求的uri
 		uri := string(c.Request.URI().Path())
 		hlog.Info(uri)
 
-		// 如果是不拦截的URL  TODO 此处因为权限拦截不支持正则 先放开swagger
-		if isExcludePath(uri) || strings.Contains(uri, "swagger") {
+		// 如果是不拦截的URL
+		if isExcludePath(uri) {
 			c.Next(ctx)
 			return
 		}
@@ -64,18 +64,18 @@ func PermHandler() app.HandlerFunc {
 		user := permstruct.UserVOStruct{}
 		token := string(c.GetHeader(JWTTokenName))
 		if token == "" {
-			responseBody.Status = http.StatusUnauthorized
+			responseBody.StatusCode = 1 //http.StatusUnauthorized
 			responseBody.Message = "缺少Token"
-			c.AbortWithStatusJSON(responseBody.Status, responseBody)
+			c.AbortWithStatusJSON(http.StatusUnauthorized, responseBody)
 			return
 		}
 
 		// 获取Token并检测有效期
 		userID, err := permutil.JWEGetInfoFromToken(token, &user)
 		if err != nil {
-			responseBody.Status = http.StatusUnauthorized
+			responseBody.StatusCode = 1 //http.StatusUnauthorized
 			responseBody.Message = fmt.Sprintf("%s%s", "解析Token失败", err.Error())
-			c.AbortWithStatusJSON(responseBody.Status, responseBody)
+			c.AbortWithStatusJSON(http.StatusUnauthorized, responseBody)
 			return
 		}
 
@@ -117,16 +117,16 @@ func PermHandler() app.HandlerFunc {
 		// 获取权限拥有的菜单信息
 		permMenuList, err := permservice.FindMenuByUserId(ctx, userID)
 		if err != nil {
-			responseBody.Status = http.StatusUnauthorized
+			responseBody.StatusCode = 1 //http.StatusUnauthorized
 			responseBody.Message = fmt.Sprintf("%s%s", "获取用户菜单失败", err.Error())
-			c.AbortWithStatusJSON(responseBody.Status, responseBody)
+			c.AbortWithStatusJSON(http.StatusUnauthorized, responseBody)
 			return
 		}
 
 		if len(permMenuList) == 0 {
-			responseBody.Status = http.StatusUnauthorized
+			responseBody.StatusCode = 1 //http.StatusUnauthorized
 			responseBody.Message = "没有任何权限"
-			c.AbortWithStatusJSON(responseBody.Status, responseBody)
+			c.AbortWithStatusJSON(http.StatusUnauthorized, responseBody)
 			return
 		}
 		// 用户是否有uri的权限.循环遍历用户有权限的菜单URL,因为pageUrl是唯一的,可以取出menuId和roleId
@@ -142,26 +142,26 @@ func PermHandler() app.HandlerFunc {
 		}
 
 		if roleID == "" {
-			responseBody.Status = http.StatusUnauthorized
+			responseBody.StatusCode = 1 //http.StatusUnauthorized
 			responseBody.Message = "没有当前操作权限"
-			c.AbortWithStatusJSON(responseBody.Status, responseBody)
+			c.AbortWithStatusJSON(http.StatusUnauthorized, responseBody)
 			return
 		}
 
 		//根据roleId 查询 role
 		role, err := permservice.FindRoleStructById(ctx, roleID)
 		if err != nil {
-			responseBody.Status = http.StatusUnauthorized
+			responseBody.StatusCode = 1 //http.StatusUnauthorized
 			responseBody.Message = fmt.Sprintf("%s%s", "FindRoleStructById失败", err.Error())
-			c.AbortWithStatusJSON(responseBody.Status, responseBody)
+			c.AbortWithStatusJSON(http.StatusUnauthorized, responseBody)
 			return
 		}
 
 		userVO, err := permservice.FindUserVOStructByUserId(ctx, userID)
 		if err != nil {
-			responseBody.Status = http.StatusUnauthorized
+			responseBody.StatusCode = 1 //http.StatusUnauthorized
 			responseBody.Message = fmt.Sprintf("%s%s", "FindUserVOStructByUserId失败", err.Error())
-			c.AbortWithStatusJSON(responseBody.Status, responseBody)
+			c.AbortWithStatusJSON(http.StatusUnauthorized, responseBody)
 			return
 		}
 
