@@ -14,6 +14,7 @@ import (
 	"net/http"
 	"strings"
 
+	"readygo/config"
 	"readygo/permission/permservice"
 	"readygo/permission/permstruct"
 	"readygo/util"
@@ -24,7 +25,7 @@ import (
 )
 
 // JWTTokenName jwt的token名称
-var JWTTokenName = "READYGOTOKEN"
+var JWTTokenName = config.Cfg.Jwt.TokenName
 
 // PermHandler 权限过滤器
 func PermHandler() app.HandlerFunc {

@@ -1,7 +1,9 @@
 package webext
 
 import (
+	"readygo/config"
 	"reflect"
+	"strconv"
 	"strings"
 	"unsafe"
 
@@ -10,7 +12,7 @@ import (
 )
 
 // Creates a router without any middleware by default
-var webEngine = server.Default(server.WithHostPorts(":7080"), server.WithBasePath("/readygo/"))
+var webEngine = server.Default(server.WithHostPorts(":" + strconv.Itoa(config.Cfg.Server.Port)), server.WithBasePath(config.Cfg.Server.BasePath + "/"))
 
 func WebEngine() *server.Hertz {
 	return webEngine
@@ -110,8 +112,11 @@ func SuccessReponseData(data interface{}, message string) ResponseData {
 	return res
 }
 
-// ErrorReponseData 通用错误处理
-func ErrorReponseData(errCode int, message string, err error) ResponseData {
+/*
+	ErrorReponseData 通用错误处理
+	err 错误信息，可传可不传
+*/
+func ErrorReponseData(errCode int, message string, err ...error) ResponseData {
 	res := ResponseData{
 		StatusCode: errCode,
 		Message:    message,

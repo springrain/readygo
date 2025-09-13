@@ -6,7 +6,10 @@ import (
 	"fmt"
 
 	"readygo/cache"
+	"readygo/config"
 	"readygo/permission/permstruct"
+	"readygo/util"
+	"readygo/webext"
 
 	"gitee.com/chunanyong/zorm"
 	"github.com/cloudwego/hertz/pkg/common/hlog"
@@ -193,4 +196,60 @@ func FindUserVOStructByUserId(ctx context.Context, userId string) (permstruct.Us
 	userVO.Active = userStruct.Active
 	userVO.PrivateOrgRoleId = ""
 	return userVO, nil
+}
+
+
+// 用户登录
+func Login(ctx context.Context, userStruct *permstruct.UserStruct) (interface{}, error) {
+	// 参数校验
+   	if userStruct == nil {
+		return webext.ErrorReponseData(500, "登录请求不能为空"), nil
+	}
+	if userStruct.Account == "" {
+		return webext.ErrorReponseData(500, "账号不能为空"), nil
+	}
+	if userStruct.Password == "" {
+		return webext.ErrorReponseData(500, "密码不能为空"), nil
+	}
+
+	// 初始化用户实体，用于接收数据库查询结果
+	var user permstruct.UserStruct
+
+	// 根据Account查询
+	finder := zorm.NewSelectFinder(permstruct.UserStructTableName).Append(" WHERE account=?", userStruct.Account)
+	hasRecord, err := zorm.QueryRow(ctx, finder, &user)
+	if err != nil {
+		detailedErr := fmt.Errorf("permservice.Login - 查询数据库失败: %w", err)
+		hlog.Error(detailedErr)
+		return webext.ErrorReponseData(500, "查询数据库失败", detailedErr), nil
+	}
+
+	// 如果没有查到记录
+	if !hasRecord {
+		return webext.ErrorReponseData(500, "账号或密码错误"), nil
+	}
+
+	// 核对密码
+	if userStruct.Password != user.Password {
+		return webext.ErrorReponseData(500, "账号或密码错误"), nil
+	}
+	// 产生 Token
+	token, err := util.NewJWTToken(user.Id)
+	if err != nil {
+		return webext.ErrorReponseData(500, "生成Token失败", err), nil
+	}
+
+	// 登录成功
+	response := map[string]interface{}{
+		config.Cfg.Jwt.TokenName: map[string]string{
+			"access_token": token,
+			"token_type":   "Bearer",
+		},
+		"user": map[string]string{
+			"userId":   user.Id,
+			"username": user.UserName,
+		},
+	}
+
+	return webext.SuccessReponseData(response, "登录成功"), nil
 }

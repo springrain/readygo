@@ -7,13 +7,14 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"readygo/config"
 	"strings"
 	"time"
 )
 
-const (
-	Timeout   int    = 3600
-	JwtSecret string = "JwtSecret"
+var (
+	Timeout   int    = config.Cfg.Jwt.Timeout
+	JwtSecret string = config.Cfg.Jwt.Secret
 )
 
 type Header struct {
