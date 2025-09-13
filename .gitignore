@@ -18,7 +18,7 @@
 *.tmp
 *debug.test
 debug.test
-go.sum
+#go.sum
 
 # system ignore
 .DS_Store
