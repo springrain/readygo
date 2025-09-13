@@ -15,7 +15,7 @@ func RegisterPermRoute(r *server.Hertz) {
 	//v1.POST("user/register", UserRegister)
 	//
 	//// 用户登录
-	// v1.POST("login", nil)
+	v1.POST("login", nil)
 	//
 	//v1.GET("user/demo",Demo)
 	//
