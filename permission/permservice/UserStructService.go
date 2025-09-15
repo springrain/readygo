@@ -4,6 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"image/color"
+	"sync"
+	"sync/atomic"
+
+	"github.com/mojocn/base64Captcha"
 
 	"readygo/cache"
 	"readygo/config"
@@ -14,6 +19,23 @@ import (
 	"gitee.com/chunanyong/zorm"
 	"github.com/cloudwego/hertz/pkg/common/hlog"
 )
+
+// 配置验证码的参数
+var driverString = base64Captcha.DriverString{
+	Height:          60,
+	Width:           200,
+	NoiseCount:      0,
+	ShowLineOptions: 2 | 4,
+	Length:          4,
+	Source:          "34678acdefghkmnprtuvwxy",
+	BgColor:         &color.RGBA{R: 3, G: 102, B: 214, A: 125},
+	Fonts:           []string{"wqy-microhei.ttc"},
+}
+var errorLoginCount atomic.Uint32
+var captchaLock = &sync.Mutex{}
+var captchaQuestion, captchaAnswer, captchaBase64 string
+var driver = driverString.ConvertFonts()
+const errCount = 3
 
 // SaveUserStruct 保存用户
 // 如果入参ctx中没有dbConnection,使用defaultDao开启事务并最后提交
@@ -212,27 +234,49 @@ func Login(ctx context.Context, userStruct *permstruct.UserStruct) (interface{},
 		return webext.ErrorReponseData(500, "密码不能为空"), nil
 	}
 
+	// 第4次开始需要传入验证码
+	if errorLoginCount.Load() >= errCount {
+		// 参数校验
+		if userStruct.Answer == "" {
+			return webext.ErrorReponseData(500, "验证码不能为空"), nil
+		}
+		// 比对验证码
+		if captchaAnswer != userStruct.Answer {
+			return webext.ErrorReponseData(500, "验证码错误"), nil
+		}
+	}
+	
 	// 初始化用户实体，用于接收数据库查询结果
 	var user permstruct.UserStruct
 
 	// 根据Account查询
 	finder := zorm.NewSelectFinder(permstruct.UserStructTableName).Append(" WHERE account=?", userStruct.Account)
 	hasRecord, err := zorm.QueryRow(ctx, finder, &user)
-	if err != nil {
-		detailedErr := fmt.Errorf("permservice.Login - 查询数据库失败: %w", err)
-		hlog.Error(detailedErr)
-		return webext.ErrorReponseData(500, "查询数据库失败", detailedErr), nil
-	}
-
-	// 如果没有查到记录
-	if !hasRecord {
+	
+	// 用户不存在或者异常
+	if err != nil || !hasRecord{
+		// 账号不存在，增加错误次数
+		errorLoginCount.Add(1)
+		// 错误超过3次，返回验证码的base64
+		if errorLoginCount.Load() >= errCount {
+			generateCaptcha()
+			return webext.ErrorReponseData(500, captchaBase64), nil
+		}
 		return webext.ErrorReponseData(500, "账号或密码错误"), nil
 	}
 
 	// 核对密码
 	if userStruct.Password != user.Password {
+		// 密码错误，增加错误次数
+		errorLoginCount.Add(1)
+		// 错误超过3次，返回验证码的base64
+		if errorLoginCount.Load() >= errCount {
+			generateCaptcha()
+			return webext.ErrorReponseData(500, captchaBase64), nil
+		}
 		return webext.ErrorReponseData(500, "账号或密码错误"), nil
 	}
+	
 	// 产生 Token
 	token, err := util.NewJWTToken(user.Id)
 	if err != nil {
@@ -251,5 +295,20 @@ func Login(ctx context.Context, userStruct *permstruct.UserStruct) (interface{},
 		},
 	}
 
+	// 登录成功，重置错误次数
+	errorLoginCount.Store(0)
 	return webext.SuccessReponseData(response, "登录成功"), nil
+}
+
+// generateCaptcha 生成随机验证码
+func generateCaptcha() {
+	captchaLock.Lock()
+	defer captchaLock.Unlock()
+	_, captchaQuestion, captchaAnswer = driver.GenerateIdQuestionAnswer()
+	item, err := driver.DrawCaptcha(captchaQuestion)
+	if err != nil {
+		captchaBase64 = ""
+		return
+	}
+	captchaBase64 = item.EncodeB64string()
 }

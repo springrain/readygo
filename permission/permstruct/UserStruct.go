@@ -66,6 +66,9 @@ type UserStruct struct {
 
 	// Roles 用户的角色
 	Roles []RoleStruct
+
+    // 验证码
+	Answer string
 }
 
 // GetTableName 获取表名称
