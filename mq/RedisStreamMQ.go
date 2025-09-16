@@ -105,14 +105,15 @@ func CreateStreamConsumerGroup(ctx context.Context, streamName, groupName, start
 
 // SendMessage  发送消息队列
 func SendMessage(ctx context.Context, streamName string, values []interface{}) (MessageID, error) {
-	_, errResult := cache.RedisCMDContext(ctx, "xadd", streamName, "*", values)
-
+	result, errResult := cache.RedisCMDContext(ctx, "xadd", streamName, "*", values)
 	if errResult != nil {
 		return emptyMessageID, errResult
 	}
-
-	return emptyMessageID, nil
-
+	messageID := MessageID{}
+	if msgID, ok := result.(string); ok {
+		messageID.ID = msgID
+	}
+	return messageID, nil
 }
 
 // StartConsumer 启动一个消费者
