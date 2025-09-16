@@ -2,8 +2,8 @@ package cache
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
+	"readygo/util"
 	"runtime"
 	"strings"
 	"time"
@@ -102,7 +102,7 @@ func redisHset(ctx context.Context, hname string, key string, value interface{})
 		return errors.New("值不能为空")
 	}
 	// 把值转成JSON的[]byte格式
-	jsonData, errJSON := json.Marshal(value)
+	jsonData, errJSON := util.Marshal(value)
 	if errJSON != nil {
 		return errJSON
 	}
@@ -128,8 +128,7 @@ func redisHget(ctx context.Context, hname string, key string, valuePtr interface
 		return errResult
 	}
 	// 转换成json的[]byte
-	// jsonBytes, jsonOK := jsonData.([]byte)
-	jsonBytes, jsonOK := jsonData.(string)
+	jsonBytes, jsonOK := jsonData.([]byte)
 	if !jsonOK { // 取值失败
 		return errors.New("缓存中的格式值错误")
 	}
@@ -137,8 +136,7 @@ func redisHget(ctx context.Context, hname string, key string, valuePtr interface
 		return nil
 	}
 	// 赋值
-	// errJSON := json.Unmarshal(jsonBytes, valuePtr)
-	errJSON := json.Unmarshal([]byte(jsonBytes), valuePtr)
+	errJSON := util.Unmarshal(jsonBytes, valuePtr)
 	return errJSON
 }
 
@@ -169,17 +167,46 @@ func redisDel(ctx context.Context, cacheName string) error {
 	return nil
 }
 
-func redisGet(ctx context.Context, cacheName string) (interface{}, error) {
-	if cacheName == "" {
-		return nil, errors.New("值不能为空")
+// RedisSet 设置key的值
+func RedisSet(ctx context.Context, cacheName string, value interface{}) error {
+	if cacheName == "" || value == nil {
+		return errors.New("值不能为空")
 	}
-	result, errResult := RedisCMDContext(ctx, "get", cacheName)
+	// 把值转成JSON的[]byte格式
+	jsonData, errJSON := util.Marshal(value)
+	if errJSON != nil {
+		return errJSON
+	}
+	_, errResult := RedisCMDContext(ctx, "set", cacheName, jsonData)
+	//获值错误
+	if errResult != nil {
+		return errResult
+	}
+	return nil
+}
+
+// RedisGet 获取指定key的值
+func RedisGet(ctx context.Context, cacheName string, valuePtr interface{}) error {
+	if cacheName == "" {
+		return errors.New("值不能为空")
+	}
+	jsonData, errResult := RedisCMDContext(ctx, "get", cacheName)
 
 	// 获值错误
 	if errResult != nil {
-		return nil, errResult
+		return errResult
 	}
-	return result, nil
+	// 转换成json的[]byte
+	jsonBytes, jsonOK := jsonData.([]byte)
+	if !jsonOK { // 取值失败
+		return errors.New("缓存中的格式值错误")
+	}
+	if len(jsonBytes) < 1 { // 缓存中没有值
+		return nil
+	}
+	// 赋值
+	errJSON := util.Unmarshal(jsonBytes, valuePtr)
+	return errJSON
 }
 
 // RedisINCR redis实现的计数器
@@ -196,11 +223,11 @@ func RedisINCR(ctx context.Context, cacheName string) (interface{}, error) {
 }
 
 // RedisLock redis实现的分布式锁
-// 参数:lockName锁的名称,timeoutSecond超时秒数默认5秒,分布式锁内业务的匿名函数
-// 返回值:true获取锁成功,获取锁失败false,匿名函数返回值,错误信息
-func RedisLock(ctx context.Context, lockName string, timeoutSecond int, doLock func() (interface{}, error)) (bool, interface{}, error) {
+// 参数:lockName锁的名称,timeoutSecond超时秒数默认5秒
+// 返回值:true获取锁成功,获取锁失败false,错误信息
+func RedisLock(ctx context.Context, lockName string, timeoutSecond int) (bool, error) {
 	if lockName == "" {
-		return false, nil, errors.New("lockName值不能为空")
+		return false, errors.New("lockName值不能为空")
 	}
 
 	if timeoutSecond == 0 { // 如果没有超时时间,默认5秒
@@ -210,48 +237,17 @@ func RedisLock(ctx context.Context, lockName string, timeoutSecond int, doLock f
 	// 获取超时的时间,作为value
 	value := time.Now().Unix() + int64(timeoutSecond)
 
-	lockedStatus, errResult := RedisCMDContext(ctx, "set", lockName, value, "ex", timeoutSecond, "nx")
+	lockedStatus, errResult := RedisCMDContext(ctx, "set", lockName, value, "nx", "ex", timeoutSecond)
 	locked, lockOK := lockedStatus.(int)
 	if !lockOK { // 结果异常
-		return false, nil, errors.New("获取锁状态异常")
+		return false, errors.New("获取锁状态异常")
 	}
 
 	// 获值错误或者没有获取到锁
 	if errResult != nil || (locked == 0) {
-		return false, nil, errResult
+		return false, errResult
 	}
-	// 确保解锁逻辑执行
-	defer func() {
-		// 当前时间
-		newValue := time.Now().Unix()
-		if newValue >= value { // 已经过了超时时间,不需要解锁
-			return
-		}
-
-		lockValue, errLock := redisGet(ctx, lockName)
-		if errLock != nil { // 从redis获取值出现异常,解锁
-			redisDel(ctx, lockName)
-			return
-		}
-
-		oldValue, newOK := lockValue.(int64)
-		if !newOK { // 如果获取值异常,解锁
-			redisDel(ctx, lockName)
-			return
-		}
-		if oldValue != value { // 值已经被其他的程序修改,已经不再是本程序的锁了,返回
-			return
-		}
-
-		// 其他情况,解锁
-		redisDel(ctx, lockName)
-	}()
-
-	// 调用业务逻辑
-	result, errLock := doLock()
-
-	// 返回业务逻辑
-	return locked == 1, result, errLock
+	return locked == 1, errResult
 }
 
 // RedisCMDContext 运行redis指令

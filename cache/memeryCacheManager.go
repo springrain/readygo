@@ -2,8 +2,8 @@ package cache
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
+	"readygo/util"
 	"sync"
 )
 
@@ -48,7 +48,7 @@ func (cacheManager *memeryCacheManager) getFromCache(ctx context.Context, cacheN
 		return nil
 	}
 	// 赋值
-	errJSON := json.Unmarshal(jsonBytes, valuePtr)
+	errJSON := util.Unmarshal(jsonBytes, valuePtr)
 	return errJSON
 }
 
@@ -69,7 +69,7 @@ func (cacheManager *memeryCacheManager) putToCache(ctx context.Context, cacheNam
 	}
 
 	// 对象转成json的[]byte
-	jsonData, errJSON := json.Marshal(valuePtr)
+	jsonData, errJSON := util.Marshal(valuePtr)
 	if errJSON != nil {
 		return errJSON
 	}
