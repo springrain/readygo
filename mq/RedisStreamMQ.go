@@ -33,11 +33,11 @@ type IMessageProducerConsumer[T any] interface {
 	GetGroupName(ctx context.Context) string
 	// GetConsumerName 获取消费者名称
 	GetConsumerName(ctx context.Context) string
-	// GetCount 一次获取消息的总数
+	// GetCount 一次获取消息的总数,默认10
 	GetCount(ctx context.Context) int
-	// GetBlock 阻塞毫秒数
+	// GetBlock 阻塞毫秒数,默认5000毫秒
 	GetBlock(ctx context.Context) int
-	// GetStart 获取消费的起始位置
+	// GetStart 获取消费的起始位置,默认 ">"
 	GetStart(ctx context.Context) string
 	// SendMessage 生产者发送消息
 	SendMessage(ctx context.Context, messageObject T) (MessageID, error)
