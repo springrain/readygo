@@ -27,42 +27,44 @@ type MessageID struct {
 }
 
 // IMessageProducerConsumer 生产消费者的接口
-type IMessageProducerConsumer interface {
+type IMessageProducerConsumer[T any] interface {
 	// GetQueueName 获取队列名称
 	GetQueueName(ctx context.Context) string
 	// GetGroupName 获取消息组名称
 	GetGroupName(ctx context.Context) string
 	// GetConsumerName 获取消费者名称
 	GetConsumerName(ctx context.Context) string
-	// GetMessageObject 获取消息对象,是指针对象
-	GetMessageObject(ctx context.Context) interface{}
 	// GetStart 获取消费的起始位置
 	GetStart(ctx context.Context) string
+	// OnMessage 生产者发送消息
+	SendMessage(ctx context.Context, messageObject T) (MessageID, error)
 	// OnMessage 消费者处理消息
-	OnMessage(ctx context.Context, messageID MessageID, messageObject interface{}) (bool, error)
+	OnMessage(ctx context.Context, messageID MessageID, messageObject T) (bool, error)
 }
 
 // MessageProducerConsumer 默认的消息队列实现
-type MessageProducerConsumer struct {
-	QueueName     string
-	GroupName     string
-	ConsumerName  string
-	MessageObject interface{}
-	Start         string
+type MessageProducerConsumer[T any] struct {
+	QueueName    string
+	GroupName    string
+	ConsumerName string
+	Start        string
 }
 
-func (messageProducerConsumer *MessageProducerConsumer) GetQueueName(ctx context.Context) string {
+func (messageProducerConsumer *MessageProducerConsumer[T]) GetQueueName(ctx context.Context) string {
 	return messageProducerConsumer.QueueName
 }
-func (messageProducerConsumer *MessageProducerConsumer) GetGroupName(ctx context.Context) string {
+func (messageProducerConsumer *MessageProducerConsumer[T]) GetGroupName(ctx context.Context) string {
 	return messageProducerConsumer.GroupName
 }
-func (messageProducerConsumer *MessageProducerConsumer) GetConsumerName(ctx context.Context) string {
+func (messageProducerConsumer *MessageProducerConsumer[T]) GetConsumerName(ctx context.Context) string {
 	return messageProducerConsumer.ConsumerName
 }
 
-func (messageProducerConsumer *MessageProducerConsumer) GetStart(ctx context.Context) string {
+func (messageProducerConsumer *MessageProducerConsumer[T]) GetStart(ctx context.Context) string {
 	return messageProducerConsumer.Start
+}
+func (messageProducerConsumer *MessageProducerConsumer[T]) SendMessage(ctx context.Context, messageObject T) (MessageID, error) {
+	return sendMessage(ctx, messageProducerConsumer.QueueName, messageObject)
 }
 
 // CreateStreamConsumerGroup  创建 redis stream consumer group
@@ -88,11 +90,7 @@ func CreateStreamConsumerGroup(ctx context.Context, streamName, groupName, start
 }
 
 // SendMessage  发送消息队列
-func SendMessage(ctx context.Context, messageProducerConsumer IMessageProducerConsumer) (MessageID, error) {
-	messageObject := messageProducerConsumer.GetMessageObject(ctx)
-	if messageObject == nil {
-		return emptyMessageID, errors.New("messageObject is nil")
-	}
+func sendMessage[T any](ctx context.Context, queueName string, messageObject T) (MessageID, error) {
 	jsonData, err := json.Marshal(messageObject)
 	if err != nil {
 		return emptyMessageID, err
@@ -100,7 +98,7 @@ func SendMessage(ctx context.Context, messageProducerConsumer IMessageProducerCo
 
 	args := make([]interface{}, 0)
 	args = append(args, "xadd")
-	args = append(args, messageProducerConsumer.GetQueueName(ctx))
+	args = append(args, queueName)
 	args = append(args, "*")
 	args = append(args, streamRawDataJSONKey)
 	args = append(args, jsonData)
@@ -118,7 +116,7 @@ func SendMessage(ctx context.Context, messageProducerConsumer IMessageProducerCo
 }
 
 // StartConsumer 启动一个消费者
-func StartConsumer(ctx context.Context, messageProducerConsumer IMessageProducerConsumer) error {
+func StartConsumer[T any](ctx context.Context, messageProducerConsumer IMessageProducerConsumer[T]) error {
 	queueName := messageProducerConsumer.GetQueueName(ctx)
 	groupName := messageProducerConsumer.GetGroupName(ctx)
 	consumerName := messageProducerConsumer.GetConsumerName(ctx)
@@ -173,12 +171,12 @@ func StartConsumer(ctx context.Context, messageProducerConsumer IMessageProducer
 					ConsumerName: consumerName,
 				}
 				msgObjectBytes := values[1].(string)
-				messageObj := messageProducerConsumer.GetMessageObject(ctx)
+				messageObj := new(T)
 				err := json.Unmarshal([]byte(msgObjectBytes), messageObj)
 				if err != nil {
 					continue
 				}
-				ok, err := messageProducerConsumer.OnMessage(ctx, messageID, messageObj)
+				ok, err := messageProducerConsumer.OnMessage(ctx, messageID, *messageObj)
 				if err != nil {
 					continue
 				}
