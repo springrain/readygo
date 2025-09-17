@@ -38,8 +38,6 @@ type IMessageProducerConsumer interface {
 	GetMessageObject(ctx context.Context) interface{}
 	// GetStart 获取消费的起始位置
 	GetStart(ctx context.Context) string
-	// OnMessage 生产者发送消息
-	SendMessage(ctx context.Context, messageObject interface{}) (MessageID, error)
 	// OnMessage 消费者处理消息
 	OnMessage(ctx context.Context, messageID MessageID, messageObject interface{}) (bool, error)
 }
@@ -67,21 +65,6 @@ func (messageProducerConsumer *MessageProducerConsumer) GetStart(ctx context.Con
 	return messageProducerConsumer.Start
 }
 
-func (messageProducerConsumer *MessageProducerConsumer) SendMessage(ctx context.Context, messageObject interface{}) (MessageID, error) {
-	if messageObject == nil {
-		return emptyMessageID, errors.New("messageObject is nil")
-	}
-	jsonData, err := json.Marshal(messageObject)
-	if err != nil {
-		return emptyMessageID, err
-	}
-	data := make([]interface{}, 0, 2)
-	data[0] = streamRawDataJSONKey
-	data[1] = jsonData
-
-	return SendMessage(ctx, messageProducerConsumer.GetQueueName(ctx), data)
-}
-
 // CreateStreamConsumerGroup  创建 redis stream consumer group
 // start 有 "0",从开始位置消费; $从最近的消息消费
 func CreateStreamConsumerGroup(ctx context.Context, streamName, groupName, start string) error {
@@ -105,12 +88,23 @@ func CreateStreamConsumerGroup(ctx context.Context, streamName, groupName, start
 }
 
 // SendMessage  发送消息队列
-func SendMessage(ctx context.Context, streamName string, values []interface{}) (MessageID, error) {
+func SendMessage(ctx context.Context, messageProducerConsumer IMessageProducerConsumer) (MessageID, error) {
+	messageObject := messageProducerConsumer.GetMessageObject(ctx)
+	if messageObject == nil {
+		return emptyMessageID, errors.New("messageObject is nil")
+	}
+	jsonData, err := json.Marshal(messageObject)
+	if err != nil {
+		return emptyMessageID, err
+	}
+
 	args := make([]interface{}, 0)
 	args = append(args, "xadd")
-	args = append(args, streamName)
+	args = append(args, messageProducerConsumer.GetQueueName(ctx))
 	args = append(args, "*")
-	args = append(args, values...)
+	args = append(args, streamRawDataJSONKey)
+	args = append(args, jsonData)
+
 	//result, errResult := cache.RedisCMDContext(ctx, "xadd", streamName, "*", values)
 	result, errResult := cache.RedisCMDContext(ctx, args...)
 	if errResult != nil {
