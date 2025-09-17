@@ -2,23 +2,28 @@ package mq
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"readygo/cache"
-	"readygo/util"
 	"strings"
 	"time"
 
 	"github.com/redis/go-redis/v9"
 )
 
+// emptyMessageID 空的消息ID
 var emptyMessageID = MessageID{}
 
-var messageByteDataKey = "messageByteData"
+// streamRawDataJSONKey  redis stream 中的值只能使用字符串,所以使用Json格式!!!!
+const streamRawDataJSONKey = "stream_raw_data_json"
 
 // MessageID 消息ID,用于隔离依赖和属性显示
 type MessageID struct {
-	ID string
+	ID           string
+	QueueName    string
+	GroupName    string
+	ConsumerName string
 }
 
 // IMessageProducerConsumer 生产消费者的接口
@@ -57,26 +62,22 @@ func (messageProducerConsumer *MessageProducerConsumer) GetGroupName(ctx context
 func (messageProducerConsumer *MessageProducerConsumer) GetConsumerName(ctx context.Context) string {
 	return messageProducerConsumer.ConsumerName
 }
-func (messageProducerConsumer *MessageProducerConsumer) GetMessageObject(ctx context.Context) interface{} {
-	return messageProducerConsumer.MessageObject
-}
+
 func (messageProducerConsumer *MessageProducerConsumer) GetStart(ctx context.Context) string {
 	return messageProducerConsumer.Start
 }
-func (messageProducerConsumer *MessageProducerConsumer) OnMessage(ctx context.Context, messageID MessageID, messageObject interface{}) (bool, error) {
-	return false, nil
-}
+
 func (messageProducerConsumer *MessageProducerConsumer) SendMessage(ctx context.Context, messageObject interface{}) (MessageID, error) {
 	if messageObject == nil {
 		return emptyMessageID, errors.New("messageObject is nil")
 	}
-	bytedata, err := util.Marshal(messageObject)
+	jsonData, err := json.Marshal(messageObject)
 	if err != nil {
 		return emptyMessageID, err
 	}
 	data := make([]interface{}, 0, 2)
-	data[0] = messageByteDataKey
-	data[1] = bytedata
+	data[0] = streamRawDataJSONKey
+	data[1] = jsonData
 
 	return SendMessage(ctx, messageProducerConsumer.GetQueueName(ctx), data)
 }
@@ -105,7 +106,13 @@ func CreateStreamConsumerGroup(ctx context.Context, streamName, groupName, start
 
 // SendMessage  发送消息队列
 func SendMessage(ctx context.Context, streamName string, values []interface{}) (MessageID, error) {
-	result, errResult := cache.RedisCMDContext(ctx, "xadd", streamName, "*", values)
+	args := make([]interface{}, 0)
+	args = append(args, "xadd")
+	args = append(args, streamName)
+	args = append(args, "*")
+	args = append(args, values...)
+	//result, errResult := cache.RedisCMDContext(ctx, "xadd", streamName, "*", values)
+	result, errResult := cache.RedisCMDContext(ctx, args...)
 	if errResult != nil {
 		return emptyMessageID, errResult
 	}
@@ -138,7 +145,7 @@ func StartConsumer(ctx context.Context, messageProducerConsumer IMessageProducer
 		// 0：​​重新获取​​那些已经被领取但还躺在 PEL 中"未签收"的消息.常用于故障恢复和重试.
 		// 两者都会获取到未确认的消息,但 > 是向前看(新消息),0是回头看(未完成的消息).
 
-		streams, errResult := cache.RedisCMDContext(ctx, "xreadgroup", "group", groupName, consumerName, "count", 10, "block", 5*time.Second, "streams", queueName, ">")
+		streams, errResult := cache.RedisCMDContext(ctx, "xreadgroup", "group", groupName, consumerName, "count", 10, "streams", queueName, ">")
 
 		if errResult != nil {
 			if errResult == redis.Nil { // 超时,继续轮询
@@ -149,26 +156,51 @@ func StartConsumer(ctx context.Context, messageProducerConsumer IMessageProducer
 		}
 
 		fmt.Println(streams)
-
-		/*
-			// 处理从所有 Stream 中读取到的消息
-			for _, stream := range streams {
-				for _, message := range stream.Messages {
-					// 调用回调函数处理消息
-					if err := handler(message); err != nil {
-						// 可根据错误类型决定是否重试或放入死信队列
-						continue
-					}
-
-					// 处理成功,发送 ACK 确认消息
-					if err := rdb.XAck(ctx, streamName, groupName, message.ID).Err(); err != nil {
-
-					} else {
-
-					}
+		//map[geo:[[1758014730551-0 [name test]]]]
+		streamMap := streams.(map[interface{}]interface{})
+		for k, v := range streamMap {
+			streamName := k.(string) //获取队列名称
+			fmt.Println(streamName)
+			vs := v.([]interface{})
+			for _, msgObject := range vs { //循环消息
+				msgs := msgObject.([]interface{})
+				if len(msgs) != 2 {
+					continue
 				}
+				msgId := msgs[0].(string)
+				values := msgs[1].([]interface{})
+				if len(values) != 2 {
+					continue
+				}
+				messageID := MessageID{
+					ID:           msgId,
+					GroupName:    groupName,
+					QueueName:    queueName,
+					ConsumerName: consumerName,
+				}
+				msgObjectBytes := values[1].(string)
+				messageObj := messageProducerConsumer.GetMessageObject(ctx)
+				err := json.Unmarshal([]byte(msgObjectBytes), messageObj)
+				if err != nil {
+					continue
+				}
+				ok, err := messageProducerConsumer.OnMessage(ctx, messageID, messageObj)
+				if err != nil {
+					continue
+				}
+				if !ok {
+					continue
+				}
+				result, errResult := cache.RedisCMDContext(ctx, "xack", queueName, groupName, consumerName, msgId)
+				if errResult != nil {
+					continue
+				}
+				if result.(int) == 1 { //success
+
+				}
+
 			}
-		*/
+		}
 
 	}
 }
