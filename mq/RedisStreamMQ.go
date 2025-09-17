@@ -33,9 +33,13 @@ type IMessageProducerConsumer[T any] interface {
 	GetGroupName(ctx context.Context) string
 	// GetConsumerName 获取消费者名称
 	GetConsumerName(ctx context.Context) string
+	// GetCount 一次获取消息的总数
+	GetCount(ctx context.Context) int
+	// GetBlock 阻塞毫秒数
+	GetBlock(ctx context.Context) int
 	// GetStart 获取消费的起始位置
 	GetStart(ctx context.Context) string
-	// OnMessage 生产者发送消息
+	// SendMessage 生产者发送消息
 	SendMessage(ctx context.Context, messageObject T) (MessageID, error)
 	// OnMessage 消费者处理消息
 	OnMessage(ctx context.Context, messageID MessageID, messageObject T) (bool, error)
@@ -46,6 +50,8 @@ type MessageProducerConsumer[T any] struct {
 	QueueName    string
 	GroupName    string
 	ConsumerName string
+	Count        int
+	Block        int
 	Start        string
 }
 
@@ -58,8 +64,24 @@ func (messageProducerConsumer *MessageProducerConsumer[T]) GetGroupName(ctx cont
 func (messageProducerConsumer *MessageProducerConsumer[T]) GetConsumerName(ctx context.Context) string {
 	return messageProducerConsumer.ConsumerName
 }
-
+func (messageProducerConsumer *MessageProducerConsumer[T]) GetCount(ctx context.Context) int {
+	if messageProducerConsumer.Count == 0 {
+		return 10
+	}
+	return messageProducerConsumer.Count
+}
+func (messageProducerConsumer *MessageProducerConsumer[T]) GetBlock(ctx context.Context) int {
+	if messageProducerConsumer.Block == 0 {
+		return 5000
+	} else if messageProducerConsumer.Block < 0 {
+		return 0
+	}
+	return messageProducerConsumer.Block
+}
 func (messageProducerConsumer *MessageProducerConsumer[T]) GetStart(ctx context.Context) string {
+	if messageProducerConsumer.Start == "" {
+		return ">"
+	}
 	return messageProducerConsumer.Start
 }
 func (messageProducerConsumer *MessageProducerConsumer[T]) SendMessage(ctx context.Context, messageObject T) (MessageID, error) {
@@ -119,6 +141,9 @@ func StartConsumer[T any](ctx context.Context, messageProducerConsumer IMessageP
 	queueName := messageProducerConsumer.GetQueueName(ctx)
 	groupName := messageProducerConsumer.GetGroupName(ctx)
 	consumerName := messageProducerConsumer.GetConsumerName(ctx)
+	count := messageProducerConsumer.GetCount(ctx)
+	block := messageProducerConsumer.GetBlock(ctx)
+	start := messageProducerConsumer.GetStart(ctx)
 
 	if queueName == "" || groupName == "" || consumerName == "" {
 		return errors.New("queueName or groupName or consumerName is empty")
@@ -136,7 +161,7 @@ func StartConsumer[T any](ctx context.Context, messageProducerConsumer IMessageP
 		// 0：​​重新获取​​那些已经被领取但还躺在 PEL 中"未签收"的消息.常用于故障恢复和重试.
 		// 两者都会获取到未确认的消息,但 > 是向前看(新消息),0是回头看(未完成的消息).
 
-		streams, errResult := cache.RedisCMDContext(ctx, "xreadgroup", "group", groupName, consumerName, "count", 1, "block", 5000, "streams", queueName, ">")
+		streams, errResult := cache.RedisCMDContext(ctx, "xreadgroup", "group", groupName, consumerName, "count", count, "block", block, "streams", queueName, start)
 
 		if errResult != nil {
 			if errResult == redis.Nil { // 超时,继续轮询
