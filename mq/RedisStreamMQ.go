@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"readygo/cache"
 	"strings"
 	"time"
@@ -147,12 +146,10 @@ func StartConsumer[T any](ctx context.Context, messageProducerConsumer IMessageP
 			continue
 		}
 
-		fmt.Println(streams)
 		//map[geo:[[1758014730551-0 [name test]]]]
 		streamMap := streams.(map[interface{}]interface{})
 		for k, v := range streamMap {
 			streamName := k.(string) //获取队列名称
-			fmt.Println(streamName)
 			vs := v.([]interface{})
 			for _, msgObject := range vs { //循环消息
 				msgs := msgObject.([]interface{})
@@ -166,8 +163,8 @@ func StartConsumer[T any](ctx context.Context, messageProducerConsumer IMessageP
 				}
 				messageID := MessageID{
 					ID:           msgId,
+					QueueName:    streamName,
 					GroupName:    groupName,
-					QueueName:    queueName,
 					ConsumerName: consumerName,
 				}
 				msgObjectBytes := values[1].(string)
