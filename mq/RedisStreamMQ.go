@@ -88,9 +88,9 @@ func (messageProducerConsumer *MessageProducerConsumer[T]) SendMessage(ctx conte
 	return sendMessage(ctx, messageProducerConsumer.QueueName, messageObject)
 }
 
-// CreateStreamConsumerGroup  创建 redis stream consumer group
+// createStreamConsumerGroup  创建 redis stream consumer group
 // start 有 "0",从开始位置消费; $从最近的消息消费
-func CreateStreamConsumerGroup(ctx context.Context, streamName, groupName, start string) error {
+func createStreamConsumerGroup(ctx context.Context, streamName, groupName, start string) error {
 	if streamName == "" || groupName == "" {
 		return errors.New("值不能为空")
 	}
@@ -129,7 +129,7 @@ func sendMessage[T any](ctx context.Context, queueName string, messageObject T) 
 	if errResult != nil {
 		return emptyMessageID, errResult
 	}
-	messageID := MessageID{}
+	messageID := MessageID{QueueName: queueName}
 	if msgID, ok := result.(string); ok {
 		messageID.ID = msgID
 	}
@@ -150,7 +150,7 @@ func StartConsumer[T any](ctx context.Context, messageProducerConsumer IMessageP
 	}
 
 	//先创建组
-	errGroup := CreateStreamConsumerGroup(ctx, queueName, groupName, "0")
+	errGroup := createStreamConsumerGroup(ctx, queueName, groupName, "0")
 	if errGroup != nil {
 		return errGroup
 	}
@@ -217,4 +217,18 @@ func StartConsumer[T any](ctx context.Context, messageProducerConsumer IMessageP
 		}
 
 	}
+}
+
+// RetryConsumer 启动一个重试消息的消费者.minIdleTime是消息的最小空闲毫秒,只有空闲时间超过此值的消息才会被认领
+func RetryConsumer[T any](ctx context.Context, minIdleTime int, messageProducerConsumer IMessageProducerConsumer[T]) error {
+	//启动重试的消费者队列
+	go StartConsumer(ctx, messageProducerConsumer)
+
+	queueName := messageProducerConsumer.GetQueueName(ctx)
+	groupName := messageProducerConsumer.GetGroupName(ctx)
+	consumerName := messageProducerConsumer.GetConsumerName(ctx)
+	count := messageProducerConsumer.GetCount(ctx)
+	//start := messageProducerConsumer.GetStart(ctx)
+	_, errResult := cache.RedisCMDContext(ctx, "xautoclaim", queueName, groupName, consumerName, minIdleTime, "0-0", "count", count, "JUSTID")
+	return errResult
 }
