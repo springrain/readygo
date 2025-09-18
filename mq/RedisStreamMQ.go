@@ -270,8 +270,6 @@ func RetryConsumer[T any](ctx context.Context, messageProducerConsumer IMessageP
 			continue
 		}
 
-		messageIds := make([]interface{}, 0)
-
 		for _, msgObject := range msgsSlice { //循环所有的消息
 			msg := msgObject.([]interface{})
 			if len(msg) != 4 {
@@ -288,32 +286,16 @@ func RetryConsumer[T any](ctx context.Context, messageProducerConsumer IMessageP
 				}
 				continue
 			}
-			// XCLAIM 还转移给自己
-			messageIds = append(messageIds, msgId)
-		}
+			// 使用 XCLAIM 迁移id给自己,用于XPENDING重新计算投递次数
+			// XCLAIM geo deepseek_group consumer1 0  1758158851046-0 1758158851042-0 JUSTID
+			_, err := cache.RedisCMDContext(ctx, "xclaim", queueName, groupName, consumerName, 0, msgId, "JUSTID")
+			if err != nil {
+				util.FuncLogError(ctx, err)
+				continue
+			}
 
-		if len(messageIds) == 0 {
-			continue
-		}
-		// 使用 XCLAIM 迁移刚才的id,用于XPENDING重新计算投递次数
-		// XCLAIM geo deepseek_group consumer1 0  1758158851046-0 1758158851042-0 JUSTID
-		xclaimArgs := make([]interface{}, 0)
-		xclaimArgs = append(xclaimArgs, "xclaim")
-		xclaimArgs = append(xclaimArgs, queueName)
-		xclaimArgs = append(xclaimArgs, groupName)
-		xclaimArgs = append(xclaimArgs, consumerName)
-		xclaimArgs = append(xclaimArgs, 0)
-		xclaimArgs = append(xclaimArgs, messageIds...)
-		xclaimArgs = append(xclaimArgs, "JUSTID")
-		_, err := cache.RedisCMDContext(ctx, xclaimArgs...)
-		if err != nil {
-			util.FuncLogError(ctx, err)
-			continue
-		}
-
-		//XRANGE geo 1758018581240-0 1758018581240-0 ,不会增加 投递次数(delivery count),需要使用 XCLAIM 重新分配消息给自己
-		// xreadgroup 参数id是开始并不包括!!!!,所以使用 XRANGE geo 1758018581240-0 1758018581240-0 读取到消息内容,然后调用OnMessage
-		for _, msgId := range messageIds {
+			//XRANGE geo 1758018581240-0 1758018581240-0 ,不会增加 投递次数(delivery count),需要使用 XCLAIM 重新分配消息给自己
+			// xreadgroup 参数id是开始并不包括!!!!,所以使用 XRANGE geo 1758018581240-0 1758018581240-0 读取到消息内容,然后调用OnMessage
 			xrange, err := cache.RedisCMDContext(ctx, "xrange", queueName, msgId, msgId)
 			if err != nil {
 				util.FuncLogError(ctx, err)
@@ -327,7 +309,7 @@ func RetryConsumer[T any](ctx context.Context, messageProducerConsumer IMessageP
 				continue
 			}
 			msgObj := (xs[0]).([]interface{})
-			if len(msgObj) != 2 || msgObj[0].(string) != msgId.(string) {
+			if len(msgObj) != 2 || msgObj[0].(string) != msgId {
 				continue
 			}
 			msgJson := (msgObj[1]).([]interface{})
@@ -337,7 +319,7 @@ func RetryConsumer[T any](ctx context.Context, messageProducerConsumer IMessageP
 			}
 
 			messageID := MessageID{
-				ID:           msgId.(string),
+				ID:           msgId,
 				QueueName:    queueName,
 				GroupName:    groupName,
 				ConsumerName: consumerName,
