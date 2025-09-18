@@ -246,9 +246,9 @@ func StartConsumer[T any](ctx context.Context, messageProducerConsumer IMessageP
 	}
 }
 
-// RetryMessage 重试消息.minIdleTime是消息的最小空闲毫秒,只有空闲时间超过此值的消息才会被重试
+// RetryConsumer 重试消费者的XPENDING消息.minIdleTime是消息的最小空闲毫秒,只有空闲时间超过此值的消息才会被重试
 // 使用 XPENDING,XCLAIM,XRANGE 然后调用OnMessage处理
-func RetryMessage[T any](ctx context.Context, messageProducerConsumer IMessageProducerConsumer[T]) {
+func RetryConsumer[T any](ctx context.Context, messageProducerConsumer IMessageProducerConsumer[T]) {
 	queueName := messageProducerConsumer.GetQueueName(ctx)
 	groupName := messageProducerConsumer.GetGroupName(ctx)
 	consumerName := messageProducerConsumer.GetConsumerName(ctx)
