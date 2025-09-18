@@ -151,6 +151,7 @@ func sendMessage[T any](ctx context.Context, queueName string, messageObject T) 
 }
 
 // StartConsumer 启动一个消费者
+// 使用示例: go mq.StartConsumer(ctx, messageProducerConsumer),通常搭配 go mq.RetryConsumer(ctx, messageProducerConsumer) 实现消息重试
 func StartConsumer[T any](ctx context.Context, messageProducerConsumer IMessageProducerConsumer[T]) error {
 	queueName := messageProducerConsumer.GetQueueName(ctx)
 	groupName := messageProducerConsumer.GetGroupName(ctx)

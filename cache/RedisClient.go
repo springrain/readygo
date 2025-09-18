@@ -23,6 +23,8 @@ type RedisConfig struct {
 	// Minimum number of idle connections which is useful when establishing
 	// new connection is slow.
 	MinIdleConns int
+	// 使用的数据库
+	DB int
 }
 
 // 单机
@@ -66,6 +68,7 @@ func NewRedisClient(ctx context.Context, redisConfig *RedisConfig) error {
 		redisClient = redis.NewClient(&redis.Options{
 			Addr:         addrs[0],
 			Password:     redisConfig.Password, // no password set
+			DB:           redisConfig.DB,
 			PoolSize:     redisConfig.PoolSize,
 			MinIdleConns: redisConfig.MinIdleConns,
 		})
