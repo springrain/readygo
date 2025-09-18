@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"readygo/cache"
+	"readygo/util"
 	"strings"
 	"time"
 
@@ -43,16 +44,22 @@ type IMessageProducerConsumer[T any] interface {
 	SendMessage(ctx context.Context, messageObject T) (MessageID, error)
 	// OnMessage 消费者处理消息
 	OnMessage(ctx context.Context, messageID MessageID, messageObject T) (bool, error)
+	// GetMinIdleTime XPENDING命令的min-idle-time毫秒数,避免处理最新的消息.默认300秒
+	GetMinIdleTime(ctx context.Context) int
+	//MaxRetryCount 最大的重试次数,默认20次
+	GetMaxRetryCount(ctx context.Context) int
 }
 
 // MessageProducerConsumer 默认的消息队列实现
 type MessageProducerConsumer[T any] struct {
-	QueueName    string
-	GroupName    string
-	ConsumerName string
-	Count        int
-	Block        int
-	Start        string
+	QueueName     string
+	GroupName     string
+	ConsumerName  string
+	Count         int
+	Block         int
+	Start         string
+	MinIdleTime   int
+	MaxRetryCount int
 }
 
 func (messageProducerConsumer *MessageProducerConsumer[T]) GetQueueName(ctx context.Context) string {
@@ -88,6 +95,20 @@ func (messageProducerConsumer *MessageProducerConsumer[T]) SendMessage(ctx conte
 	return sendMessage(ctx, messageProducerConsumer.QueueName, messageObject)
 }
 
+func (messageProducerConsumer *MessageProducerConsumer[T]) GetMinIdleTime(ctx context.Context) int {
+	if messageProducerConsumer.MinIdleTime == 0 {
+		return 300000
+	}
+	return messageProducerConsumer.MinIdleTime
+}
+
+func (messageProducerConsumer *MessageProducerConsumer[T]) GetMaxRetryCount(ctx context.Context) int {
+	if messageProducerConsumer.MaxRetryCount == 0 {
+		return 20
+	}
+	return messageProducerConsumer.MaxRetryCount
+}
+
 // createStreamConsumerGroup  创建 redis stream consumer group
 // start 有 "0",从开始位置消费; $从最近的消息消费
 func createStreamConsumerGroup(ctx context.Context, streamName, groupName, start string) error {
@@ -104,6 +125,7 @@ func createStreamConsumerGroup(ctx context.Context, streamName, groupName, start
 		if strings.Contains(errResult.Error(), "already exists") { // 已经存在,不再创建
 			return nil
 		}
+		util.FuncLogError(ctx, errResult)
 		return errResult
 	}
 
@@ -152,6 +174,7 @@ func StartConsumer[T any](ctx context.Context, messageProducerConsumer IMessageP
 	//先创建组
 	errGroup := createStreamConsumerGroup(ctx, queueName, groupName, "0")
 	if errGroup != nil {
+		util.FuncLogError(ctx, errGroup)
 		return errGroup
 	}
 
@@ -167,6 +190,7 @@ func StartConsumer[T any](ctx context.Context, messageProducerConsumer IMessageP
 			if errResult == redis.Nil { // 超时,继续轮询
 				continue
 			}
+			util.FuncLogError(ctx, errResult)
 			time.Sleep(1 * time.Second) // 出错后稍作等待
 			continue
 		}
@@ -196,10 +220,12 @@ func StartConsumer[T any](ctx context.Context, messageProducerConsumer IMessageP
 				messageObj := new(T)
 				err := json.Unmarshal([]byte(msgObjectBytes), messageObj)
 				if err != nil {
+					util.FuncLogError(ctx, err)
 					continue
 				}
 				ok, err := messageProducerConsumer.OnMessage(ctx, messageID, *messageObj)
 				if err != nil {
+					util.FuncLogError(ctx, err)
 					continue
 				}
 				if !ok {
@@ -207,6 +233,7 @@ func StartConsumer[T any](ctx context.Context, messageProducerConsumer IMessageP
 				}
 				result, errResult := cache.RedisCMDContext(ctx, "xack", queueName, groupName, consumerName, msgId)
 				if errResult != nil {
+					util.FuncLogError(ctx, errResult)
 					continue
 				}
 				if result.(int) == 1 { //success
@@ -219,16 +246,127 @@ func StartConsumer[T any](ctx context.Context, messageProducerConsumer IMessageP
 	}
 }
 
-// RetryConsumer 启动一个重试消息的消费者.minIdleTime是消息的最小空闲毫秒,只有空闲时间超过此值的消息才会被认领
-func RetryConsumer[T any](ctx context.Context, minIdleTime int, messageProducerConsumer IMessageProducerConsumer[T]) error {
-	//启动重试的消费者队列
-	go StartConsumer(ctx, messageProducerConsumer)
-
+// RetryMessage 重试消息.minIdleTime是消息的最小空闲毫秒,只有空闲时间超过此值的消息才会被重试
+// 使用 XPENDING,XCLAIM,XRANGE 然后调用OnMessage处理
+func RetryMessage[T any](ctx context.Context, messageProducerConsumer IMessageProducerConsumer[T]) {
 	queueName := messageProducerConsumer.GetQueueName(ctx)
 	groupName := messageProducerConsumer.GetGroupName(ctx)
 	consumerName := messageProducerConsumer.GetConsumerName(ctx)
 	count := messageProducerConsumer.GetCount(ctx)
+	//block := messageProducerConsumer.GetBlock(ctx)
+	minIdleTime := messageProducerConsumer.GetMinIdleTime(ctx)
+	maxRetryCount := messageProducerConsumer.GetMaxRetryCount(ctx)
 	//start := messageProducerConsumer.GetStart(ctx)
-	_, errResult := cache.RedisCMDContext(ctx, "xautoclaim", queueName, groupName, consumerName, minIdleTime, "0-0", "count", count, "JUSTID")
-	return errResult
+	for {
+		// XPENDING geo deepseek_group IDLE 300000 - + 10 consumer1
+		xpending, errResult := cache.RedisCMDContext(ctx, "xpending", queueName, groupName, "idle", minIdleTime, "-", "+", count, consumerName)
+		if errResult != nil || xpending == nil {
+			util.FuncLogError(ctx, errResult)
+			continue
+		}
+		msgsSlice := xpending.([]interface{})
+		if len(msgsSlice) == 0 { //没有消息,睡眠一会
+			time.Sleep(time.Millisecond * time.Duration(minIdleTime))
+			continue
+		}
+
+		messageIds := make([]interface{}, 0)
+
+		for _, msgObject := range msgsSlice { //循环所有的消息
+			msg := msgObject.([]interface{})
+			if len(msg) != 4 {
+				continue
+			}
+			msgId := msg[0].(string)
+			consumerName := msg[1].(string)
+			//idleTime := msg[2].(int64)
+			deliveryCount := msg[3].(int64)
+			if deliveryCount > int64(maxRetryCount) { //超过最大的投递次数,强制ACK消息
+				_, err := cache.RedisCMDContext(ctx, "xack", queueName, groupName, consumerName, msgId)
+				if err != nil {
+					util.FuncLogError(ctx, err)
+				}
+				continue
+			}
+			// XCLAIM 还转移给自己
+			messageIds = append(messageIds, msgId)
+		}
+
+		if len(messageIds) == 0 {
+			continue
+		}
+		// 使用 XCLAIM 迁移刚才的id,用于XPENDING重新计算投递次数
+		// XCLAIM geo deepseek_group consumer1 0  1758158851046-0 1758158851042-0 JUSTID
+		xclaimArgs := make([]interface{}, 0)
+		xclaimArgs = append(xclaimArgs, "xclaim")
+		xclaimArgs = append(xclaimArgs, queueName)
+		xclaimArgs = append(xclaimArgs, groupName)
+		xclaimArgs = append(xclaimArgs, consumerName)
+		xclaimArgs = append(xclaimArgs, 0)
+		xclaimArgs = append(xclaimArgs, messageIds...)
+		xclaimArgs = append(xclaimArgs, "JUSTID")
+		_, err := cache.RedisCMDContext(ctx, xclaimArgs...)
+		if err != nil {
+			util.FuncLogError(ctx, err)
+			continue
+		}
+
+		//XRANGE geo 1758018581240-0 1758018581240-0 ,不会增加 投递次数(delivery count),需要使用 XCLAIM 重新分配消息给自己
+		// xreadgroup 参数id是开始并不包括!!!!,所以使用 XRANGE geo 1758018581240-0 1758018581240-0 读取到消息内容,然后调用OnMessage
+		for _, msgId := range messageIds {
+			xrange, err := cache.RedisCMDContext(ctx, "xrange", queueName, msgId, msgId)
+			if err != nil {
+				util.FuncLogError(ctx, err)
+				continue
+			}
+
+			// [[1758165638806-0 [abc 456]]]
+			//fmt.Println(xrange)
+			xs := xrange.([]interface{})
+			if len(xs) != 1 {
+				continue
+			}
+			msgObj := (xs[0]).([]interface{})
+			if len(msgObj) != 2 || msgObj[0].(string) != msgId.(string) {
+				continue
+			}
+			msgJson := (msgObj[1]).([]interface{})
+			//if len(msgJson) != 2 || msgJson[0].(string) != streamRawDataJSONKey {
+			if len(msgJson) != 2 {
+				continue
+			}
+
+			messageID := MessageID{
+				ID:           msgId.(string),
+				QueueName:    queueName,
+				GroupName:    groupName,
+				ConsumerName: consumerName,
+			}
+			msgObjectBytes := msgJson[1].(string)
+			messageObj := new(T)
+			err = json.Unmarshal([]byte(msgObjectBytes), messageObj)
+			if err != nil {
+				util.FuncLogError(ctx, err)
+				continue
+			}
+			ok, err := messageProducerConsumer.OnMessage(ctx, messageID, *messageObj)
+			if err != nil {
+				util.FuncLogError(ctx, err)
+				continue
+			}
+			if !ok {
+				continue
+			}
+			result, errResult := cache.RedisCMDContext(ctx, "xack", queueName, groupName, consumerName, msgId)
+			if errResult != nil {
+				util.FuncLogError(ctx, errResult)
+				continue
+			}
+			if result.(int) == 1 { //success
+
+			}
+
+		}
+
+	}
 }
