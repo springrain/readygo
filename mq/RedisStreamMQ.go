@@ -46,7 +46,7 @@ type IMessageProducerConsumer[T any] interface {
 	OnMessage(ctx context.Context, messageID MessageID, messageObject T) (bool, error)
 	// GetMinIdleTime XPENDING命令的min-idle-time毫秒数,避免处理最新的消息.默认300秒
 	GetMinIdleTime(ctx context.Context) int
-	//MaxRetryCount 最大的重试次数,默认20次
+	// MaxRetryCount 最大的重试次数,默认20次
 	GetMaxRetryCount(ctx context.Context) int
 }
 
@@ -132,22 +132,14 @@ func createStreamConsumerGroup(ctx context.Context, streamName, groupName, start
 	return nil
 }
 
-// SendMessage  发送消息队列
+// sendMessage  发送消息队列
 func sendMessage[T any](ctx context.Context, queueName string, messageObject T) (MessageID, error) {
 	jsonData, err := json.Marshal(messageObject)
 	if err != nil {
 		return emptyMessageID, err
 	}
-
-	args := make([]interface{}, 0)
-	args = append(args, "xadd")
-	args = append(args, queueName)
-	args = append(args, "*")
-	args = append(args, streamRawDataJSONKey)
-	args = append(args, jsonData)
-
-	//result, errResult := cache.RedisCMDContext(ctx, "xadd", streamName, "*", values)
-	result, errResult := cache.RedisCMDContext(ctx, args...)
+	result, errResult := cache.RedisCMDContext(ctx, "xadd", queueName, "*", streamRawDataJSONKey, jsonData)
+	//result, errResult := cache.RedisCMDContext(ctx, args...)
 	if errResult != nil {
 		return emptyMessageID, errResult
 	}
