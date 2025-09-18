@@ -313,8 +313,8 @@ func RetryConsumer[T any](ctx context.Context, messageProducerConsumer IMessageP
 				continue
 			}
 			msgJson := (msgObj[1]).([]interface{})
-			//if len(msgJson) != 2 || msgJson[0].(string) != streamRawDataJSONKey {
-			if len(msgJson) != 2 {
+			//if len(msgJson) != 2 {
+			if len(msgJson) != 2 || msgJson[0].(string) != streamRawDataJSONKey {
 				continue
 			}
 
