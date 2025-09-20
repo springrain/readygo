@@ -224,13 +224,10 @@ func StartConsumer[T any](ctx context.Context, messageProducerConsumer IMessageP
 				if !ok {
 					continue
 				}
-				result, errResult := cache.RedisCMDContext(ctx, "xack", queueName, groupName, consumerName, msgId)
+				_, errResult := cache.RedisCMDContext(ctx, "xack", queueName, groupName, msgId)
 				if errResult != nil {
 					util.FuncLogError(ctx, errResult)
 					continue
-				}
-				if result.(int) == 1 { //success
-
 				}
 
 			}
@@ -273,7 +270,7 @@ func RetryConsumer[T any](ctx context.Context, messageProducerConsumer IMessageP
 			//idleTime := msg[2].(int64)
 			deliveryCount := msg[3].(int64)
 			if deliveryCount > int64(maxRetryCount) { //超过最大的投递次数,强制ACK消息
-				_, err := cache.RedisCMDContext(ctx, "xack", queueName, groupName, consumerName, msgId)
+				_, err := cache.RedisCMDContext(ctx, "xack", queueName, groupName, msgId)
 				if err != nil {
 					util.FuncLogError(ctx, err)
 				}
@@ -332,13 +329,10 @@ func RetryConsumer[T any](ctx context.Context, messageProducerConsumer IMessageP
 			if !ok {
 				continue
 			}
-			result, errResult := cache.RedisCMDContext(ctx, "xack", queueName, groupName, consumerName, msgId)
+			_, errResult := cache.RedisCMDContext(ctx, "xack", queueName, groupName, msgId)
 			if errResult != nil {
 				util.FuncLogError(ctx, errResult)
 				continue
-			}
-			if result.(int) == 1 { //success
-
 			}
 
 		}
