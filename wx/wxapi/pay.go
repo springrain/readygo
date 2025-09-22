@@ -30,17 +30,48 @@ func init() {
 
 // 支付结果通知
 func WxPayNotifyPay(ctx context.Context, c *app.RequestContext) {
-	//
-	//var body gowe.WxPayNotifyPayBody
-	//c.Bind(&body)
+	// 1. 验证签名
+	fmt.Println("微信回调请求到达----------")
 
-	body := c.Request.Body()
+	// 从请求头获取签名相关字段
+	timestamp := string(c.Request.Header.Peek("Wechatpay-Timestamp"))
+	nonce := string(c.Request.Header.Peek("Wechatpay-Nonce"))
+	signature := string(c.Request.Header.Peek("Wechatpay-Signature"))
+	serial := string(c.Request.Header.Peek("Wechatpay-Serial"))
 
-	gowe.WxPayNotifyPay(ctx, WXPay, body, func(wxPayNotifyPayBody gowe.WxPayNotifyPayBody) error {
-		fmt.Println(wxPayNotifyPayBody)
+	if timestamp == "" || nonce == "" || signature == "" || serial == "" {
+		fmt.Println("缺少签名头----------")
+		c.JSON(400, map[string]string{"message": "缺少签名头"})
+		return
+	}
 
-		return nil
-	})
+	body, err := c.Body()
+	if err != nil {
+		fmt.Println("读取请求体失败----------", err.Error())
+		c.JSON(400, map[string]string{"message": "读取请求体失败"})
+		return
+	}
+	// 通常不需要再手动调用 SetBody，但如果你后续处理需要，可以设置
+	c.Request.SetBody(body)
+	//验签
+	err = gowe.VerifyWechatSignature(ctx, WXPay, timestamp, nonce, signature, serial, body)
+	if err != nil {
+		fmt.Printf("签名验证失败: %v", err)
+		c.JSON(400, map[string]string{"message": fmt.Sprintf("签名验证失败: %v", err)})
+		return
+	}
+
+	//回调
+	callback := gowe.WechatPayCallback(ctx, WXPay, body)
+	if callback.Code == 0 {
+		fmt.Println("微信回调成功----------")
+		// 7. 返回成功
+		c.JSON(200, map[string]string{"message": "Success"})
+	} else {
+		fmt.Println("微信回调失败----------")
+		// 7. 返回成功
+		c.JSON(400, map[string]string{"message": "error"})
+	}
 }
 
 // 统一下单

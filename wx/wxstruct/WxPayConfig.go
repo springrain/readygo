@@ -3,11 +3,15 @@ package wxstruct
 import "context"
 
 type WxPayConfig struct {
-	Id     string
-	AppId  string
-	Secret string
-	MchID  string
-	Key    string
+	Id                   string
+	AppId                string
+	Secret               string
+	MchID                string
+	MchAPIv3Key          string
+	Key                  string
+	CertSerialNo         string
+	PrivateKey           string
+	WechatPayCertificate string
 }
 
 func (w WxPayConfig) GetId(ctx context.Context) string {
@@ -30,7 +34,17 @@ func (w WxPayConfig) GetCertificateFile(ctx context.Context) string {
 	return "../cert/apiclient_cert.pem"
 }
 
-func (w WxPayConfig) GetMchId(ctx context.Context) string {
+// 商户证书序列号
+func (w WxPayConfig) GetCertSerialNo(ctx context.Context) string {
+	return w.CertSerialNo
+}
+
+// 商户API v3密钥 (32字节)
+func (w WxPayConfig) GetMchAPIv3Key(ctx context.Context) string {
+	return w.MchAPIv3Key
+}
+
+func (w WxPayConfig) GetMchID(ctx context.Context) string {
 	return w.MchID
 }
 
@@ -46,7 +60,18 @@ func (w WxPayConfig) GetAPIKey(ctx context.Context) string {
 	return w.Key
 }
 
-func (w WxPayConfig) GetNotifyUrl(ctx context.Context) string {
+// 商户API私钥
+func (w WxPayConfig) GetPrivateKey(ctx context.Context) string {
+	return w.PrivateKey
+}
+
+// 微信支付平台证书（示例，实际应从微信平台下载并定期更新）
+func (w WxPayConfig) GetWechatPayCertificate(ctx context.Context) string {
+	return w.WechatPayCertificate
+
+}
+
+func (w WxPayConfig) GetNotifyURL(ctx context.Context) string {
 	return ""
 }
 
