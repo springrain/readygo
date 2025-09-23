@@ -48,12 +48,13 @@ func init() {
 		SlowSQLMillis: config.Cfg.Database.SlowSQLMillis,
 	}
 	_, _ = zorm.NewDBDao(&dbDaoConfig)
-	
+
 	// 初始化redis
 	cache.NewRedisClient(context.Background(), &cache.RedisConfig{
-		Addr: config.Cfg.Redis.Addr,
-		Password: config.Cfg.Redis.Password,
-		PoolSize: config.Cfg.Redis.PoolSize,
+		Addr:         config.Cfg.Redis.Addr,
+		Password:     config.Cfg.Redis.Password,
+		PoolSize:     config.Cfg.Redis.PoolSize,
+		DB:           config.Cfg.Redis.DB,
 		MinIdleConns: config.Cfg.Redis.MinIdleConns,
 	})
 
@@ -91,8 +92,8 @@ func initWebEngine() {
 	h.StaticFile("/favicon.ico", "./resources/favicon.ico")
 
 	// --------------------------
-    // 第一步：先注册不需要权限的路由
-    // --------------------------
+	// 第一步：先注册不需要权限的路由
+	// --------------------------
 	h.GET("/ping", func(ctx context.Context, c *app.RequestContext) {
 		c.JSON(200, utils.H{"hello": "world"})
 	})
@@ -119,14 +120,14 @@ func initWebEngine() {
 		}
 	})
 
-    // --------------------------
-    // 第二步：再注册权限中间件
-    // --------------------------
+	// --------------------------
+	// 第二步：再注册权限中间件
+	// --------------------------
 	h.Use(permhandler.PermHandler())
 
 	// --------------------------
-    // 第三步：最后注册需要权限的路由
-    // --------------------------
+	// 第三步：最后注册需要权限的路由
+	// --------------------------
 	permroute.RegisterPermRoute(h)
 	wxroute.RegisterWXRoute(h)
 }
