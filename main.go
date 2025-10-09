@@ -11,8 +11,8 @@ package main
 import (
 	"context"
 	"net/http"
-	"os"
 	"readygo/config"
+	"readygo/util"
 
 	"readygo/cache"
 	"readygo/permission/permhandler"
@@ -24,7 +24,6 @@ import (
 	"gitee.com/chunanyong/zorm"
 
 	"github.com/cloudwego/hertz/pkg/app"
-	"github.com/cloudwego/hertz/pkg/common/hlog"
 	"github.com/cloudwego/hertz/pkg/common/utils"
 	_ "github.com/go-sql-driver/mysql"
 )
@@ -76,20 +75,8 @@ func initWebEngine() {
 	h.Use(webext.WebLogger())
 	// r.Use(gin.Logger())
 
-	f, err := os.OpenFile("./logs/readygo.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-	if err != nil {
-		panic(err)
-	}
-	defer f.Close()
-	hlog.SetOutput(f)
-
 	// Recovery middleware recovers from any panics and writes a 500 if there was one.
-	// h.Use(webext.WebRecovery())
-
-	// css js等静态文件
-	h.Static("/assets", "./assets")
-	h.StaticFS("/more_static", &app.FS{Root: "my_file_system", GenerateIndexPages: true})
-	h.StaticFile("/favicon.ico", "./resources/favicon.ico")
+	h.Use(webext.WebRecovery())
 
 	// --------------------------
 	// 第一步：先注册不需要权限的路由
@@ -133,6 +120,9 @@ func initWebEngine() {
 }
 
 func main() {
+	//https://github.com/cloudwego/hertz/issues/292
+	defer util.InitLog().Close()
+
 	h := webext.WebEngine()
 	h.Spin()
 }

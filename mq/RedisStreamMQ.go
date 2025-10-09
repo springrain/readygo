@@ -47,7 +47,7 @@ type IMessageProducerConsumer[T any] interface {
 	OnMessage(ctx context.Context, messageID MessageID, messageObject T) (bool, error)
 	// GetMinIdleTime XPENDING命令的min-idle-time毫秒数,避免处理最新的消息.默认300秒
 	GetMinIdleTime(ctx context.Context) int
-	// MaxRetryCount 最大的重试次数,默认20次
+	//MaxRetryCount 最大的重试次数,默认20次
 	GetMaxRetryCount(ctx context.Context) int
 }
 
@@ -74,7 +74,7 @@ func (messageProducerConsumer *MessageProducerConsumer[T]) GetConsumerName(ctx c
 }
 func (messageProducerConsumer *MessageProducerConsumer[T]) GetCount(ctx context.Context) int {
 	if messageProducerConsumer.Count == 0 {
-		return 10
+		return 1
 	}
 	return messageProducerConsumer.Count
 }
@@ -133,14 +133,22 @@ func createStreamConsumerGroup(ctx context.Context, streamName, groupName, start
 	return nil
 }
 
-// sendMessage  发送消息队列
+// SendMessage  发送消息队列
 func sendMessage[T any](ctx context.Context, queueName string, messageObject T) (MessageID, error) {
 	jsonData, err := json.Marshal(messageObject)
 	if err != nil {
 		return emptyMessageID, err
 	}
-	result, errResult := cache.RedisCMDContext(ctx, "xadd", queueName, "*", streamRawDataJSONKey, jsonData)
-	//result, errResult := cache.RedisCMDContext(ctx, args...)
+
+	args := make([]interface{}, 0)
+	args = append(args, "xadd")
+	args = append(args, queueName)
+	args = append(args, "*")
+	args = append(args, streamRawDataJSONKey)
+	args = append(args, jsonData)
+
+	//result, errResult := cache.RedisCMDContext(ctx, "xadd", streamName, "*", values)
+	result, errResult := cache.RedisCMDContext(ctx, args...)
 	if errResult != nil {
 		return emptyMessageID, errResult
 	}
@@ -152,7 +160,6 @@ func sendMessage[T any](ctx context.Context, queueName string, messageObject T) 
 }
 
 // StartConsumer 启动一个消费者
-// 使用示例: go mq.StartConsumer(ctx, messageProducerConsumer),通常搭配 go mq.RetryConsumer(ctx, messageProducerConsumer) 实现消息重试
 func StartConsumer[T any](ctx context.Context, messageProducerConsumer IMessageProducerConsumer[T]) error {
 	defer func() {
 		if err := recover(); err != nil {
@@ -230,9 +237,8 @@ func StartConsumer[T any](ctx context.Context, messageProducerConsumer IMessageP
 				if !ok {
 					continue
 				}
-				_, errResult := cache.RedisCMDContext(ctx, "xack", queueName, groupName, msgId)
+				_, errResult := AckMessage(ctx, queueName, groupName, msgId)
 				if errResult != nil {
-					util.FuncLogError(ctx, errResult)
 					continue
 				}
 
@@ -281,10 +287,7 @@ func RetryConsumer[T any](ctx context.Context, messageProducerConsumer IMessageP
 			//idleTime := msg[2].(int64)
 			deliveryCount := msg[3].(int64)
 			if deliveryCount > int64(maxRetryCount) { //超过最大的投递次数,强制ACK消息
-				_, err := cache.RedisCMDContext(ctx, "xack", queueName, groupName, msgId)
-				if err != nil {
-					util.FuncLogError(ctx, err)
-				}
+				AckMessage(ctx, queueName, groupName, msgId)
 				continue
 			}
 			// 使用 XCLAIM 迁移id给自己,用于XPENDING重新计算投递次数
@@ -340,7 +343,7 @@ func RetryConsumer[T any](ctx context.Context, messageProducerConsumer IMessageP
 			if !ok {
 				continue
 			}
-			_, errResult := cache.RedisCMDContext(ctx, "xack", queueName, groupName, msgId)
+			_, errResult := AckMessage(ctx, queueName, groupName, msgId)
 			if errResult != nil {
 				util.FuncLogError(ctx, errResult)
 				continue
@@ -349,4 +352,17 @@ func RetryConsumer[T any](ctx context.Context, messageProducerConsumer IMessageP
 		}
 
 	}
+}
+
+// AckMessage 应答消息
+func AckMessage(ctx context.Context, queueName string, groupName string, msgId string) (bool, error) {
+	result, errResult := cache.RedisCMDContext(ctx, "xack", queueName, groupName, msgId)
+	if errResult != nil {
+		util.FuncLogError(ctx, errResult)
+		return false, errResult
+	}
+
+	//影响的条数
+	count := result.(int64)
+	return count == 1, errResult
 }

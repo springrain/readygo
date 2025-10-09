@@ -2,16 +2,29 @@ package util
 
 import (
 	"context"
+	"io"
+	"os"
 
 	"gitee.com/chunanyong/zorm"
 	"github.com/cloudwego/hertz/pkg/common/hlog"
 )
 
-func init() {
+// InitLog 初始化日志文件
+func InitLog() *os.File {
+	f, err := os.OpenFile("./readygo.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		panic(err)
+	}
+	// https://github.com/cloudwego/hertz/issues/292
+	//defer f.Close()
+	fileWriter := io.MultiWriter(f, os.Stdout)
+	hlog.SetOutput(fileWriter)
+	hlog.SetSilentMode(true)
 	hlog.SetLevel(hlog.LevelError)
 	zorm.FuncLogError = FuncLogError
 	zorm.FuncLogPanic = FuncLogPanic
 	zorm.FuncPrintSQL = FuncPrintSQL
+	return f
 }
 
 // LogCallDepth 记录日志调用层级,用于定位到业务层代码
