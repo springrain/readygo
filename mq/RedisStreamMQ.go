@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"readygo/cache"
 	"readygo/util"
 	"strings"
@@ -153,6 +154,11 @@ func sendMessage[T any](ctx context.Context, queueName string, messageObject T) 
 // StartConsumer 启动一个消费者
 // 使用示例: go mq.StartConsumer(ctx, messageProducerConsumer),通常搭配 go mq.RetryConsumer(ctx, messageProducerConsumer) 实现消息重试
 func StartConsumer[T any](ctx context.Context, messageProducerConsumer IMessageProducerConsumer[T]) error {
+	defer func() {
+		if err := recover(); err != nil {
+			util.FuncLogError(ctx, fmt.Errorf("panic recovered: %v", err))
+		}
+	}()
 	queueName := messageProducerConsumer.GetQueueName(ctx)
 	groupName := messageProducerConsumer.GetGroupName(ctx)
 	consumerName := messageProducerConsumer.GetConsumerName(ctx)
@@ -239,6 +245,11 @@ func StartConsumer[T any](ctx context.Context, messageProducerConsumer IMessageP
 // RetryConsumer 重试消费者的XPENDING消息.minIdleTime是消息的最小空闲毫秒,只有空闲时间超过此值的消息才会被重试
 // 使用 XPENDING,XCLAIM,XRANGE 然后调用OnMessage处理
 func RetryConsumer[T any](ctx context.Context, messageProducerConsumer IMessageProducerConsumer[T]) {
+	defer func() {
+		if err := recover(); err != nil {
+			util.FuncLogError(ctx, fmt.Errorf("panic recovered: %v", err))
+		}
+	}()
 	queueName := messageProducerConsumer.GetQueueName(ctx)
 	groupName := messageProducerConsumer.GetGroupName(ctx)
 	consumerName := messageProducerConsumer.GetConsumerName(ctx)
