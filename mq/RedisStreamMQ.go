@@ -170,7 +170,7 @@ func StartConsumer[T any](ctx context.Context, messageProducerConsumer IMessageP
 	groupName := messageProducerConsumer.GetGroupName(ctx)
 	consumerName := messageProducerConsumer.GetConsumerName(ctx)
 	count := messageProducerConsumer.GetCount(ctx)
-	block := messageProducerConsumer.GetBlock(ctx)
+	//block := messageProducerConsumer.GetBlock(ctx)
 	start := messageProducerConsumer.GetStart(ctx)
 
 	if queueName == "" || groupName == "" || consumerName == "" {
@@ -190,7 +190,7 @@ func StartConsumer[T any](ctx context.Context, messageProducerConsumer IMessageP
 		// 0：​​重新获取​​那些已经被领取但还躺在 PEL 中"未签收"的消息.常用于故障恢复和重试.
 		// 两者都会获取到未确认的消息,但 > 是向前看(新消息),0是回头看(未完成的消息).
 
-		streams, errResult := cache.RedisCMDContext(ctx, "xreadgroup", "group", groupName, consumerName, "count", count, "block", block, "streams", queueName, start)
+		streams, errResult := cache.RedisCMDContext(ctx, "xreadgroup", "group", groupName, consumerName, "count", count, "streams", queueName, start)
 
 		if errResult != nil {
 			if errResult == redis.Nil { // 超时,继续轮询
