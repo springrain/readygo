@@ -131,7 +131,7 @@ func redisHget(ctx context.Context, hname string, key string, valuePtr interface
 		return errResult
 	}
 	// 转换成json的[]byte
-	jsonBytes, jsonOK := jsonData.([]byte)
+	jsonBytes, jsonOK := jsonData.(string)
 	if !jsonOK { // 取值失败
 		return errors.New("缓存中的格式值错误")
 	}
@@ -139,7 +139,7 @@ func redisHget(ctx context.Context, hname string, key string, valuePtr interface
 		return nil
 	}
 	// 赋值
-	errJSON := util.Unmarshal(jsonBytes, valuePtr)
+	errJSON := util.Unmarshal([]byte(jsonBytes), valuePtr)
 	return errJSON
 }
 
@@ -241,16 +241,18 @@ func RedisLock(ctx context.Context, lockName string, timeoutSecond int) (bool, e
 	value := time.Now().Unix() + int64(timeoutSecond)
 
 	lockedStatus, errResult := RedisCMDContext(ctx, "set", lockName, value, "nx", "ex", timeoutSecond)
-	locked, lockOK := lockedStatus.(int)
+	if errResult != nil {
+		return false, errResult
+	}
+	if lockedStatus == nil {
+		return false, errResult
+	}
+
+	locked, lockOK := lockedStatus.(string)
 	if !lockOK { // 结果异常
 		return false, errors.New("获取锁状态异常")
 	}
-
-	// 获值错误或者没有获取到锁
-	if errResult != nil || (locked == 0) {
-		return false, errResult
-	}
-	return locked == 1, errResult
+	return strings.EqualFold(locked, "OK"), errResult
 }
 
 // RedisCMDContext 运行redis指令
