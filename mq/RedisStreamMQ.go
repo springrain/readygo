@@ -39,7 +39,7 @@ type IMessageProducerConsumer[T any] interface {
 	GetCount(ctx context.Context) int
 	// GetBlock 阻塞毫秒数,默认5000毫秒
 	GetBlock(ctx context.Context) int
-	// GetStart 获取消费的起始位置,默认 ">"
+	// GetStart 获取消费的起始位置,默认 "0"
 	GetStart(ctx context.Context) string
 	// SendMessage 生产者发送消息
 	SendMessage(ctx context.Context, messageObject T) (MessageID, error)
@@ -88,7 +88,7 @@ func (messageProducerConsumer *MessageProducerConsumer[T]) GetBlock(ctx context.
 }
 func (messageProducerConsumer *MessageProducerConsumer[T]) GetStart(ctx context.Context) string {
 	if messageProducerConsumer.Start == "" {
-		return ">"
+		return "0"
 	}
 	return messageProducerConsumer.Start
 }
@@ -249,7 +249,6 @@ func StartConsumer[T any](ctx context.Context, messageProducerConsumer IMessageP
 }
 
 // RetryConsumer 重试消费者的XPENDING消息.minIdleTime是消息的最小空闲毫秒,只有空闲时间超过此值的消息才会被重试
-// 使用 XPENDING,XCLAIM,XRANGE 然后调用OnMessage处理
 func RetryConsumer[T any](ctx context.Context, messageProducerConsumer IMessageProducerConsumer[T]) {
 	defer func() {
 		if err := recover(); err != nil {
@@ -298,57 +297,60 @@ func RetryConsumer[T any](ctx context.Context, messageProducerConsumer IMessageP
 				continue
 			}
 
-			//XRANGE geo 1758018581240-0 1758018581240-0 ,不会增加 投递次数(delivery count),需要使用 XCLAIM 重新分配消息给自己
-			// xreadgroup 参数id是开始并不包括!!!!,所以使用 XRANGE geo 1758018581240-0 1758018581240-0 读取到消息内容,然后调用OnMessage
-			xrange, err := cache.RedisCMDContext(ctx, "xrange", queueName, msgId, msgId)
-			if err != nil {
-				util.FuncLogError(ctx, err)
-				continue
-			}
+			// 以下代码暂时不用. 因为需要使用 xreadgroup 才会让 deliveryCount 累加. StartConsumer 的 xreadgroup start 使用 0,获取所有的消息,再次进行消费.
 
-			// [[1758165638806-0 [abc 456]]]
-			//fmt.Println(xrange)
-			xs := xrange.([]interface{})
-			if len(xs) != 1 {
-				continue
-			}
-			msgObj := (xs[0]).([]interface{})
-			if len(msgObj) != 2 || msgObj[0].(string) != msgId {
-				continue
-			}
-			msgJson := (msgObj[1]).([]interface{})
-			//if len(msgJson) != 2 {
-			if len(msgJson) != 2 || msgJson[0].(string) != streamRawDataJSONKey {
-				continue
-			}
+			/*
+				//XRANGE geo 1758018581240-0 1758018581240-0 ,不会增加 投递次数(delivery count),需要使用 XCLAIM 重新分配消息给自己
+				// xreadgroup 参数id是开始并不包括!!!!,所以使用 XRANGE geo 1758018581240-0 1758018581240-0 读取到消息内容,然后调用OnMessage
+				xrange, err := cache.RedisCMDContext(ctx, "xrange", queueName, msgId, msgId)
+				if err != nil {
+					util.FuncLogError(ctx, err)
+					continue
+				}
 
-			messageID := MessageID{
-				ID:           msgId,
-				QueueName:    queueName,
-				GroupName:    groupName,
-				ConsumerName: consumerName,
-			}
-			msgObjectBytes := msgJson[1].(string)
-			messageObj := new(T)
-			err = json.Unmarshal([]byte(msgObjectBytes), messageObj)
-			if err != nil {
-				util.FuncLogError(ctx, err)
-				continue
-			}
-			ok, err := messageProducerConsumer.OnMessage(ctx, messageID, *messageObj)
-			if err != nil {
-				util.FuncLogError(ctx, err)
-				continue
-			}
-			if !ok {
-				continue
-			}
-			_, errResult := AckMessage(ctx, queueName, groupName, msgId)
-			if errResult != nil {
-				util.FuncLogError(ctx, errResult)
-				continue
-			}
+				// [[1758165638806-0 [abc 456]]]
+				//fmt.Println(xrange)
+				xs := xrange.([]interface{})
+				if len(xs) != 1 {
+					continue
+				}
+				msgObj := (xs[0]).([]interface{})
+				if len(msgObj) != 2 || msgObj[0].(string) != msgId {
+					continue
+				}
+				msgJson := (msgObj[1]).([]interface{})
+				//if len(msgJson) != 2 {
+				if len(msgJson) != 2 || msgJson[0].(string) != streamRawDataJSONKey {
+					continue
+				}
 
+				messageID := MessageID{
+					ID:           msgId,
+					QueueName:    queueName,
+					GroupName:    groupName,
+					ConsumerName: consumerName,
+				}
+				msgObjectBytes := msgJson[1].(string)
+				messageObj := new(T)
+				err = json.Unmarshal([]byte(msgObjectBytes), messageObj)
+				if err != nil {
+					util.FuncLogError(ctx, err)
+					continue
+				}
+				ok, err := messageProducerConsumer.OnMessage(ctx, messageID, *messageObj)
+				if err != nil {
+					util.FuncLogError(ctx, err)
+					continue
+				}
+				if !ok {
+					continue
+				}
+				_, errResult := AckMessage(ctx, queueName, groupName, msgId)
+				if errResult != nil {
+					util.FuncLogError(ctx, errResult)
+					continue
+				}
+			*/
 		}
 
 	}
