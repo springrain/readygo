@@ -41,8 +41,6 @@ type IMessageProducerConsumer[T any] interface {
 	GetBlock(ctx context.Context) int
 	// GetStart 获取消费的起始位置,默认 "0"
 	GetStart(ctx context.Context) string
-	// SendMessage 生产者发送消息
-	SendMessage(ctx context.Context, messageObject T) (MessageID, error)
 	// OnMessage 消费者处理消息
 	OnMessage(ctx context.Context, messageID MessageID, messageObject T) (bool, error)
 	// GetMinIdleTime XPENDING命令的min-idle-time毫秒数,避免处理最新的消息.默认300秒
@@ -92,9 +90,6 @@ func (messageProducerConsumer *MessageProducerConsumer[T]) GetStart(ctx context.
 	}
 	return messageProducerConsumer.Start
 }
-func (messageProducerConsumer *MessageProducerConsumer[T]) SendMessage(ctx context.Context, messageObject T) (MessageID, error) {
-	return sendMessage(ctx, messageProducerConsumer.QueueName, messageObject)
-}
 
 func (messageProducerConsumer *MessageProducerConsumer[T]) GetMinIdleTime(ctx context.Context) int {
 	if messageProducerConsumer.MinIdleTime == 0 {
@@ -134,7 +129,7 @@ func createStreamConsumerGroup(ctx context.Context, streamName, groupName, start
 }
 
 // SendMessage  发送消息队列
-func sendMessage[T any](ctx context.Context, queueName string, messageObject T) (MessageID, error) {
+func SendMessage[T any](ctx context.Context, queueName string, messageObject T) (MessageID, error) {
 	jsonData, err := json.Marshal(messageObject)
 	if err != nil {
 		return emptyMessageID, err
