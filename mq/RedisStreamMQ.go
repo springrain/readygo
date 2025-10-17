@@ -90,7 +90,6 @@ func (messageProducerConsumer *MessageProducerConsumer[T]) GetStart(ctx context.
 	}
 	return messageProducerConsumer.Start
 }
-
 func (messageProducerConsumer *MessageProducerConsumer[T]) GetMinIdleTime(ctx context.Context) int {
 	if messageProducerConsumer.MinIdleTime == 0 {
 		return 300000
@@ -166,7 +165,7 @@ func StartConsumer[T any](ctx context.Context, messageProducerConsumer IMessageP
 	consumerName := messageProducerConsumer.GetConsumerName(ctx)
 	count := messageProducerConsumer.GetCount(ctx)
 	//block := messageProducerConsumer.GetBlock(ctx)
-	start := messageProducerConsumer.GetStart(ctx)
+	//start := messageProducerConsumer.GetStart(ctx)
 
 	if queueName == "" || groupName == "" || consumerName == "" {
 		return errors.New("queueName or groupName or consumerName is empty")
@@ -185,61 +184,71 @@ func StartConsumer[T any](ctx context.Context, messageProducerConsumer IMessageP
 		// 0：​​重新获取​​那些已经被领取但还躺在 PEL 中"未签收"的消息.常用于故障恢复和重试.
 		// 两者都会获取到未确认的消息,但 > 是向前看(新消息),0是回头看(未完成的消息).
 
-		streams, errResult := cache.RedisCMDContext(ctx, "xreadgroup", "group", groupName, consumerName, "count", count, "streams", queueName, start)
+		// 先认领未确认的消息并处理
+		streams, errResult := cache.RedisCMDContext(ctx, "xreadgroup", "group", groupName, consumerName, "count", count, "streams", queueName, ">")
+		doConsumerMessage(ctx, streams, errResult, messageProducerConsumer)
+		// 处理已确认的消息,上一步已经处理的,这里不会重复处理
+		streams, errResult = cache.RedisCMDContext(ctx, "xreadgroup", "group", groupName, consumerName, "count", count, "streams", queueName, "0")
+		doConsumerMessage(ctx, streams, errResult, messageProducerConsumer)
 
-		if errResult != nil {
-			if errResult == redis.Nil { // 超时,继续轮询
+	}
+}
+
+// doConsumerMessage 处理消费者消息
+func doConsumerMessage[T any](ctx context.Context, streams interface{}, errResult error, messageProducerConsumer IMessageProducerConsumer[T]) {
+	if errResult != nil {
+		if errResult == redis.Nil { // 超时,继续轮询
+			return
+		}
+		util.FuncLogError(ctx, errResult)
+		time.Sleep(1 * time.Second) // 出错后稍作等待
+		return
+	}
+	queueName := messageProducerConsumer.GetQueueName(ctx)
+	groupName := messageProducerConsumer.GetGroupName(ctx)
+	consumerName := messageProducerConsumer.GetConsumerName(ctx)
+	//map[geo:[[1758014730551-0 [name test]]]]
+	streamMap := streams.(map[interface{}]interface{})
+	for k, v := range streamMap {
+		streamName := k.(string) //获取队列名称
+		vs := v.([]interface{})
+		for _, msgObject := range vs { //循环消息
+			msgs := msgObject.([]interface{})
+			if len(msgs) != 2 {
 				continue
 			}
-			util.FuncLogError(ctx, errResult)
-			time.Sleep(1 * time.Second) // 出错后稍作等待
-			continue
-		}
-
-		//map[geo:[[1758014730551-0 [name test]]]]
-		streamMap := streams.(map[interface{}]interface{})
-		for k, v := range streamMap {
-			streamName := k.(string) //获取队列名称
-			vs := v.([]interface{})
-			for _, msgObject := range vs { //循环消息
-				msgs := msgObject.([]interface{})
-				if len(msgs) != 2 {
-					continue
-				}
-				msgId := msgs[0].(string)
-				values := msgs[1].([]interface{})
-				if len(values) != 2 {
-					continue
-				}
-				messageID := MessageID{
-					ID:           msgId,
-					QueueName:    streamName,
-					GroupName:    groupName,
-					ConsumerName: consumerName,
-				}
-				msgObjectBytes := values[1].(string)
-				messageObj := new(T)
-				err := json.Unmarshal([]byte(msgObjectBytes), messageObj)
-				if err != nil {
-					util.FuncLogError(ctx, err)
-					continue
-				}
-				ok, err := messageProducerConsumer.OnMessage(ctx, messageID, *messageObj)
-				if err != nil {
-					util.FuncLogError(ctx, err)
-					continue
-				}
-				if !ok {
-					continue
-				}
-				_, errResult := AckMessage(ctx, queueName, groupName, msgId)
-				if errResult != nil {
-					continue
-				}
-
+			msgId := msgs[0].(string)
+			values := msgs[1].([]interface{})
+			if len(values) != 2 {
+				continue
 			}
-		}
+			messageID := MessageID{
+				ID:           msgId,
+				QueueName:    streamName,
+				GroupName:    groupName,
+				ConsumerName: consumerName,
+			}
+			msgObjectBytes := values[1].(string)
+			messageObj := new(T)
+			err := json.Unmarshal([]byte(msgObjectBytes), messageObj)
+			if err != nil {
+				util.FuncLogError(ctx, err)
+				continue
+			}
+			ok, err := messageProducerConsumer.OnMessage(ctx, messageID, *messageObj)
+			if err != nil {
+				util.FuncLogError(ctx, err)
+				continue
+			}
+			if !ok {
+				continue
+			}
+			_, errResult := AckMessage(ctx, queueName, groupName, msgId)
+			if errResult != nil {
+				continue
+			}
 
+		}
 	}
 }
 
