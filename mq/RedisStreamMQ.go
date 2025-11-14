@@ -179,6 +179,9 @@ func StartConsumer[T any](ctx context.Context, messageProducerConsumer IMessageP
 	}
 
 	for {
+		// 先不要异步,会造成多个线程争抢一个账号进行爬虫
+
+
 		// 使用 XREADGROUP 以阻塞方式读取消息
 		// >：获取​​从未被该消费者组内任何消费者领取过​​的"全新"消息.这是最常用的模式.
 		// 0：​​重新获取​​那些已经被领取但还躺在 PEL 中"未签收"的消息.常用于故障恢复和重试.
@@ -187,7 +190,8 @@ func StartConsumer[T any](ctx context.Context, messageProducerConsumer IMessageP
 		// 先认领未确认的消息并处理
 		streams, errResult := cache.RedisCMDContext(ctx, "xreadgroup", "group", groupName, consumerName, "count", count, "streams", queueName, ">")
 		doConsumerMessage(ctx, streams, errResult, messageProducerConsumer)
-		// 处理已确认的消息,上一步已经处理的,这里不会重复处理
+		// 处理已确认的消息,上一步已经处理的,这里不会重复处理.
+		// 通过xclaim重新获取的消息,需要从0开始读取,如果没有被认领,从0也无法读取
 		streams, errResult = cache.RedisCMDContext(ctx, "xreadgroup", "group", groupName, consumerName, "count", count, "streams", queueName, "0")
 		doConsumerMessage(ctx, streams, errResult, messageProducerConsumer)
 
@@ -268,8 +272,12 @@ func RetryConsumer[T any](ctx context.Context, messageProducerConsumer IMessageP
 	maxRetryCount := messageProducerConsumer.GetMaxRetryCount(ctx)
 	//start := messageProducerConsumer.GetStart(ctx)
 	for {
+		//避免长时间访问redis,每次睡眠 minIdleTime 毫秒
+		time.Sleep(time.Millisecond * time.Duration(minIdleTime))
 		// XPENDING geo deepseek_group IDLE 300000 - + 10 consumer1
-		xpending, errResult := cache.RedisCMDContext(ctx, "xpending", queueName, groupName, "idle", minIdleTime, "-", "+", count, consumerName)
+		// StartConsumer  有 0 开始 读取 xreadgroup,会让等待空闲重新计算,造成 idle 参数无法获取结果
+		//xpending, errResult := cache.RedisCMDContext(ctx, "xpending", queueName, groupName, "idle", minIdleTime, "-", "+", count, consumerName)
+		xpending, errResult := cache.RedisCMDContext(ctx, "xpending", queueName, groupName, "-", "+", count, consumerName)
 		if errResult != nil || xpending == nil {
 			util.FuncLogError(ctx, errResult)
 			continue

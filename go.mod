@@ -4,12 +4,12 @@ go 1.25
 
 require (
 	gitee.com/chunanyong/gowe v1.2.0
-	gitee.com/chunanyong/zorm v1.7.9
-	github.com/cloudwego/hertz v0.10.2
+	gitee.com/chunanyong/zorm v1.8.0
+	github.com/cloudwego/hertz v0.10.3
 	github.com/go-sql-driver/mysql v1.9.3
 	github.com/joho/godotenv v1.5.1
 	github.com/mojocn/base64Captcha v1.3.8
-	github.com/redis/go-redis/v9 v9.14.0
+	github.com/redis/go-redis/v9 v9.16.0
 	github.com/vmihailenco/msgpack/v5 v5.4.1
 	gopkg.in/yaml.v3 v3.0.1
 )
