@@ -33,7 +33,7 @@ func FindRoleByUserId(ctx context.Context, userId string, page *zorm.Page) ([]pe
 	// 按照 r.privateOrg,r.sortno desc  先处理角色私有部门的权限
 	finder := zorm.NewFinder()
 	finder.Append("SELECT r.* from ").Append(permstruct.RoleStructTableName).Append(" r,")
-	finder.Append(permstruct.UserRoleStructTableName).Append("  re where re.userId=? and re.roleId=r.id and r.active=1 order by r.privateOrg desc,r.sortno desc", userId)
+	finder.Append(permstruct.UserRoleStructTableName).Append("  re where re.user_id=? and re.role_id=r.id and r.active=1 order by r.private_org desc,r.sortno desc", userId)
 
 	// 查询列表
 	errQueryList := zorm.Query(ctx, finder, &roles, page)
@@ -155,7 +155,7 @@ func UpdateUserRoles(ctx context.Context, userId string, roleIds []string) error
 		return errors.New("userId不能为空")
 	}
 	// 查询用户的现有的角色,清理缓存
-	f_select_old := zorm.NewSelectFinder(permstruct.UserRoleStructTableName, "roleId").Append(" WHERE userId=? ", userId)
+	f_select_old := zorm.NewSelectFinder(permstruct.UserRoleStructTableName, "role_id").Append(" WHERE user_id=? ", userId)
 	listOld := make([]string, 0)
 	errQueryList := zorm.Query(ctx, f_select_old, listOld, nil)
 	if errQueryList != nil {
@@ -165,7 +165,7 @@ func UpdateUserRoles(ctx context.Context, userId string, roleIds []string) error
 	// 开启事务,批量保存
 	_, errTransaction := zorm.Transaction(ctx, func(ctx context.Context) (interface{}, error) {
 		// 删除用户现有的角色
-		f_del := zorm.NewDeleteFinder(permstruct.UserRoleStructTableName).Append(" WHERE userId=? ", userId)
+		f_del := zorm.NewDeleteFinder(permstruct.UserRoleStructTableName).Append(" WHERE user_id=? ", userId)
 		_, errUpdateFinder := zorm.UpdateFinder(ctx, f_del)
 		if errUpdateFinder != nil {
 			return nil, errUpdateFinder

@@ -14,10 +14,10 @@ type UserRoleStruct struct {
 	Id string `column:"id"`
 
 	// UserId 用户编号
-	UserId string `column:"userId"`
+	UserId string `column:"user_id"`
 
 	// RoleId 角色编号
-	RoleId string `column:"roleId"`
+	RoleId string `column:"role_id"`
 
 	//------------------数据库字段结束,自定义字段写在下面---------------//
 }

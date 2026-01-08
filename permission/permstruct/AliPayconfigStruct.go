@@ -18,52 +18,52 @@ type AliPayconfigStruct struct {
 	Id string `column:"id"`
 
 	// PrivateKey <no value>
-	PrivateKey string `column:"privateKey"`
+	PrivateKey string `column:"private_key"`
 
 	// AliPayPublicKey <no value>
-	AliPayPublicKey string `column:"aliPayPublicKey"`
+	AliPayPublicKey string `column:"ali_pay_public_key"`
 
 	// AppId <no value>
-	AppId string `column:"appId"`
+	AppId string `column:"app_id"`
 
 	// ServiceUrl <no value>
-	ServiceUrl string `column:"serviceUrl"`
+	ServiceUrl string `column:"service_url"`
 
 	// Charset <no value>
 	Charset string `column:"charset"`
 
 	// SignType <no value>
-	SignType string `column:"signType"`
+	SignType string `column:"sign_type"`
 
 	// Format <no value>
 	Format string `column:"format"`
 
 	// CertPath <no value>
-	CertPath string `column:"certPath"`
+	CertPath string `column:"cert_path"`
 
 	// AlipayPublicCertPath <no value>
-	AlipayPublicCertPath string `column:"alipayPublicCertPath"`
+	AlipayPublicCertPath string `column:"alipay_public_cert_path"`
 
 	// RootCertPath <no value>
-	RootCertPath string `column:"rootCertPath"`
+	RootCertPath string `column:"root_cert_path"`
 
 	// EncryptType <no value>
-	EncryptType string `column:"encryptType"`
+	EncryptType string `column:"encrypt_type"`
 
 	// AesKey <no value>
-	AesKey string `column:"aesKey"`
+	AesKey string `column:"aes_key"`
 
 	// CreateTime <no value>
-	CreateTime time.Time `column:"createTime"`
+	CreateTime time.Time `column:"create_time"`
 
 	// CreateUserId <no value>
-	CreateUserId string `column:"createUserId"`
+	CreateUserId string `column:"create_user_id"`
 
 	// UpdateTime <no value>
-	UpdateTime time.Time `column:"updateTime"`
+	UpdateTime time.Time `column:"update_time"`
 
 	// UpdateUserId <no value>
-	UpdateUserId string `column:"updateUserId"`
+	UpdateUserId string `column:"update_user_id"`
 
 	// Active 状态 0不可用,1可用
 	Active int `column:"active"`

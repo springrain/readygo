@@ -18,28 +18,28 @@ type UserPlatformInfosStruct struct {
 	Id string `column:"id"`
 
 	// UserId t_user表中ID
-	UserId string `column:"userId"`
+	UserId string `column:"user_id"`
 
 	// OpenId 公众号openId,企业号userId,小程序openId,APP推送deviceToken
-	OpenId string `column:"openId"`
+	OpenId string `column:"open_id"`
 
 	// DeviceType 设备/应用类型：1公众号2小程序3企业号4APP IOS消息推送5APP安卓消息推送6web
-	DeviceType int `column:"deviceType"`
+	DeviceType int `column:"device_type"`
 
 	// OrgId 所属组织机构ID
-	OrgId string `column:"orgId"`
+	OrgId string `column:"org_id"`
 
 	// CreateTime <no value>
-	CreateTime time.Time `column:"createTime"`
+	CreateTime time.Time `column:"create_time"`
 
 	// CreateUserId <no value>
-	CreateUserId string `column:"createUserId"`
+	CreateUserId string `column:"create_user_id"`
 
 	// UpdateTime <no value>
-	UpdateTime time.Time `column:"updateTime"`
+	UpdateTime time.Time `column:"update_time"`
 
 	// UpdateUserId <no value>
-	UpdateUserId string `column:"updateUserId"`
+	UpdateUserId string `column:"update_user_id"`
 
 	// Active 是否有效(0否,1是)
 	Active int `column:"active"`

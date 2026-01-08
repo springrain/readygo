@@ -18,40 +18,40 @@ type WxPayconfigStruct struct {
 	Id string `column:"id"`
 
 	// OrgId 站点Id
-	OrgId string `column:"orgId"`
+	OrgId string `column:"org_id"`
 
 	// AppId 开发者Id
-	AppId string `column:"appId"`
+	AppId string `column:"app_id"`
 
 	// Secret 应用密钥
 	Secret string `column:"secret"`
 
 	// MchId 微信支付商户号
-	MchId string `column:"mchId"`
+	MchId string `column:"mch_id"`
 
 	// Key 交易过程生成签名的密钥，仅保留在商户系统和微信支付后台，不会在网络中传播
 	Key string `column:"key"`
 
 	// CertificateFile 证书地址
-	CertificateFile string `column:"certificateFile"`
+	CertificateFile string `column:"certificate_file"`
 
 	// NotifyUrl 通知地址
-	NotifyUrl string `column:"notifyUrl"`
+	NotifyUrl string `column:"notify_url"`
 
 	// SignType 加密方式,MD5和HMAC-SHA256
-	SignType string `column:"signType"`
+	SignType string `column:"sign_type"`
 
 	// CreateTime <no value>
-	CreateTime time.Time `column:"createTime"`
+	CreateTime time.Time `column:"create_time"`
 
 	// CreateUserId <no value>
-	CreateUserId string `column:"createUserId"`
+	CreateUserId string `column:"create_user_id"`
 
 	// UpdateTime <no value>
-	UpdateTime time.Time `column:"updateTime"`
+	UpdateTime time.Time `column:"update_time"`
 
 	// UpdateUserId <no value>
-	UpdateUserId string `column:"updateUserId"`
+	UpdateUserId string `column:"update_user_id"`
 
 	// Active 状态 0不可用,1可用
 	Active int `column:"active"`

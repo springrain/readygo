@@ -34,13 +34,13 @@ type demoStruct struct {
 	Id string `column:"id"`
 
 	// UserName 姓名
-	UserName string `column:"userName"`
+	UserName string `column:"user_name"`
 
 	// Password 密码
 	Password string `column:"password"`
 
 	// CreateTime <no value>
-	CreateTime time.Time `column:"createTime"`
+	CreateTime time.Time `column:"create_time"`
 
 	// Active 是否有效(0否,1是)
 	// Active int `column:"active"`

@@ -14,10 +14,10 @@ type RoleMenuStruct struct {
 	Id string `column:"id"`
 
 	// RoleId 角色编号
-	RoleId string `column:"roleId"`
+	RoleId string `column:"role_id"`
 
 	// MenuId 菜单编号
-	MenuId string `column:"menuId"`
+	MenuId string `column:"menu_id"`
 
 	//------------------数据库字段结束,自定义字段写在下面---------------//
 

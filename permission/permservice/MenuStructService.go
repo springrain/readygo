@@ -183,7 +183,7 @@ func DeleteMenuStructById(ctx context.Context, id string) error {
 		}
 
 		// 删除中间表
-		f_delete_re := zorm.NewDeleteFinder(permstruct.RoleMenuStructTableName).Append(" WHERE menuId in (?)", menuIds)
+		f_delete_re := zorm.NewDeleteFinder(permstruct.RoleMenuStructTableName).Append(" WHERE menu_id in (?)", menuIds)
 		_, errDeleteRE := zorm.UpdateFinder(ctx, f_delete_re)
 		if errDeleteRE != nil {
 			return nil, errDeleteRE

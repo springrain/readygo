@@ -265,7 +265,7 @@ func TestUpdateFinder(t *testing.T) {
 		finder := zorm.NewUpdateFinder(demoStructTableName) // UPDATE t_demo SET
 		// finder = zorm.NewDeleteFinder(demoStructTableName)  // DELETE FROM t_demo
 		// finder = zorm.NewFinder().Append("UPDATE").Append(demoStructTableName).Append("SET") // UPDATE t_demo SET
-		finder.Append("userName=?,active=?", "TestUpdateFinder", 1).Append("WHERE id=?", "41b2aa4f-379a-4319-8af9-08472b6e514e")
+		finder.Append("user_name=?,active=?", "TestUpdateFinder", 1).Append("WHERE id=?", "41b2aa4f-379a-4319-8af9-08472b6e514e")
 
 		// 更新 "sql":"UPDATE t_demo SET  userName=?,active=? WHERE id=?","args":["TestUpdateFinder",1,"41b2aa4f-379a-4319-8af9-08472b6e514e"]
 		_, err := zorm.UpdateFinder(ctx, finder)
@@ -289,7 +289,7 @@ func TestUpdateEntityMap(t *testing.T) {
 		entityMap.PkColumnName = "id"
 		// Set 设置数据库的字段值,主键必须有值
 		entityMap.Set("id", "41b2aa4f-379a-4319-8af9-08472b6e514e")
-		entityMap.Set("userName", "TestUpdateEntityMap")
+		entityMap.Set("user_name", "TestUpdateEntityMap")
 		// 更新 "sql":"UPDATE t_demo SET userName=? WHERE id=?","args":["TestUpdateEntityMap","41b2aa4f-379a-4319-8af9-08472b6e514e"]
 		_, err := zorm.UpdateEntityMap(ctx, entityMap)
 

@@ -18,7 +18,7 @@ type UserStruct struct {
 	Id string `column:"id"`
 
 	// UserName 姓名
-	UserName string `column:"userName"`
+	UserName string `column:"user_name"`
 
 	// Account 账号
 	Account string `column:"account"`
@@ -36,28 +36,28 @@ type UserStruct struct {
 	Email string `column:"email"`
 
 	// OpenId 微信openId
-	OpenId string `column:"openId"`
+	OpenId string `column:"open_id"`
 
 	// UnionID 微信UnionID
-	UnionID string `column:"unionID"`
+	UnionID string `column:"union_id"`
 
 	// Avatar 头像地址
 	Avatar string `column:"avatar"`
 
 	// UserType 0会员,1员工,2店长收银,9系统管理员
-	UserType int `column:"userType"`
+	UserType int `column:"user_type"`
 
 	// CreateTime <no value>
-	CreateTime time.Time `column:"createTime"`
+	CreateTime time.Time `column:"create_time"`
 
 	// CreateUserId <no value>
-	CreateUserId string `column:"createUserId"`
+	CreateUserId string `column:"create_user_id"`
 
 	// UpdateTime <no value>
-	UpdateTime time.Time `column:"updateTime"`
+	UpdateTime time.Time `column:"update_time"`
 
 	// UpdateUserId <no value>
-	UpdateUserId string `column:"updateUserId"`
+	UpdateUserId string `column:"update_user_id"`
 
 	// Active 是否有效(0否,1是)
 	Active int `column:"active"`

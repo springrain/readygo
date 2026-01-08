@@ -314,7 +314,7 @@ func UpdateOrgManagerUserId(ctx context.Context, orgId string, managerUserId str
 	}
 	// 匿名函数return的error如果不为nil,事务就会回滚
 	_, errUpdateOrgManagerUserId := zorm.Transaction(ctx, func(ctx context.Context) (interface{}, error) {
-		finder := zorm.NewDeleteFinder(permstruct.UserOrgStructTableName).Append(" WHERE orgId=? and managerType=2 ", orgId)
+		finder := zorm.NewDeleteFinder(permstruct.UserOrgStructTableName).Append(" WHERE org_id=? and manager_type=2 ", orgId)
 		_, errUpdateFinder := zorm.UpdateFinder(ctx, finder)
 		if errUpdateFinder != nil {
 			return nil, errUpdateFinder

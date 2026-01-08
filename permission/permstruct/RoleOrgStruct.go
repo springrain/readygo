@@ -14,10 +14,10 @@ type RoleOrgStruct struct {
 	Id string `column:"id"`
 
 	// OrgId 部门编号
-	OrgId string `column:"orgId"`
+	OrgId string `column:"org_id"`
 
 	// RoleId 角色编号
-	RoleId string `column:"roleId"`
+	RoleId string `column:"role_id"`
 
 	// Children 0不包含子部门,1包含.用于表示角色和部门的权限关系
 	Children int `column:"children"`

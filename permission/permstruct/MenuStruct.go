@@ -30,22 +30,22 @@ type MenuStruct struct {
 	Remark string `column:"remark"`
 
 	// Pageurl <no value>
-	Pageurl string `column:"pageurl"`
+	Pageurl string `column:"page_url"`
 
 	// MenuType 0.功能按钮,1.导航菜单
-	MenuType int `column:"menuType"`
+	MenuType int `column:"menu_type"`
 
 	// CreateTime <no value>
-	CreateTime time.Time `column:"createTime"`
+	CreateTime time.Time `column:"create_time"`
 
 	// CreateUserId <no value>
-	CreateUserId string `column:"createUserId"`
+	CreateUserId string `column:"create_user_id"`
 
 	// UpdateTime <no value>
-	UpdateTime time.Time `column:"updateTime"`
+	UpdateTime time.Time `column:"update_time"`
 
 	// UpdateUserId <no value>
-	UpdateUserId string `column:"updateUserId"`
+	UpdateUserId string `column:"update_user_id"`
 
 	// Sortno 排序,查询时倒叙排列
 	Sortno int `column:"sortno"`

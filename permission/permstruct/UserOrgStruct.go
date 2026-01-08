@@ -14,13 +14,13 @@ type UserOrgStruct struct {
 	Id string `column:"id"`
 
 	// UserId 用户编号
-	UserId string `column:"userId"`
+	UserId string `column:"user_id"`
 
 	// OrgId 机构编号
-	OrgId string `column:"orgId"`
+	OrgId string `column:"org_id"`
 
 	// ManagerType 0会员,1员工,2主管
-	ManagerType int `column:"managerType"`
+	ManagerType int `column:"manager_type"`
 
 	//------------------数据库字段结束,自定义字段写在下面---------------//
 }

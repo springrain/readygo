@@ -27,7 +27,7 @@ type OrgStruct struct {
 	Pid string `column:"pid"`
 
 	// OrgType 0-99门店,100-199部门,200-299,分公司,300-399集团公司,900-999总平台
-	OrgType int `column:"orgType"`
+	OrgType int `column:"org_type"`
 
 	// Sortno 排序,查询时倒叙排列
 	Sortno int `column:"sortno"`
@@ -36,16 +36,16 @@ type OrgStruct struct {
 	Remark string `column:"remark"`
 
 	// CreateTime <no value>
-	CreateTime time.Time `column:"createTime"`
+	CreateTime time.Time `column:"create_time"`
 
 	// CreateUserId <no value>
-	CreateUserId string `column:"createUserId"`
+	CreateUserId string `column:"create_user_id"`
 
 	// UpdateTime <no value>
-	UpdateTime time.Time `column:"updateTime"`
+	UpdateTime time.Time `column:"update_time"`
 
 	// UpdateUserId <no value>
-	UpdateUserId string `column:"updateUserId"`
+	UpdateUserId string `column:"update_user_id"`
 
 	// Active 是否有效(0否,1是)
 	Active int `column:"active"`

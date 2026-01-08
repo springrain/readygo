@@ -15,8 +15,8 @@ func FindUserIdByOrgId(ctx context.Context, orgId string, page *zorm.Page) ([]st
 	if len(orgId) < 1 {
 		return nil, errors.New("orgId不能为空")
 	}
-	finder := zorm.NewFinder().Append("SELECT re.userId FROM ").Append(permstruct.UserOrgStructTableName)
-	finder.Append(" re where  re.orgId=? and re.managerType>0 order by re.managerType desc ", orgId)
+	finder := zorm.NewFinder().Append("SELECT re.user_id FROM ").Append(permstruct.UserOrgStructTableName)
+	finder.Append(" re where  re.org_id=? and re.manager_type>0 order by re.manager_type desc ", orgId)
 	userIds := make([]string, 0)
 	errQueryList := zorm.Query(ctx, finder, &userIds, page)
 	if errQueryList != nil {
@@ -45,9 +45,9 @@ func FindAllUserIdByOrgId(ctx context.Context, orgId string, page *zorm.Page) ([
 		return nil, errFindById
 	}
 	comcode := orgStructPtr.Comcode
-	finder := zorm.NewFinder().Append("SELECT re.userId FROM ").Append(permstruct.UserOrgStructTableName).Append(" re,")
+	finder := zorm.NewFinder().Append("SELECT re.user_id FROM ").Append(permstruct.UserOrgStructTableName).Append(" re,")
 	finder.Append(permstruct.OrgStructTableName)
-	finder.Append(" org WHERE org.id=re.orgId and org.comcode like ? and re.managerType>0   order by re.userId asc ", comcode+"%")
+	finder.Append(" org WHERE org.id=re.org_id and org.comcode like ? and re.manager_type>0   order by re.user_id asc ", comcode+"%")
 
 	userIds := make([]string, 0)
 	errQueryList := zorm.Query(ctx, finder, &userIds, page)
@@ -72,8 +72,8 @@ func FindOrgIdByUserId(ctx context.Context, userId string, page *zorm.Page) ([]s
 	if len(userId) < 1 {
 		return nil, errors.New("userId不能为空")
 	}
-	finder := zorm.NewFinder().Append("SELECT re.orgId FROM  ").Append(permstruct.UserOrgStructTableName).Append(" re ")
-	finder.Append("   WHERE re.userId=?    order by re.managerType desc   ", userId)
+	finder := zorm.NewFinder().Append("SELECT re.org_id FROM  ").Append(permstruct.UserOrgStructTableName).Append(" re ")
+	finder.Append("   WHERE re.user_id=?    order by re.manager_type desc   ", userId)
 
 	orgIds := make([]string, 0)
 	errQueryList := zorm.Query(ctx, finder, &orgIds, page)
@@ -100,7 +100,7 @@ func FindUserOrgByUserId(ctx context.Context, userId string, page *zorm.Page) ([
 		return nil, errors.New("userId不能为空")
 	}
 	finder := zorm.NewFinder().Append("SELECT re.* FROM  ").Append(permstruct.UserOrgStructTableName).Append(" re ")
-	finder.Append("   WHERE re.userId=?    order by re.managerType desc   ", userId)
+	finder.Append("   WHERE re.user_id=?    order by re.manager_type desc   ", userId)
 
 	userOrgs := make([]permstruct.UserOrgStruct, 0)
 	errQueryList := zorm.Query(ctx, finder, &userOrgs, page)
@@ -117,8 +117,8 @@ func FindManagerOrgIdByUserId(ctx context.Context, userId string, page *zorm.Pag
 		return nil, errors.New("userId不能为空")
 	}
 
-	finder := zorm.NewFinder().Append("SELECT re.orgId FROM  ").Append(permstruct.UserOrgStructTableName)
-	finder.Append(" re  WHERE re.userId=?  and re.managerType=2  order by re.orgId desc   ", userId)
+	finder := zorm.NewFinder().Append("SELECT re.org_id FROM  ").Append(permstruct.UserOrgStructTableName)
+	finder.Append(" re  WHERE re.user_id=?  and re.manager_type=2  order by re.org_id desc   ", userId)
 
 	orgIds := make([]string, 0)
 	errQueryList := zorm.Query(ctx, finder, &orgIds, page)
@@ -145,8 +145,8 @@ func FindManagerUserIdByOrgId(ctx context.Context, orgId string) (string, error)
 		return "", errors.New("orgId不能为空")
 	}
 
-	finder := zorm.NewFinder().Append("SELECT re.userId FROM ").Append(permstruct.UserOrgStructTableName)
-	finder.Append(" re  WHERE   re.orgId=? and  re.managerType=2   order by re.userId desc   ", orgId)
+	finder := zorm.NewFinder().Append("SELECT re.user_id FROM ").Append(permstruct.UserOrgStructTableName)
+	finder.Append(" re  WHERE   re.org_id=? and  re.manager_type=2   order by re.user_id desc   ", orgId)
 
 	managerUserId := ""
 	_, errQueryStruct := zorm.QueryRow(ctx, finder, &managerUserId)
@@ -180,9 +180,9 @@ func FindAllUserCountByOrgId(ctx context.Context, orgId string) (int, error) {
 		return -1, errByOrgId
 	}
 
-	finder := zorm.NewFinder().Append("SELECT count(re.userId) FROM ").Append(permstruct.UserOrgStructTableName)
+	finder := zorm.NewFinder().Append("SELECT count(re.user_id) FROM ").Append(permstruct.UserOrgStructTableName)
 	finder.Append(" re,").Append(permstruct.OrgStructTableName)
-	finder.Append(" org WHERE org.id=re.orgId and org.comcode like ? and  re.managerType>0 ", org.Comcode+"%")
+	finder.Append(" org WHERE org.id=re.org_id and org.comcode like ? and  re.manager_type>0 ", org.Comcode+"%")
 	// 查询总条数
 	count := -1
 	_, errCount := zorm.QueryRow(ctx, finder, &count)
@@ -195,7 +195,7 @@ func FindRoleOrgByRoleId(ctx context.Context, roleId string, page *zorm.Page) ([
 		return nil, errors.New("roleId不能为空")
 	}
 	finder := zorm.NewFinder().Append("SELECT re.* FROM ").Append(permstruct.RoleOrgStructTableName)
-	finder.Append(" re WHERE re.roleId=? order by re.id desc ", roleId)
+	finder.Append(" re WHERE re.role_id=? order by re.id desc ", roleId)
 
 	roleOrgs := make([]permstruct.RoleOrgStruct, 0)
 	errQueryList := zorm.Query(ctx, finder, &roleOrgs, page)
@@ -226,7 +226,7 @@ func WrapOrgIdFinderByFinder(ctx context.Context, finder *zorm.Finder, orgIdColu
 		orgIdColumn = "orgId"
 	}
 	if createUserIdColumn == "" {
-		createUserIdColumn = "createUserId"
+		createUserIdColumn = "create_user_id"
 	}
 
 	if wrapOrgIdFinder == nil || err != nil {
@@ -340,8 +340,9 @@ func findManagerOrgAndRoleOrgByUserId(ctx context.Context, userId string) ([]per
 }
 
 // 根据role 对象 查询 Role的关联部门.  roleOrgType 0自己的数据,1所在部门,2所在部门及子部门数据,3.自定义部门数据.部门主管有所管理部门的数据全权限,无论角色是否分配
-//  外围需要单独判断是否启用私有角色,不然很容易造成群贤扩大
-//  这里只处理角色产生的权限,不考虑用户如果是主管派生的下级部门权限,这种情况有业务自己处理
+//
+//	外围需要单独判断是否启用私有角色,不然很容易造成群贤扩大
+//	这里只处理角色产生的权限,不考虑用户如果是主管派生的下级部门权限,这种情况有业务自己处理
 func findRoleOrgIdByRole(ctx context.Context, role *permstruct.RoleStruct, userId string, page *zorm.Page) ([]permstruct.RoleOrgStruct, error) {
 	if role == nil {
 		return nil, errors.New("role不能为空")
@@ -391,7 +392,7 @@ func findOrgByRoleId(ctx context.Context, roleId string, page *zorm.Page) ([]per
 	}
 
 	finder := zorm.NewFinder().Append("SELECT re.* FROM ").Append(permstruct.RoleOrgStructTableName)
-	finder.Append(" re WHERE re.roleId=? order by re.id desc ", roleId)
+	finder.Append(" re WHERE re.role_id=? order by re.id desc ", roleId)
 
 	roleOrgs := make([]permstruct.RoleOrgStruct, 0)
 	errQueryList := zorm.Query(ctx, finder, &roleOrgs, page)
@@ -402,7 +403,7 @@ func findOrgByRoleId(ctx context.Context, roleId string, page *zorm.Page) ([]per
 	return roleOrgs, nil
 }
 
-//  查询用户作为主管时所有的管理部门,封装成 []permstruct.RoleOrgStruct 格式
+// 查询用户作为主管时所有的管理部门,封装成 []permstruct.RoleOrgStruct 格式
 func wrapManagerRoleOrgByUserId(ctx context.Context, userId string) ([]permstruct.RoleOrgStruct, error) {
 	list := make([]permstruct.RoleOrgStruct, 0)
 

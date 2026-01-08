@@ -18,31 +18,31 @@ type WxMiniappconfigStruct struct {
 	Id string `column:"id"`
 
 	// OrgId 站点Id
-	OrgId string `column:"orgId"`
+	OrgId string `column:"org_id"`
 
 	// AppId 开发者Id
-	AppId string `column:"appId"`
+	AppId string `column:"app_id"`
 
 	// Secret 应用密钥
 	Secret string `column:"secret"`
 
 	// PlanId 签约模板Id
-	PlanId string `column:"planId"`
+	PlanId string `column:"plan_id"`
 
 	// RequestSerial 签约请求序列号
-	RequestSerial string `column:"requestSerial"`
+	RequestSerial string `column:"request_serial"`
 
 	// CreateTime <no value>
-	CreateTime time.Time `column:"createTime"`
+	CreateTime time.Time `column:"create_time"`
 
 	// CreateUserId <no value>
-	CreateUserId string `column:"createUserId"`
+	CreateUserId string `column:"create_user_id"`
 
 	// UpdateTime <no value>
-	UpdateTime time.Time `column:"updateTime"`
+	UpdateTime time.Time `column:"update_time"`
 
 	// UpdateUserId <no value>
-	UpdateUserId string `column:"updateUserId"`
+	UpdateUserId string `column:"update_user_id"`
 
 	// Active 状态 0不可用,1可用
 	Active int `column:"active"`

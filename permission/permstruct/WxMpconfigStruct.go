@@ -18,10 +18,10 @@ type WxMpconfigStruct struct {
 	Id string `column:"id"`
 
 	// OrgId 站点Id
-	OrgId string `column:"orgId"`
+	OrgId string `column:"org_id"`
 
 	// AppId 开发者Id
-	AppId string `column:"appId"`
+	AppId string `column:"app_id"`
 
 	// Secret 应用密钥
 	Secret string `column:"secret"`
@@ -30,25 +30,25 @@ type WxMpconfigStruct struct {
 	Token string `column:"token"`
 
 	// AesKey 消息加解密密钥
-	AesKey string `column:"aesKey"`
+	AesKey string `column:"aes_key"`
 
 	// WxOriginalId 微信原始ID
-	WxOriginalId string `column:"wxOriginalId"`
+	WxOriginalId string `column:"wx_original_id"`
 
 	// Oauth2 是否支持微信oauth2.0协议,0是不支持,1是支持
 	Oauth2 int `column:"oauth2"`
 
 	// CreateTime <no value>
-	CreateTime time.Time `column:"createTime"`
+	CreateTime time.Time `column:"create_time"`
 
 	// CreateUserId <no value>
-	CreateUserId string `column:"createUserId"`
+	CreateUserId string `column:"create_user_id"`
 
 	// UpdateTime <no value>
-	UpdateTime time.Time `column:"updateTime"`
+	UpdateTime time.Time `column:"update_time"`
 
 	// UpdateUserId <no value>
-	UpdateUserId string `column:"updateUserId"`
+	UpdateUserId string `column:"update_user_id"`
 
 	// Active 状态 0不可用,1可用
 	Active int `column:"active"`
