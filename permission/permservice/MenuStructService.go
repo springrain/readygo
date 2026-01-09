@@ -149,12 +149,17 @@ func UpdateMenuStruct(ctx context.Context, menuStruct *permstruct.MenuStruct) er
 		return errUpdateMenuStruct
 	}
 
-	// 清理缓存
-	for _, menuId := range childrenIds {
-		go cache.EvictKey(ctx, baseInfoCacheKey, "FindMenuStructById_"+menuId)
-	}
-	// go cache.EvictKey(baseInfoCacheKey, "FindMenuStructById_"+menuStruct.Id)
-	go cache.EvictKey(ctx, baseInfoCacheKey, "FindAllMenuTree")
+	// 清理所有权限缓存
+	go cache.ClearCache(ctx, qxCacheKey)
+
+	/*
+		// 清理缓存
+		for _, menuId := range childrenIds {
+			go cache.EvictKey(ctx, baseInfoCacheKey, "FindMenuStructById_"+menuId)
+		}
+		// go cache.EvictKey(baseInfoCacheKey, "FindMenuStructById_"+menuStruct.Id)
+		go cache.EvictKey(ctx, baseInfoCacheKey, "FindAllMenuTree")
+	*/
 
 	return nil
 }
@@ -211,7 +216,7 @@ func DeleteMenuStructById(ctx context.Context, id string) error {
 		return errDeleteMenuStruct
 	}
 
-	// 清理缓存
+	// 清理所有权限缓存
 	go cache.ClearCache(ctx, qxCacheKey)
 	go cache.EvictKey(ctx, baseInfoCacheKey, "FindAllMenuTree")
 

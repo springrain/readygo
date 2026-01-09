@@ -188,21 +188,25 @@ func UpdateUserRoles(ctx context.Context, userId string, roleIds []string) error
 		return nil, nil
 	})
 
-	// 清理老角色缓存
-	for _, roleId := range listOld {
-		go cache.EvictKey(ctx, qxCacheKey, "FindUserByRoleId_"+roleId)
-	}
+	// 清理所有权限缓存
+	go cache.ClearCache(ctx, qxCacheKey)
+	/*
 
-	// 清理用户的缓存
-	go cache.EvictKey(ctx, qxCacheKey, "FindRoleByUserId_"+userId)
-	go cache.EvictKey(ctx, qxCacheKey, "FindMenuByUserId_"+userId)
+		// 清理老角色缓存
+		for _, roleId := range listOld {
+			go cache.EvictKey(ctx, qxCacheKey, "FindUserByRoleId_"+roleId)
+		}
 
-	// 清理新角色缓存
-	for _, roleId := range roleIds {
-		// 清理缓存
-		go cache.EvictKey(ctx, qxCacheKey, "FindUserByRoleId_"+roleId)
-	}
+		// 清理用户的缓存
+		go cache.EvictKey(ctx, qxCacheKey, "FindRoleByUserId_"+userId)
+		go cache.EvictKey(ctx, qxCacheKey, "FindMenuByUserId_"+userId)
 
+		// 清理新角色缓存
+		for _, roleId := range roleIds {
+			// 清理缓存
+			go cache.EvictKey(ctx, qxCacheKey, "FindUserByRoleId_"+roleId)
+		}
+	*/
 	return errTransaction
 }
 
