@@ -171,7 +171,7 @@ func redisDel(ctx context.Context, cacheName string) error {
 }
 
 // RedisSet 设置key的值
-func RedisSet(ctx context.Context, cacheName string, value interface{}) error {
+func RedisSet(ctx context.Context, cacheName string, value interface{}, expireSeconds int) error {
 	if cacheName == "" || value == nil {
 		return errors.New("值不能为空")
 	}
@@ -180,7 +180,12 @@ func RedisSet(ctx context.Context, cacheName string, value interface{}) error {
 	if errJSON != nil {
 		return errJSON
 	}
-	_, errResult := RedisCMDContext(ctx, "set", cacheName, jsonData)
+	var errResult error
+	if expireSeconds > 0 {
+		_, errResult = RedisCMDContext(ctx, "set", cacheName, jsonData, "ex", expireSeconds)
+	} else {
+		_, errResult = RedisCMDContext(ctx, "set", cacheName, jsonData)
+	}
 	//获值错误
 	if errResult != nil {
 		return errResult
@@ -200,7 +205,7 @@ func RedisGet(ctx context.Context, cacheName string, valuePtr interface{}) error
 		return errResult
 	}
 	// 转换成json的[]byte
-	jsonBytes, jsonOK := jsonData.([]byte)
+	jsonBytes, jsonOK := jsonData.(string)
 	if !jsonOK { // 取值失败
 		return errors.New("缓存中的格式值错误")
 	}
@@ -208,7 +213,7 @@ func RedisGet(ctx context.Context, cacheName string, valuePtr interface{}) error
 		return nil
 	}
 	// 赋值
-	errJSON := util.Unmarshal(jsonBytes, valuePtr)
+	errJSON := util.Unmarshal([]byte(jsonBytes), valuePtr)
 	return errJSON
 }
 
