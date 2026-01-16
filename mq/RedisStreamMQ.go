@@ -45,7 +45,7 @@ type IMessageProducerConsumer[T any] interface {
 	OnMessage(ctx context.Context, messageID MessageID, messageObject T) (bool, error)
 	// GetMinIdleTime XPENDING命令的min-idle-time毫秒数,避免处理最新的消息.默认300秒
 	GetMinIdleTime(ctx context.Context) int
-	//MaxRetryCount 最大的重试次数,默认20次
+	//MaxRetryCount 最大的重试次数,默认200次
 	GetMaxRetryCount(ctx context.Context) int
 }
 
@@ -59,6 +59,14 @@ type MessageProducerConsumer[T any] struct {
 	Start         string
 	MinIdleTime   int
 	MaxRetryCount int
+}
+
+// MQResult 消息队列结果
+type MQResult[T any] struct {
+	MessageID  MessageID `json:"messageID"`
+	MessageObj T         `json:"messageObj"`
+	IsSuccess  bool      `json:"isSuccess"`
+	Error      error     `json:"error"`
 }
 
 func (messageProducerConsumer *MessageProducerConsumer[T]) GetQueueName(ctx context.Context) string {
@@ -99,7 +107,7 @@ func (messageProducerConsumer *MessageProducerConsumer[T]) GetMinIdleTime(ctx co
 
 func (messageProducerConsumer *MessageProducerConsumer[T]) GetMaxRetryCount(ctx context.Context) int {
 	if messageProducerConsumer.MaxRetryCount == 0 {
-		return 20
+		return 200
 	}
 	return messageProducerConsumer.MaxRetryCount
 }
@@ -164,7 +172,7 @@ func StartConsumer[T any](ctx context.Context, messageProducerConsumer IMessageP
 	groupName := messageProducerConsumer.GetGroupName(ctx)
 	consumerName := messageProducerConsumer.GetConsumerName(ctx)
 	count := messageProducerConsumer.GetCount(ctx)
-	//block := messageProducerConsumer.GetBlock(ctx)
+	block := int64(messageProducerConsumer.GetBlock(ctx))
 	//start := messageProducerConsumer.GetStart(ctx)
 
 	if queueName == "" || groupName == "" || consumerName == "" {
@@ -179,8 +187,11 @@ func StartConsumer[T any](ctx context.Context, messageProducerConsumer IMessageP
 	}
 
 	for {
-		// 先不要异步,会造成多个线程争抢一个账号进行爬虫
 
+		// 每次循环的间隔时间戳
+		now := time.Now()
+
+		// 先不要异步,会造成多个线程争抢一个账号进行爬虫
 
 		// 使用 XREADGROUP 以阻塞方式读取消息
 		// >：获取​​从未被该消费者组内任何消费者领取过​​的"全新"消息.这是最常用的模式.
@@ -188,25 +199,42 @@ func StartConsumer[T any](ctx context.Context, messageProducerConsumer IMessageP
 		// 两者都会获取到未确认的消息,但 > 是向前看(新消息),0是回头看(未完成的消息).
 
 		// 先认领未确认的消息并处理
-		streams, errResult := cache.RedisCMDContext(ctx, "xreadgroup", "group", groupName, consumerName, "count", count, "streams", queueName, ">")
-		doConsumerMessage(ctx, streams, errResult, messageProducerConsumer)
+		streams1, errResult1 := cache.RedisCMDContext(ctx, "xreadgroup", "group", groupName, consumerName, "count", count, "streams", queueName, ">")
+		if streams1 != nil {
+			DoConsumerMessage(ctx, streams1, errResult1, messageProducerConsumer)
+		}
+
 		// 处理已确认的消息,上一步已经处理的,这里不会重复处理.
 		// 通过xclaim重新获取的消息,需要从0开始读取,如果没有被认领,从0也无法读取
-		streams, errResult = cache.RedisCMDContext(ctx, "xreadgroup", "group", groupName, consumerName, "count", count, "streams", queueName, "0")
-		doConsumerMessage(ctx, streams, errResult, messageProducerConsumer)
+		streams2, errResult2 := cache.RedisCMDContext(ctx, "xreadgroup", "group", groupName, consumerName, "count", count, "streams", queueName, "0")
+		if streams2 != nil {
+			DoConsumerMessage(ctx, streams2, errResult2, messageProducerConsumer)
+		}
+
+		if streams1 == nil && streams2 == nil {
+			// 计算处理一轮的时间
+			elapsed := time.Since(now).Milliseconds()
+			// 如果处理时间小于阻塞时间,则睡眠剩余时间
+			if elapsed < block {
+				time.Sleep(time.Millisecond * time.Duration(block-elapsed))
+			}
+		}
 
 	}
 }
 
 // doConsumerMessage 处理消费者消息
-func doConsumerMessage[T any](ctx context.Context, streams interface{}, errResult error, messageProducerConsumer IMessageProducerConsumer[T]) {
+func DoConsumerMessage[T any](ctx context.Context, streams interface{}, errResult error, messageProducerConsumer IMessageProducerConsumer[T]) []MQResult[T] {
+	// 创建List
+	mqResultList := make([]MQResult[T], 0)
+
 	if errResult != nil {
 		if errResult == redis.Nil { // 超时,继续轮询
-			return
+			return mqResultList
 		}
 		util.FuncLogError(ctx, errResult)
 		time.Sleep(1 * time.Second) // 出错后稍作等待
-		return
+		return mqResultList
 	}
 	queueName := messageProducerConsumer.GetQueueName(ctx)
 	groupName := messageProducerConsumer.GetGroupName(ctx)
@@ -240,6 +268,16 @@ func doConsumerMessage[T any](ctx context.Context, streams interface{}, errResul
 				continue
 			}
 			ok, err := messageProducerConsumer.OnMessage(ctx, messageID, *messageObj)
+
+			// 处理消息结果
+			mqResult := MQResult[T]{
+				MessageID:  messageID,
+				MessageObj: *messageObj,
+				IsSuccess:  ok,
+				Error:      err,
+			}
+			mqResultList = append(mqResultList, mqResult)
+
 			if err != nil {
 				util.FuncLogError(ctx, err)
 				continue
@@ -254,6 +292,8 @@ func doConsumerMessage[T any](ctx context.Context, streams interface{}, errResul
 
 		}
 	}
+
+	return mqResultList
 }
 
 // RetryConsumer 重试消费者的XPENDING消息.minIdleTime是消息的最小空闲毫秒,只有空闲时间超过此值的消息才会被重试
