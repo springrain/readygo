@@ -4,7 +4,7 @@ go 1.25
 
 require (
 	gitee.com/chunanyong/gowe v1.2.0
-	gitee.com/chunanyong/zorm v1.8.1
+	gitee.com/chunanyong/zorm v1.8.2
 	github.com/cloudwego/hertz v0.10.4
 	github.com/go-sql-driver/mysql v1.9.3
 	github.com/joho/godotenv v1.5.1
