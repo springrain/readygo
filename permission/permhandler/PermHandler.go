@@ -110,16 +110,16 @@ func PermHandler() app.HandlerFunc {
 		// 获取权限拥有的菜单信息
 		permMenuList, err := permservice.FindMenuByUserId(ctx, userID)
 		if err != nil {
-			responseBody.StatusCode = 1 //http.StatusUnauthorized
+			responseBody.StatusCode = 1 //http.StatusForbidden
 			responseBody.Message = fmt.Sprintf("%s%s", "获取用户菜单失败", err.Error())
-			c.AbortWithStatusJSON(http.StatusUnauthorized, responseBody)
+			c.AbortWithStatusJSON(http.StatusForbidden, responseBody)
 			return
 		}
 
 		if len(permMenuList) == 0 {
-			responseBody.StatusCode = 1 //http.StatusUnauthorized
+			responseBody.StatusCode = 1 //http.StatusForbidden
 			responseBody.Message = "没有任何权限"
-			c.AbortWithStatusJSON(http.StatusUnauthorized, responseBody)
+			c.AbortWithStatusJSON(http.StatusForbidden, responseBody)
 			return
 		}
 		// 用户是否有uri的权限.循环遍历用户有权限的菜单URL,因为pageUrl是唯一的,可以取出menuId和roleId
@@ -135,26 +135,26 @@ func PermHandler() app.HandlerFunc {
 		}
 
 		if roleID == "" {
-			responseBody.StatusCode = 1 //http.StatusUnauthorized
+			responseBody.StatusCode = 1 //http.StatusForbidden
 			responseBody.Message = "没有当前操作权限"
-			c.AbortWithStatusJSON(http.StatusUnauthorized, responseBody)
+			c.AbortWithStatusJSON(http.StatusForbidden, responseBody)
 			return
 		}
 
 		//根据roleId 查询 role
 		role, err := permservice.FindRoleStructById(ctx, roleID)
 		if err != nil {
-			responseBody.StatusCode = 1 //http.StatusUnauthorized
+			responseBody.StatusCode = 1 //http.StatusForbidden
 			responseBody.Message = fmt.Sprintf("%s%s", "FindRoleStructById失败", err.Error())
-			c.AbortWithStatusJSON(http.StatusUnauthorized, responseBody)
+			c.AbortWithStatusJSON(http.StatusForbidden, responseBody)
 			return
 		}
 
 		userVO, err := permservice.FindUserVOStructByUserId(ctx, userID)
 		if err != nil {
-			responseBody.StatusCode = 1 //http.StatusUnauthorized
+			responseBody.StatusCode = 1 //http.StatusForbidden
 			responseBody.Message = fmt.Sprintf("%s%s", "FindUserVOStructByUserId失败", err.Error())
-			c.AbortWithStatusJSON(http.StatusUnauthorized, responseBody)
+			c.AbortWithStatusJSON(http.StatusForbidden, responseBody)
 			return
 		}
 
