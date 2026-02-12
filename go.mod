@@ -1,6 +1,6 @@
 module readygo
 
-go 1.25
+go 1.26
 
 require (
 	gitee.com/chunanyong/gowe v1.2.0
