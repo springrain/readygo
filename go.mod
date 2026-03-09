@@ -4,12 +4,12 @@ go 1.26
 
 require (
 	gitee.com/chunanyong/gowe v1.2.0
-	gitee.com/chunanyong/zorm v1.8.2
+	gitee.com/chunanyong/zorm v1.8.3
 	github.com/cloudwego/hertz v0.10.4
 	github.com/go-sql-driver/mysql v1.9.3
 	github.com/joho/godotenv v1.5.1
 	github.com/mojocn/base64Captcha v1.3.8
-	github.com/redis/go-redis/v9 v9.17.3
+	github.com/redis/go-redis/v9 v9.18.0
 	github.com/vmihailenco/msgpack/v5 v5.4.1
 	gopkg.in/yaml.v3 v3.0.1
 )
@@ -33,6 +33,7 @@ require (
 	github.com/tidwall/pretty v1.2.0 // indirect
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
 	github.com/vmihailenco/tagparser/v2 v2.0.0 // indirect
+	go.uber.org/atomic v1.11.0 // indirect
 	golang.org/x/arch v0.0.0-20210923205945-b76863e36670 // indirect
 	golang.org/x/crypto v0.42.0 // indirect
 	golang.org/x/image v0.23.0 // indirect
